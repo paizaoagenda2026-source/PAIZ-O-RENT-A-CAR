@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAIZÃO RENT A CAR - Sistema de Locação</title>
+    <style>
+        :root {
+            --primary: #1a3c6e;
+            --secondary: #e63946;
+            --accent: #f4a261;
+            --bg: #f8f9fa;
+            --text: #333;
+            --white: #fff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a3c6e 0%, #0d1b2a 100%);
+        }
+
+        .login-box {
+            background: var(--white);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            text-align: center;
+        }
+
+        .login-box h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .login-box h2 {
+            color: var(--secondary);
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+            border-radius: var(--radius);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+
+        .login-box button:hover {
+            background: #0d1b2a;
+        }
+
+        .main-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .tabs-container {
+            display: flex;
+            flex-wrap: wrap;
+            background: var(--primary);
+            padding: 10px;
+            gap: 5px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            align-items: center;
+        }
+
+        .tab {
+            padding: 10px 15px;
+            background: transparent;
+            color: var(--white);
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 13px;
+            transition: background 0.3s;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab.active {
+            background: var(--secondary);
+            color: var(--white);
+        }
+
+        .tab.hidden-tab {
+            display: none !important;
+        }
+
+        .fullscreen-btn {
+            margin-left: auto;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-left: 5px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: var(--white);
+            margin: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content.hidden-content {
+            display: none !important;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #0d1b2a;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #c1272d;
+        }
+
+        .btn-buscar {
+            background: #6c757d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .btn-buscar:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: var(--accent);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 2px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 2px;
+        }
+
+        .btn-copy {
+            background: var(--info);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 2px;
+            transition: background 0.3s;
+        }
+
+        .btn-copy:hover {
+            background: #138496;
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .filter-input {
+            margin-bottom: 15px;
+            padding: 10px;
+            width: 300px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .subfolder {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .subfolder-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 5px;
+        }
+
+        .subfolder h4 {
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .saved-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .saved-image-item {
+            width: auto;
+            height: auto;
+            max-width: 200px;
+            max-height: 300px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+
+        .saved-image-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            border-color: var(--primary);
+        }
+
+        .saved-image-item img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .saved-image-item .delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: background 0.3s;
+        }
+
+        .saved-image-item .delete-btn:hover {
+            background: rgba(220, 53, 69, 1);
+        }
+
+        .image-preview-card {
+            width: 50px;
+            height: 37px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #fafafa;
+            position: relative;
+            display: inline-block;
+        }
+
+        .image-preview-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .image-preview-card .no-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-size: 3px;
+            text-align: center;
+            padding: 2px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .config-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .config-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .sub-tab {
+            padding: 10px 20px;
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .sub-tab:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sub-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sub-tab-content {
+            display: none;
+        }
+
+        .sub-tab-content.active {
+            display: block;
+        }
+
+        .status-pendente {
+            background-color: #ffc107;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .status-pago {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .status-atrasado {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .permissoes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .permissao-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .permissao-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .permissao-item label {
+            cursor: pointer;
+            font-size: 14px;
+            user-select: none;
+        }
+
+        .permissao-grupo {
+            margin-bottom: 15px;
+        }
+
+        .permissao-grupo h5 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 15px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 4px;
+        }
+
+        .permissoes-veiculos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h1>🚗 PAIZÃO RENT A CAR</h1>
+            <h2>📍 Sistema de Locação</h2>
+            <form id="loginForm">
+                <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+                <input type="password" id="loginPassword" placeholder="Senha" required>
+                <button type="submit" id="loginButton">Entrar</button>
+            </form>
+            <p id="loginError" style="color: red; margin-top: 10px; display: none;">Usuário ou senha inválidos!</p>
+        </div>
+    </div>
+
+    <!-- MAIN SYSTEM -->
+    <div class="main-container" id="mainContainer">
+        <div class="tabs-container" id="tabsContainer">
+            <button class="tab active" data-tab="veiculos">🚗 Veículos</button>
+            <button class="tab" data-tab="clientes">👤 Clientes</button>
+            <button class="tab" data-tab="locacoes">📋 Locações</button>
+            <button class="tab" data-tab="manutencao">🔧 Manutenção</button>
+            <button class="tab" data-tab="mecanico">👨‍🔧 Mecânico</button>
+            <button class="tab" data-tab="usuario">👥 Usuário</button>
+            <button class="tab" data-tab="garagem">🏠 Garagem</button>
+            <button class="tab" data-tab="sos">🆘 SOS</button>
+            <button class="tab" data-tab="comprovantes">📄 Comprovantes</button>
+            <button class="tab" data-tab="pagamentos">💰 Sub Pagamentos</button>
+            <button class="tab" data-tab="banco">🏦 Banco</button>
+            <button class="tab" data-tab="fluxocaixa">💵 Fluxo de Caixa</button>
+            <button class="tab" data-tab="doc">📁 DOC</button>
+            <button class="tab" data-tab="compras">🛒 Compras</button>
+            <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
+            <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
+            <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
+            <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
+        </div>
+
+        <!-- ABA: VEICULOS -->
+        <div class="tab-content active" id="veiculos">
+            <h2>🚗 Cadastro de Veículos</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar veículos..." id="filterVeiculos">
+            <div class="form-grid" id="formVeiculos">
+                <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="veicFabricante" class="campo-enter"></div>
+                <div class="form-group"><label>Cor</label><input type="text" id="veicCor" class="campo-enter"></div>
+                <div class="form-group"><label>Placa</label><input type="text" id="veicPlaca" class="campo-enter"></div>
+                <div class="form-group"><label>Motor</label><input type="text" id="veicMotor" class="campo-enter"></div>
+                <div class="form-group"><label>Câmbio</label><input type="text" id="veicCambio" class="campo-enter"></div>
+                <div class="form-group"><label>Ano Fabr</label><input type="text" id="veicAnoFabr" class="campo-enter"></div>
+                <div class="form-group"><label>Ano Model</label><input type="text" id="veicAnoModel" class="campo-enter"></div>
+                <div class="form-group"><label>KM</label><input type="text" id="veicKm" class="campo-enter"></div>
+                <div class="form-group"><label>Renavan</label><input type="text" id="veicRenavan" class="campo-enter"></div>
+                <div class="form-group"><label>Chassi</label><input type="text" id="veicChassi" class="campo-enter"></div>
+                <div class="form-group"><label>R$ Fipe</label><input type="text" id="veicFipe" class="money campo-enter"></div>
+                <div class="form-group"><label>R$ Caução</label><input type="text" id="veicCaucao" class="money campo-enter"></div>
+                <div class="form-group"><label>R$ Aluguel</label><input type="text" id="veicAluguel" class="money campo-enter"></div>
+                <div class="form-group"><label>Proprietário</label><input type="text" id="veicProprietario" class="campo-enter"></div>
+                <div class="form-group"><label>CPF Propr</label><input type="text" id="veicCpfPropr" class="campo-enter"></div>
+            </div>
+            <button class="btn-primary" data-permissao="veiculos_salvar" onclick="salvarVeiculo()">💾 Salvar</button>
+            <button class="btn-info" data-permissao="veiculos_rastreador" onclick="abrirRastreador()">📍 Rastreador</button>
+            <button class="btn-warning" data-permissao="veiculos_multas" onclick="abrirMultas()">🚨 Multas</button>
+            <div class="table-container">
+                <table id="tabelaVeiculos">
+                    <thead><tr><th>Fab/Modelo</th><th>Placa</th><th>Cor</th><th>Ano</th><th>Aluguel</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: CLIENTES -->
+        <div class="tab-content" id="clientes">
+            <h2>👤 Cadastro de Clientes</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar clientes..." id="filterClientes">
+            <div class="form-grid" id="formClientes">
+                <div class="form-group"><label>Data do Cadastro</label><input type="date" id="cliDataCadastro" class="campo-enter"></div>
+                <div class="form-group"><label>Nome</label><input type="text" id="cliNome" class="campo-enter"></div>
+                <div class="form-group"><label>CPF</label><input type="text" id="cliCpf" class="campo-enter"></div>
+                <div class="form-group"><label>RG</label><input type="text" id="cliRg" class="campo-enter"></div>
+                <div class="form-group"><label>CNH</label><input type="text" id="cliCnh" class="campo-enter"></div>
+                <div class="form-group"><label>Data CNH</label><input type="date" id="cliDataCnh" class="campo-enter"></div>
+                <div class="form-group"><label>Telefone</label><input type="text" id="cliTelefone" class="campo-enter"></div>
+                <div class="form-group"><label>Endereço</label><input type="text" id="cliEndereco" class="campo-enter"></div>
+                <div class="form-group"><label>CEP</label><input type="text" id="cliCep" class="campo-enter"></div>
+                <div class="form-group"><label>Cidade</label><input type="text" id="cliCidade" class="campo-enter"></div>
+                <div class="form-group"><label>Estado</label><input type="text" id="cliEstado" class="campo-enter"></div>
+            </div>
+            <button class="btn-primary" data-permissao="clientes_salvar" onclick="salvarCliente()">💾 Salvar</button>
+            <div class="table-container">
+                <table id="tabelaClientes">
+                    <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: LOCAÇÕES -->
+        <div class="tab-content" id="locacoes">
+            <h2>📋 Locações</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar locações..." id="filterLocacoes">
+            <div class="form-grid" id="formLocacoes">
+                <div class="form-group">
+                    <label>Locatário</label>
+                    <select id="locLocatario" class="campo-enter" onchange="selecionarClienteCombo()">
+                        <option value="">Selecione um cliente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Veículo</label>
+                    <select id="locVeiculo" class="campo-enter" onchange="selecionarVeiculoCombo()">
+                        <option value="">Selecione um veículo</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Data Início</label><input type="date" id="locDataInicio" class="campo-enter" onchange="calcularDataFim()"></div>
+                <div class="form-group"><label>Data Fim</label><input type="date" id="locDataFim" readonly></div>
+                <div class="form-group"><label>Fabricante/Modelo</label><input type="text" id="locFabModelo" readonly></div>
+                <div class="form-group"><label>Cor</label><input type="text" id="locCor" readonly></div>
+                <div class="form-group">
+                    <label>Placa</label>
+                    <select id="locPlaca" class="campo-enter" onchange="selecionarPlacaCombo()">
+                        <option value="">Selecione uma placa</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Ano Fabr</label><input type="text" id="locAnoFabr" readonly></div>
+                <div class="form-group"><label>Ano Model</label><input type="text" id="locAnoModel" readonly></div>
+                <div class="form-group"><label>R$ Caução</label><input type="text" id="locCaucao" class="money" readonly></div>
+                <div class="form-group"><label>Valor Aluguel</label><input type="text" id="locValorAluguel" class="money" readonly></div>
+                <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" readonly></div>
+                <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" readonly></div>
+                <div class="form-group">
+                    <label>Pagamento Caução</label>
+                    <select id="locPagCaucao" class="campo-enter">
+                        <option value="avista">À Vista</option>
+                        <option value="parcelado">Parcelado C/Aluguel</option>
+                        <option value="entrada">Entrada + Parcelas</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-primary" data-permissao="locacoes_salvar" onclick="salvarLocacao()">💾 Salvar</button>
+            <button class="btn-secondary" data-permissao="locacoes_contrato" onclick="gerarContrato()">📄 Contrato</button>
+            <div class="table-container">
+                <table id="tabelaLocacoes">
+                    <thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Aluguel</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: MANUTENÇÃO -->
+        <div class="tab-content" id="manutencao">
+            <h2>🔧 Manutenção</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar manutenções..." id="filterManutencao">
+            <div class="form-grid" id="formManutencao">
+                <div class="form-group"><label>Veículo</label><input type="text" id="manVeiculo" class="campo-enter"></div>
+                <div class="form-group"><label>Placa</label><input type="text" id="manPlaca" class="campo-enter"></div>
+                <div class="form-group"><label>KM</label><input type="text" id="manKm" class="campo-enter"></div>
+                <div class="form-group"><label>Tipo de Manutenção</label><input type="text" id="manTipo" class="campo-enter"></div>
+                <div class="form-group"><label>Data</label><input type="date" id="manData" class="campo-enter"></div>
+                <div class="form-group"><label>OBS</label><textarea id="manObs" rows="3" class="campo-enter"></textarea></div>
+            </div>
+            <button class="btn-primary" data-permissao="manutencao_salvar" onclick="salvarManutencao()">💾 Salvar</button>
+            <div class="table-container">
+                <table id="tabelaManutencao">
+                    <thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>Data</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: MECÂNICO -->
+        <div class="tab-content" id="mecanico">
+            <h2>👨‍🔧 Mecânico</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar serviços..." id="filterMecanico">
+            <div class="form-grid" id="formMecanico">
+                <div class="form-group"><label>Data</label><input type="date" id="mecData" class="campo-enter"></div>
+                <div class="form-group"><label>Oficina</label><input type="text" id="mecOficina" class="campo-enter"></div>
+                <div class="form-group"><label>Serviço</label><input type="text" id="mecServico" class="campo-enter"></div>
+                <div class="form-group"><label>Responsável</label><input type="text" id="mecResponsavel" class="campo-enter"></div>
+                <div class="form-group"><label>Carro</label><input type="text" id="mecCarro" class="campo-enter"></div>
+                <div class="form-group"><label>Placa</label><input type="text" id="mecPlaca" class="campo-enter"></div>
+                <div class="form-group"><label>Valor</label><input type="text" id="mecValor" class="money campo-enter"></div>
+                <div class="form-group"><label>OBS</label><textarea id="mecObs" rows="3" class="campo-enter"></textarea></div>
+            </div>
+            <button class="btn-primary" data-permissao="mecanico_salvar" onclick="salvarMecanico()">💾 Salvar</button>
+            <div class="table-container">
+                <table id="tabelaMecanico">
+                    <thead><tr><th>Data</th><th>Oficina</th><th>Serviço</th><th>Carro</th><th>Valor</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: USUÁRIO -->
+        <div class="tab-content" id="usuario">
+            <h2>👥 Usuários</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar usuários..." id="filterUsuario">
+            <div class="form-grid" id="formUsuario">
+                <div class="form-group"><label>Nome User</label><input type="text" id="userNome" class="campo-enter"></div>
+                <div class="form-group"><label>Senha</label><input type="password" id="userSenha" class="campo-enter"></div>
+                <div class="form-group">
+                    <label>Tipo de Usuário</label>
+                    <select id="userTipo" class="campo-enter" onchange="preencherPermissoesPadrao()">
+                        <option value="ADM">ADM</option>
+                        <option value="MOTORISTA">MOTORISTA</option>
+                        <option value="OFICINA">OFICINA</option>
+                        <option value="VISITANTE">VISITANTE</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h3>🔐 Permissões de Acesso</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                    Marque as abas, botões e veículos que este usuário pode acessar.
+                </p>
+                <div id="permissoesContainer"></div>
+            </div>
+            
+            <button class="btn-primary" data-permissao="usuario_salvar" onclick="salvarUsuario()">💾 Salvar</button>
+            <button class="btn-warning" data-permissao="usuario_editar" onclick="editarUsuario()">✏️ Editar</button>
+            <button class="btn-danger" data-permissao="usuario_excluir" onclick="excluirUsuario()">🗑️ Excluir</button>
+            <button class="btn-secondary" data-permissao="usuario_limpar" onclick="limparCamposUsuario()">🔄 Limpar</button>
+            <div class="table-container">
+                <table id="tabelaUsuario">
+                    <thead><tr><th>Nome</th><th>Tipo</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: GARAGEM -->
+        <div class="tab-content" id="garagem">
+            <h2>🏠 Garagem</h2>
+            <div class="subfolder">
+                <div class="subfolder-header">
+                    <h4>📁 Subpasta: Fotos da Garagem</h4>
+                    <div class="image-preview-card">
+                        <img id="garagemPreview" alt="Preview da imagem selecionada">
+                        <div class="no-image" id="garagemNoImage">Nenhuma imagem selecionada</div>
+                    </div>
+                </div>
+                <input type="file" id="garagemImagem" accept="image/*" style="display: none;" onchange="previewGaragemImagem()">
+                <div class="saved-images" id="garagemSavedImages"></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-buscar" data-permissao="garagem_buscar" onclick="document.getElementById('garagemImagem').click()">📂 Buscar Imagem do PC</button>
+                <button class="btn-primary" data-permissao="garagem_salvar" onclick="salvarGaragem()">💾 Salvar</button>
+            </div>
+        </div>
+
+        <!-- ABA: SOS -->
+        <div class="tab-content" id="sos">
+            <h2>🆘 SOS</h2>
+            <div class="subfolder">
+                <div class="subfolder-header">
+                    <h4>📁 Subpasta: Imagens SOS</h4>
+                    <div class="image-preview-card">
+                        <img id="sosPreview" alt="Preview da imagem selecionada">
+                        <div class="no-image" id="sosNoImage">Nenhuma imagem selecionada</div>
+                    </div>
+                </div>
+                <input type="file" id="sosImagem" accept="image/*" style="display: none;" onchange="previewSOSImagem()">
+                <div class="saved-images" id="sosSavedImages"></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-buscar" data-permissao="sos_buscar" onclick="document.getElementById('sosImagem').click()">📂 Buscar Imagem do PC</button>
+                <button class="btn-primary" data-permissao="sos_salvar" onclick="salvarSOS()">💾 Salvar</button>
+                <button class="btn-secondary" data-permissao="sos_baixar" onclick="baixarSOS()">⬇️ Baixar</button>
+            </div>
+        </div>
+
+        <!-- ABA: COMPROVANTES -->
+        <div class="tab-content" id="comprovantes">
+            <h2>📄 Comprovantes</h2>
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="switchSubTab('novo')">📤 Novo Comprovante</button>
+                <button class="sub-tab" onclick="switchSubTab('salvos')">📁 Comprovantes Salvos</button>
+            </div>
+            <div class="sub-tab-content active" id="subTabNovo">
+                <input type="file" id="compImagem" accept="image/*" style="display: none;" onchange="previewCompImagem()">
+                <div class="image-preview-card">
+                    <img id="compPreview" alt="Preview do comprovante">
+                    <div class="no-image" id="compNoImage">Nenhum comprovante selecionado</div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn-buscar" data-permissao="comprovantes_buscar" onclick="document.getElementById('compImagem').click()">📂 Buscar Comprovante</button>
+                    <button class="btn-primary" data-permissao="comprovantes_salvar" onclick="salvarComprovante()">💾 Salvar</button>
+                </div>
+            </div>
+            <div class="sub-tab-content" id="subTabSalvos">
+                <div class="subfolder">
+                    <div class="subfolder-header">
+                        <h4>📁 Subpasta: Comprovantes Salvos</h4>
+                    </div>
+                    <div class="saved-images" id="compSavedImages"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: SUB PAGAMENTOS -->
+        <div class="tab-content" id="pagamentos">
+            <h2>💰 Sub Pagamentos</h2>
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="switchSubTabPagamentos('aluguel')">🚗 Aluguel</button>
+            </div>
+            <div class="sub-tab-content active" id="subTabAluguel">
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar aluguéis..." id="filterPagamentos">
+                <div class="table-container">
+                    <table id="tabelaPagamentos">
+                        <thead>
+                            <tr><th>Locatário</th><th>Data Contrato</th><th>Placa</th><th>R$ Aluguel</th><th>Data Vencimento</th><th>Status</th><th>Ação</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: BANCO -->
+        <div class="tab-content" id="banco">
+            <h2>🏦 Banco</h2>
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="switchSubTabBanco('novo')">➕ Novo Banco</button>
+                <button class="sub-tab" onclick="switchSubTabBanco('meusbancos')">📁 Meus Bancos</button>
+            </div>
+            <div class="sub-tab-content active" id="subTabNovoBanco">
+                <div class="form-grid" id="formBanco">
+                    <div class="form-group"><label>Banco</label><input type="text" id="bancoNome" class="campo-enter"></div>
+                    <div class="form-group"><label>Agência</label><input type="text" id="bancoAgencia" class="campo-enter"></div>
+                    <div class="form-group"><label>Conta</label><input type="text" id="bancoConta" class="campo-enter"></div>
+                    <div class="form-group"><label>PIX</label><input type="text" id="bancoPix" class="campo-enter"></div>
+                    <div class="form-group"><label>Titular</label><input type="text" id="bancoTitular" class="campo-enter"></div>
+                </div>
+                <button class="btn-primary" data-permissao="banco_salvar" onclick="salvarBanco()">💾 Salvar</button>
+                <button class="btn-warning" data-permissao="banco_editar" onclick="editarBanco()">✏️ Editar</button>
+            </div>
+            <div class="sub-tab-content" id="subTabMeusBancos">
+                <input type="text" class="filter-input" placeholder="🔍 Filtrar bancos..." id="filterBancos">
+                <div class="table-container">
+                    <table id="tabelaBancos">
+                        <thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: FLUXO DE CAIXA -->
+        <div class="tab-content" id="fluxocaixa">
+            <h2>💵 Fluxo de Caixa</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar transações..." id="filterFluxoCaixa">
+            <div class="form-grid" id="formFluxoCaixa">
+                <div class="form-group"><label>Data</label><input type="date" id="fcData" class="campo-enter"></div>
+                <div class="form-group"><label>Descrição</label><input type="text" id="fcDescricao" class="campo-enter"></div>
+                <div class="form-group"><label>Categoria</label><input type="text" id="fcCategoria" class="campo-enter"></div>
+                <div class="form-group"><label>Valor</label><input type="text" id="fcValor" class="money campo-enter"></div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="fcTipo" class="campo-enter">
+                        <option value="entrada">Entrada</option>
+                        <option value="saida">Saída</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-primary" data-permissao="fluxocaixa_salvar" onclick="salvarFluxoCaixa()">💾 Salvar</button>
+            <div class="table-container">
+                <table id="tabelaFluxoCaixa">
+                    <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div style="margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 8px;">
+                <h3>Resumo Financeiro</h3>
+                <p>Total Entradas: <span id="totalEntradas">R$ 0,00</span></p>
+                <p>Total Saídas: <span id="totalSaidas">R$ 0,00</span></p>
+                <p>Saldo: <span id="saldoTotal">R$ 0,00</span></p>
+            </div>
+        </div>
+
+        <!-- ABA: DOC -->
+        <div class="tab-content" id="doc">
+            <h2>📁 Documentos</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar documentos..." id="filterDoc">
+            <div class="form-grid" id="formDoc">
+                <div class="form-group"><label>Nome do Documento</label><input type="text" id="docNome" class="campo-enter"></div>
+                <div class="form-group"><label>Tipo de Documento</label><input type="text" id="docTipo" class="campo-enter"></div>
+                <div class="form-group"><label>Data do Documento</label><input type="date" id="docData" class="campo-enter"></div>
+                <div class="form-group"><label>Veículo/Cliente</label><input type="text" id="docReferencia" class="campo-enter"></div>
+                <div class="form-group"><label>Observações</label><textarea id="docObs" rows="3" class="campo-enter"></textarea></div>
+            </div>
+            <button class="btn-primary" data-permissao="doc_salvar" onclick="salvarDoc()">💾 Salvar</button>
+            <button class="btn-secondary" data-permissao="doc_upload" onclick="uploadDoc()">📤 Upload</button>
+            <div class="table-container">
+                <table id="tabelaDoc">
+                    <thead><tr><th>Nome</th><th>Tipo</th><th>Data</th><th>Referência</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: COMPRAS -->
+        <div class="tab-content" id="compras">
+            <h2>🛒 Compras</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar compras..." id="filterCompras">
+            <div class="form-grid" id="formCompras">
+                <div class="form-group"><label>Data da Compra</label><input type="date" id="compData" class="campo-enter"></div>
+                <div class="form-group"><label>Produto/Serviço</label><input type="text" id="compProduto" class="campo-enter"></div>
+                <div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor" class="campo-enter"></div>
+                <div class="form-group"><label>CNPJ/CPF Fornecedor</label><input type="text" id="compCnpjFornecedor" class="campo-enter"></div>
+                <div class="form-group"><label>Quantidade</label><input type="number" id="compQuantidade" class="campo-enter"></div>
+                <div class="form-group"><label>Valor Unitário</label><input type="text" id="compValorUnitario" class="money campo-enter"></div>
+                <div class="form-group"><label>Valor Total</label><input type="text" id="compValorTotal" class="money" readonly></div>
+                <div class="form-group"><label>Forma de Pagamento</label>
+                    <select id="compFormaPagamento" class="campo-enter">
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">PIX</option>
+                        <option value="cartao_credito">Cartão de Crédito</option>
+                        <option value="cartao_debito">Cartão de Débito</option>
+                        <option value="boleto">Boleto</option>
+                        <option value="transferencia">Transferência</option>
+                        <option value="cheque">Cheque</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Status</label>
+                    <select id="compStatus" class="campo-enter">
+                        <option value="pendente">Pendente</option>
+                        <option value="pago">Pago</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Categoria</label><input type="text" id="compCategoria" class="campo-enter"></div>
+                <div class="form-group"><label>Observações</label><textarea id="compObs" rows="3" class="campo-enter"></textarea></div>
+            </div>
+            <button class="btn-primary" data-permissao="compras_salvar" onclick="salvarCompra()">💾 Salvar</button>
+            <button class="btn-warning" data-permissao="compras_editar" onclick="editarCompra()">✏️ Editar</button>
+            <button class="btn-secondary" data-permissao="compras_limpar" onclick="limparCamposCompra()">🔄 Limpar</button>
+            <button class="btn-danger" data-permissao="compras_excluir" onclick="excluirCompra()">🗑️ Excluir</button>
+            <div class="table-container">
+                <table id="tabelaCompras">
+                    <thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Valor Total</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: CONFIGURAÇÃO -->
+        <div class="tab-content" id="configuracao">
+            <h2>⚙️ Configurações do Sistema</h2>
+            <div class="config-section">
+                <h3>🔧 Configurações Gerais</h3>
+                <div class="form-grid" id="formConfig">
+                    <div class="form-group"><label>Nome da Empresa</label><input type="text" id="configEmpresa" value="PAIZÃO RENT A CAR" class="campo-enter"></div>
+                    <div class="form-group"><label>CNPJ</label><input type="text" id="configCnpj" class="campo-enter"></div>
+                    <div class="form-group"><label>Telefone</label><input type="text" id="configTelefone" class="campo-enter"></div>
+                    <div class="form-group"><label>Email</label><input type="text" id="configEmail" class="campo-enter"></div>
+                    <div class="form-group"><label>Endereço</label><input type="text" id="configEndereco" class="campo-enter"></div>
+                </div>
+            </div>
+            <div class="config-section">
+                <h3>💰 Configurações Financeiras</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Taxa de Juros (%)</label><input type="text" id="configJuros" class="campo-enter"></div>
+                    <div class="form-group"><label>Multa por Atraso (%)</label><input type="text" id="configMulta" class="campo-enter"></div>
+                    <div class="form-group"><label>Valor Mínimo de Aluguel</label><input type="text" id="configMinAluguel" class="money campo-enter"></div>
+                    <div class="form-group"><label>Prazo Máximo de Locação (dias)</label><input type="text" id="configPrazoMax" class="campo-enter"></div>
+                </div>
+            </div>
+            <div class="config-section">
+                <h3>🔐 Segurança</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Senha Mínima (caracteres)</label><input type="text" id="configSenhaMin" class="campo-enter"></div>
+                    <div class="form-group"><label>Tempo de Sessão (minutos)</label><input type="text" id="configSessao" class="campo-enter"></div>
+                    <div class="form-group"><label>Backup Automático</label>
+                        <select id="configBackup" class="campo-enter"><option value="sim">Sim</option><option value="nao">Não</option></select>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-primary" data-permissao="config_salvar" onclick="salvarConfiguracao()">💾 Salvar Configurações</button>
+            <button class="btn-secondary" data-permissao="config_restaurar" onclick="restaurarPadroes()">🔄 Restaurar Padrões</button>
+        </div>
+
+        <!-- ABA: AUDITORIA -->
+        <div class="tab-content" id="auditoria">
+            <h2>🔍 Auditoria do Sistema</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar registros..." id="filterAuditoria">
+            <div class="form-grid" id="formAuditoria">
+                <div class="form-group"><label>Data Início</label><input type="date" id="audDataInicio" class="campo-enter"></div>
+                <div class="form-group"><label>Data Fim</label><input type="date" id="audDataFim" class="campo-enter"></div>
+                <div class="form-group">
+                    <label>Filtrar por Ação</label>
+                    <select id="audTipoAcao" class="campo-enter">
+                        <option value="todas">Todas</option>
+                        <option value="cadastro">Cadastro</option>
+                        <option value="edicao">Edição</option>
+                        <option value="exclusao">Exclusão</option>
+                        <option value="login">Login</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-primary" data-permissao="auditoria_filtrar" onclick="aplicarFiltroAuditoria()">🔍 Aplicar Filtro</button>
+            <button class="btn-secondary" data-permissao="auditoria_limpar" onclick="limparFiltroAuditoria()">🔄 Limpar Filtro</button>
+            <div class="table-container">
+                <table id="tabelaAuditoria">
+                    <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>IP</th></tr></thead>
+                    <tbody>
+                        <tr><td>2024-01-15 10:30:00</td><td>SERGIO</td><td>Login</td><td>Login realizado com sucesso</td><td>192.168.1.1</td></tr>
+                        <tr><td>2024-01-15 10:35:00</td><td>SERGIO</td><td>Cadastro</td><td>Novo veículo cadastrado: Fiat Uno - ABC1234</td><td>192.168.1.1</td></tr>
+                        <tr><td>2024-01-15 11:00:00</td><td>SERGIO</td><td>Edição</td><td>Cliente João Silva atualizado</td><td>192.168.1.1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA AMPLIAR IMAGENS -->
+    <div class="modal-overlay" id="imageModal" onclick="closeImageModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeImageModal()">×</button>
+            <img id="modalImage" src="" alt="Imagem ampliada">
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
+        // =============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar navegação por Enter para todos os campos com a classe .campo-enter
+            document.querySelectorAll('.campo-enter').forEach(function(campo) {
+                campo.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        
+                        // Encontrar todos os campos do mesmo formulário/container
+                        const form = this.closest('.form-grid') || this.closest('form') || this.closest('.tab-content');
+                        if (!form) return;
+                        
+                        // Pegar todos os campos interativos dentro do mesmo container
+                        const campos = form.querySelectorAll('input:not([type="hidden"]):not([readonly]), select, textarea, button');
+                        const index = Array.from(campos).indexOf(this);
+                        
+                        if (index !== -1 && index < campos.length - 1) {
+                            // Próximo campo
+                            const proximo = campos[index + 1];
+                            if (proximo) {
+                                proximo.focus();
+                                if (proximo.tagName === 'SELECT') {
+                                    proximo.click();
+                                }
+                            }
+                        } else if (index === campos.length - 1) {
+                            // Se for o último campo, procurar o botão Salvar
+                            const botoes = form.querySelectorAll('.btn-primary, .btn-success, .btn-secondary');
+                            if (botoes.length > 0) {
+                                botoes[0].focus();
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Calcular valor total automaticamente
+            document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
+            document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
+        });
+
+        function calcularValorTotal() {
+            const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
+            const valorUnitarioStr = document.getElementById('compValorUnitario').value;
+            const valorUnitario = parseFloat(valorUnitarioStr.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
+            const total = qtd * valorUnitario;
+            document.getElementById('compValorTotal').value = 'R$ ' + total.toFixed(2).replace('.', ',');
+        }
+
+        // =============================================
+        // SISTEMA DE PERMISSÕES
+        // =============================================
+        
+        const todasAbas = [
+            { id: 'veiculos', label: '🚗 Veículos' },
+            { id: 'clientes', label: '👤 Clientes' },
+            { id: 'locacoes', label: '📋 Locações' },
+            { id: 'manutencao', label: '🔧 Manutenção' },
+            { id: 'mecanico', label: '👨‍🔧 Mecânico' },
+            { id: 'usuario', label: '👥 Usuário' },
+            { id: 'garagem', label: '🏠 Garagem' },
+            { id: 'sos', label: '🆘 SOS' },
+            { id: 'comprovantes', label: '📄 Comprovantes' },
+            { id: 'pagamentos', label: '💰 Sub Pagamentos' },
+            { id: 'banco', label: '🏦 Banco' },
+            { id: 'fluxocaixa', label: '💵 Fluxo de Caixa' },
+            { id: 'doc', label: '📁 DOC' },
+            { id: 'compras', label: '🛒 Compras' },
+            { id: 'configuracao', label: '⚙️ Configuração' },
+            { id: 'auditoria', label: '🔍 Auditoria' }
+        ];
+
+        const todosBotoes = {
+            veiculos: [
+                { id: 'veiculos_salvar', label: '💾 Salvar Veículo' },
+                { id: 'veiculos_rastreador', label: '📍 Rastreador' },
+                { id: 'veiculos_multas', label: '🚨 Multas' }
+            ],
+            clientes: [
+                { id: 'clientes_salvar', label: '💾 Salvar Cliente' }
+            ],
+            locacoes: [
+                { id: 'locacoes_salvar', label: '💾 Salvar Locação' },
+                { id: 'locacoes_contrato', label: '📄 Contrato' }
+            ],
+            manutencao: [
+                { id: 'manutencao_salvar', label: '💾 Salvar Manutenção' }
+            ],
+            mecanico: [
+                { id: 'mecanico_salvar', label: '💾 Salvar Serviço' }
+            ],
+            usuario: [
+                { id: 'usuario_salvar', label: '💾 Salvar Usuário' },
+                { id: 'usuario_editar', label: '✏️ Editar Usuário' },
+                { id: 'usuario_excluir', label: '🗑️ Excluir Usuário' },
+                { id: 'usuario_limpar', label: '🔄 Limpar Campos' }
+            ],
+            garagem: [
+                { id: 'garagem_buscar', label: '📂 Buscar Imagem' },
+                { id: 'garagem_salvar', label: '💾 Salvar Imagem' }
+            ],
+            sos: [
+                { id: 'sos_buscar', label: '📂 Buscar Imagem' },
+                { id: 'sos_salvar', label: '💾 Salvar Imagem' },
+                { id: 'sos_baixar', label: '⬇️ Baixar Imagem' }
+            ],
+            comprovantes: [
+                { id: 'comprovantes_buscar', label: '📂 Buscar Comprovante' },
+                { id: 'comprovantes_salvar', label: '💾 Salvar Comprovante' }
+            ],
+            pagamentos: [
+                { id: 'pagamentos_acoes', label: 'Ações de Pagamento (Pago/Excluir)' }
+            ],
+            banco: [
+                { id: 'banco_salvar', label: '💾 Salvar Banco' },
+                { id: 'banco_editar', label: '✏️ Editar Banco' },
+                { id: 'banco_copiar', label: '📋 Copiar PIX' },
+                { id: 'banco_excluir', label: '🗑️ Excluir Banco' }
+            ],
+            fluxocaixa: [
+                { id: 'fluxocaixa_salvar', label: '💾 Salvar Lançamento' }
+            ],
+            doc: [
+                { id: 'doc_salvar', label: '💾 Salvar Documento' },
+                { id: 'doc_upload', label: '📤 Upload Documento' }
+            ],
+            compras: [
+                { id: 'compras_salvar', label: '💾 Salvar Compra' },
+                { id: 'compras_editar', label: '✏️ Editar Compra' },
+                { id: 'compras_limpar', label: '🔄 Limpar Campos' },
+                { id: 'compras_excluir', label: '🗑️ Excluir Compra' }
+            ],
+            configuracao: [
+                { id: 'config_salvar', label: '💾 Salvar Configurações' },
+                { id: 'config_restaurar', label: '🔄 Restaurar Padrões' }
+            ],
+            auditoria: [
+                { id: 'auditoria_filtrar', label: '🔍 Aplicar Filtro' },
+                { id: 'auditoria_limpar', label: '🔄 Limpar Filtro' }
+            ]
+        };
+
+        const permissoesPadrao = {
+            ADM: {
+                abas: Object.fromEntries(todasAbas.map(a => [a.id, true])),
+                botoes: Object.fromEntries(Object.values(todosBotoes).flat().map(b => [b.id, true])),
+                veiculos: {}
+            },
+            MOTORISTA: {
+                abas: { veiculos:false, clientes:false, locacoes:false, manutencao:false, mecanico:false, usuario:false, garagem:true, sos:true, comprovantes:true, pagamentos:false, banco:true, fluxocaixa:false, doc:true, compras:false, configuracao:false, auditoria:false },
+                botoes: { garagem_buscar:true, garagem_salvar:true, sos_buscar:true, sos_salvar:true, sos_baixar:true, comprovantes_buscar:true, comprovantes_salvar:true, banco_copiar:true },
+                veiculos: {}
+            },
+            OFICINA: {
+                abas: { veiculos:true, clientes:false, locacoes:false, manutencao:true, mecanico:true, usuario:false, garagem:false, sos:false, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, doc:false, compras:false, configuracao:false, auditoria:false },
+                botoes: { veiculos_salvar:true, veiculos_rastreador:false, veiculos_multas:false, manutencao_salvar:true, mecanico_salvar:true },
+                veiculos: {}
+            },
+            VISITANTE: {
+                abas: { veiculos:false, clientes:false, locacoes:false, manutencao:false, mecanico:false, usuario:false, garagem:true, sos:false, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, doc:false, compras:false, configuracao:false, auditoria:false },
+                botoes: { garagem_buscar:true, garagem_salvar:true },
+                veiculos: {}
+            }
+        };
+
+        let db = {
+            veiculos: [],
+            clientes: [],
+            locacoes: [],
+            manutencao: [],
+            mecanico: [],
+            usuarios: [],
+            alugueis: [],
+            fluxoCaixa: [],
+            documentos: [],
+            compras: [],
+            auditoria: [],
+            bancos: [],
+            imagens: {
+                garagem: { subpasta: 'Fotos da Garagem', fotos: [] },
+                sos: { subpasta: 'Imagens SOS', fotos: [] },
+                comprovantes: { subpasta: 'Comprovantes', fotos: [] }
+            }
+        };
+
+        let usuarioLogado = null;
+        let compraEditandoIndex = null;
+
+        function inicializarSistema() {
+            if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
+                db.usuarios.push({
+                    nome: 'SERGIO',
+                    senha: '080888',
+                    tipo: 'ADM',
+                    permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM))
+                });
+            }
+            atualizarTabelaUsuario();
+            gerarPermissoesUI();
+            atualizarResumoFinanceiro();
+            atualizarCombosLocacao();
+            atualizarTabelaCompras();
+        }
+
+        function gerarPermissoesUI() {
+            const container = document.getElementById('permissoesContainer');
+            container.innerHTML = '';
+            
+            const abasDiv = document.createElement('div');
+            abasDiv.className = 'permissao-grupo';
+            abasDiv.innerHTML = '<h5>📑 Abas do Sistema</h5>';
+            const abasGrid = document.createElement('div');
+            abasGrid.className = 'permissoes-grid';
+            todasAbas.forEach(aba => {
+                const div = document.createElement('div');
+                div.className = 'permissao-item';
+                div.innerHTML = `<input type="checkbox" id="perm_aba_${aba.id}" checked> <label for="perm_aba_${aba.id}">${aba.label}</label>`;
+                abasGrid.appendChild(div);
+            });
+            abasDiv.appendChild(abasGrid);
+            container.appendChild(abasDiv);
+
+            Object.keys(todosBotoes).forEach(abaId => {
+                const botoes = todosBotoes[abaId];
+                if (botoes.length > 0) {
+                    const grupo = document.createElement('div');
+                    grupo.className = 'permissao-grupo';
+                    const abaLabel = todasAbas.find(a => a.id === abaId)?.label || abaId;
+                    grupo.innerHTML = `<h5>🔘 Botões - ${abaLabel}</h5>`;
+                    const grid = document.createElement('div');
+                    grid.className = 'permissoes-grid';
+                    botoes.forEach(botao => {
+                        const div = document.createElement('div');
+                        div.className = 'permissao-item';
+                        div.innerHTML = `<input type="checkbox" id="perm_botao_${botao.id}" checked> <label for="perm_botao_${botao.id}">${botao.label}</label>`;
+                        grid.appendChild(div);
+                    });
+                    grupo.appendChild(grid);
+                    container.appendChild(grupo);
+                }
+            });
+
+            const veiculosDiv = document.createElement('div');
+            veiculosDiv.className = 'permissao-grupo';
+            veiculosDiv.innerHTML = '<h5>🚙 Veículos Permitidos (por placa)</h5>';
+            const veiculosContainer = document.createElement('div');
+            veiculosContainer.className = 'permissoes-veiculos';
+            veiculosContainer.id = 'permissoesVeiculosContainer';
+            db.veiculos.forEach(v => {
+                const div = document.createElement('div');
+                div.className = 'permissao-item';
+                div.innerHTML = `<input type="checkbox" id="perm_veiculo_${v.placa}" checked> <label for="perm_veiculo_${v.placa}">${v.placa} - ${v.fabricante}</label>`;
+                veiculosContainer.appendChild(div);
+            });
+            veiculosDiv.appendChild(veiculosContainer);
+            container.appendChild(veiculosDiv);
+        }
+
+        function atualizarPermissoesVeiculos() {
+            const container = document.getElementById('permissoesVeiculosContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            db.veiculos.forEach(v => {
+                const div = document.createElement('div');
+                div.className = 'permissao-item';
+                div.innerHTML = `<input type="checkbox" id="perm_veiculo_${v.placa}" checked> <label for="perm_veiculo_${v.placa}">${v.placa} - ${v.fabricante}</label>`;
+                container.appendChild(div);
+            });
+        }
+
+        function preencherPermissoesPadrao() {
+            const tipo = document.getElementById('userTipo').value;
+            const padrao = permissoesPadrao[tipo];
+            if (!padrao) return;
+            
+            todasAbas.forEach(aba => {
+                const checkbox = document.getElementById(`perm_aba_${aba.id}`);
+                if (checkbox) checkbox.checked = padrao.abas[aba.id] || false;
+            });
+            
+            Object.values(todosBotoes).flat().forEach(botao => {
+                const checkbox = document.getElementById(`perm_botao_${botao.id}`);
+                if (checkbox) checkbox.checked = padrao.botoes[botao.id] || false;
+            });
+            
+            db.veiculos.forEach(v => {
+                const checkbox = document.getElementById(`perm_veiculo_${v.placa}`);
+                if (checkbox) checkbox.checked = tipo === 'ADM';
+            });
+        }
+
+        function coletarPermissoes() {
+            const permissoes = {
+                abas: {},
+                botoes: {},
+                veiculos: {}
+            };
+            
+            todasAbas.forEach(aba => {
+                const checkbox = document.getElementById(`perm_aba_${aba.id}`);
+                permissoes.abas[aba.id] = checkbox ? checkbox.checked : false;
+            });
+            
+            Object.values(todosBotoes).flat().forEach(botao => {
+                const checkbox = document.getElementById(`perm_botao_${botao.id}`);
+                permissoes.botoes[botao.id] = checkbox ? checkbox.checked : false;
+            });
+            
+            db.veiculos.forEach(v => {
+                const checkbox = document.getElementById(`perm_veiculo_${v.placa}`);
+                permissoes.veiculos[v.placa] = checkbox ? checkbox.checked : false;
+            });
+            
+            return permissoes;
+        }
+
+        function aplicarPermissoes(usuario) {
+            usuarioLogado = usuario;
+            const permissoes = usuario.permissoes;
+            
+            document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+                const tabId = tab.dataset.tab;
+                if (permissoes.abas[tabId]) {
+                    tab.classList.remove('hidden-tab');
+                } else {
+                    tab.classList.add('hidden-tab');
+                }
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                const contentId = content.id;
+                if (!permissoes.abas[contentId]) {
+                    content.classList.add('hidden-content');
+                    content.classList.remove('active');
+                } else {
+                    content.classList.remove('hidden-content');
+                }
+            });
+            
+            document.querySelectorAll('[data-permissao]').forEach(btn => {
+                const permissao = btn.dataset.permissao;
+                if (!permissoes.botoes[permissao]) {
+                    btn.style.display = 'none';
+                } else {
+                    btn.style.display = '';
+                }
+            });
+            
+            atualizarTabelaVeiculos();
+            
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab && activeTab.classList.contains('hidden-tab')) {
+                const firstAllowedTab = document.querySelector('.tab[data-tab]:not(.hidden-tab)');
+                if (firstAllowedTab) firstAllowedTab.click();
+            }
+        }
+
+        function temPermissaoVeiculo(placa) {
+            if (!usuarioLogado) return true;
+            if (usuarioLogado.tipo === 'ADM') return true;
+            const permissoes = usuarioLogado.permissoes;
+            return permissoes.veiculos[placa] === true;
+        }
+
+        function formatarDataBR(data) {
+            if (!data) return '';
+            const partes = data.split('-');
+            if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            return data;
+        }
+
+        function formatarDataParaInput(data) {
+            if (!data) return '';
+            const d = new Date(data);
+            return d.toISOString().split('T')[0];
+        }
+
+        function copiarPix(index) {
+            const banco = db.bancos[index];
+            if (banco && banco.pix) {
+                navigator.clipboard.writeText(banco.pix).then(() => {
+                    alert('PIX copiado!');
+                    registrarAuditoria('Cadastro', `PIX copiado: ${banco.pix}`);
+                }).catch(() => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = banco.pix;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('PIX copiado!');
+                    registrarAuditoria('Cadastro', `PIX copiado: ${banco.pix}`);
+                });
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value.trim().toUpperCase();
+            const pass = document.getElementById('loginPassword').value;
+            const usuarioEncontrado = db.usuarios.find(u => u.nome === user && u.senha === pass);
+            if (usuarioEncontrado) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'block';
+                aplicarPermissoes(usuarioEncontrado);
+                enterFullscreen();
+                registrarAuditoria('Login', `Login realizado com sucesso por ${user}`);
+                document.getElementById('loginError').style.display = 'none';
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+                registrarAuditoria('Login', 'Tentativa de login falhou');
+            }
+        });
+
+        function sairSistema() {
+            if (confirm('Tem certeza que deseja sair do sistema?')) {
+                if (document.fullscreenElement) document.exitFullscreen();
+                document.getElementById('mainContainer').style.display = 'none';
+                document.getElementById('loginContainer').style.display = 'flex';
+                document.getElementById('loginUser').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').style.display = 'none';
+                document.getElementById('loginUser').focus();
+                registrarAuditoria('Login', 'Logout do sistema');
+                usuarioLogado = null;
+            }
+        }
+
+        document.getElementById('loginUser').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('loginPassword').focus(); }
+        });
+        document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('loginButton').click(); }
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                if (this.classList.contains('hidden-tab')) return;
+                const tabId = this.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                const content = document.getElementById(tabId);
+                if (content && !content.classList.contains('hidden-content')) content.classList.add('active');
+                if (tabId === 'pagamentos') atualizarTabelaAlugueis();
+                if (tabId === 'locacoes') atualizarCombosLocacao();
+                if (tabId === 'compras') atualizarTabelaCompras();
+                
+                // Focar no primeiro campo da aba
+                setTimeout(function() {
+                    const primeiroCampo = document.querySelector('.tab-content.active .campo-enter, .tab-content.active input:not([readonly]), .tab-content.active select, .tab-content.active textarea');
+                    if (primeiroCampo) primeiroCampo.focus();
+                }, 50);
+            });
+        });
+
+        function switchSubTab(tabName) {
+            document.querySelectorAll('#comprovantes .sub-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#comprovantes .sub-tab-content').forEach(c => c.classList.remove('active'));
+            if (tabName === 'novo') {
+                document.querySelector('#comprovantes .sub-tab:first-child').classList.add('active');
+                document.getElementById('subTabNovo').classList.add('active');
+            } else {
+                document.querySelector('#comprovantes .sub-tab:last-child').classList.add('active');
+                document.getElementById('subTabSalvos').classList.add('active');
+            }
+        }
+        function switchSubTabPagamentos(tabName) {
+            document.querySelectorAll('#pagamentos .sub-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#pagamentos .sub-tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector('#pagamentos .sub-tab:first-child').classList.add('active');
+            document.getElementById('subTabAluguel').classList.add('active');
+            atualizarTabelaAlugueis();
+        }
+        function switchSubTabBanco(tabName) {
+            document.querySelectorAll('#banco .sub-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#banco .sub-tab-content').forEach(c => c.classList.remove('active'));
+            if (tabName === 'novo') {
+                document.querySelector('#banco .sub-tab:first-child').classList.add('active');
+                document.getElementById('subTabNovoBanco').classList.add('active');
+            } else {
+                document.querySelector('#banco .sub-tab:last-child').classList.add('active');
+                document.getElementById('subTabMeusBancos').classList.add('active');
+                atualizarTabelaBancos();
+            }
+        }
+
+        function enterFullscreen() {
+            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+        }
+        document.getElementById('fullscreenBtn').addEventListener('click', function() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+                this.textContent = '🖥️ Tela Cheia';
+            } else {
+                enterFullscreen();
+                this.textContent = '🖥️ Sair Tela Cheia';
+            }
+        });
+
+        document.querySelectorAll('.money').forEach(input => {
+            input.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value) {
+                    value = (parseInt(value) / 100).toFixed(2).replace('.', ',');
+                    e.target.value = 'R$ ' + value;
+                }
+            });
+        });
+
+        function setupFilter(inputId, tableId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('keyup', function() {
+                    const filter = this.value.toLowerCase();
+                    const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(filter) ? '' : 'none';
+                    });
+                });
+            }
+        }
+        ['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterDoc','filterCompras','filterAuditoria'].forEach(id => {
+            const tableId = id.replace('filter','tabela');
+            setupFilter(id, tableId);
+        });
+
+        // =============================================
+        // FUNÇÕES DOS COMBOBOX DA ABA LOCAÇÕES
+        // =============================================
+        function atualizarCombosLocacao() {
+            const selectCliente = document.getElementById('locLocatario');
+            selectCliente.innerHTML = '<option value="">Selecione um cliente</option>';
+            db.clientes.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.nome;
+                option.textContent = `${c.nome} - CPF: ${c.cpf}`;
+                selectCliente.appendChild(option);
+            });
+
+            const selectVeiculo = document.getElementById('locVeiculo');
+            selectVeiculo.innerHTML = '<option value="">Selecione um veículo</option>';
+            db.veiculos.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.fabricante;
+                option.textContent = `${v.fabricante} - ${v.placa}`;
+                selectVeiculo.appendChild(option);
+            });
+
+            const selectPlaca = document.getElementById('locPlaca');
+            selectPlaca.innerHTML = '<option value="">Selecione uma placa</option>';
+            db.veiculos.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.placa;
+                option.textContent = `${v.placa} - ${v.fabricante}`;
+                selectPlaca.appendChild(option);
+            });
+        }
+
+        function selecionarClienteCombo() {
+            const select = document.getElementById('locLocatario');
+            const nome = select.value;
+            if (nome) {
+                const cliente = db.clientes.find(c => c.nome === nome);
+                if (cliente) {
+                    document.getElementById('locCpfPropr').value = cliente.cpf;
+                }
+            } else {
+                document.getElementById('locCpfPropr').value = '';
+            }
+        }
+
+        function selecionarVeiculoCombo() {
+            const select = document.getElementById('locVeiculo');
+            const fabricante = select.value;
+            if (fabricante) {
+                const veiculo = db.veiculos.find(v => v.fabricante === fabricante);
+                if (veiculo) {
+                    document.getElementById('locFabModelo').value = veiculo.fabricante;
+                    document.getElementById('locCor').value = veiculo.cor;
+                    document.getElementById('locPlaca').value = veiculo.placa;
+                    document.getElementById('locAnoFabr').value = veiculo.anoFabr;
+                    document.getElementById('locAnoModel').value = veiculo.anoModel;
+                    document.getElementById('locCaucao').value = veiculo.caucao || 'R$ 0,00';
+                    document.getElementById('locValorAluguel').value = veiculo.aluguel || 'R$ 0,00';
+                    document.getElementById('locProprietario').value = veiculo.proprietario || '';
+                    document.getElementById('locCpfPropr').value = veiculo.cpfPropr || '';
+                }
+            } else {
+                limparCamposVeiculoLocacao();
+            }
+        }
+
+        function selecionarPlacaCombo() {
+            const select = document.getElementById('locPlaca');
+            const placa = select.value;
+            if (placa) {
+                const veiculo = db.veiculos.find(v => v.placa === placa);
+                if (veiculo) {
+                    document.getElementById('locFabModelo').value = veiculo.fabricante;
+                    document.getElementById('locCor').value = veiculo.cor;
+                    document.getElementById('locVeiculo').value = veiculo.fabricante;
+                    document.getElementById('locAnoFabr').value = veiculo.anoFabr;
+                    document.getElementById('locAnoModel').value = veiculo.anoModel;
+                    document.getElementById('locCaucao').value = veiculo.caucao || 'R$ 0,00';
+                    document.getElementById('locValorAluguel').value = veiculo.aluguel || 'R$ 0,00';
+                    document.getElementById('locProprietario').value = veiculo.proprietario || '';
+                    document.getElementById('locCpfPropr').value = veiculo.cpfPropr || '';
+                }
+            } else {
+                limparCamposVeiculoLocacao();
+            }
+        }
+
+        function limparCamposVeiculoLocacao() {
+            document.getElementById('locFabModelo').value = '';
+            document.getElementById('locCor').value = '';
+            document.getElementById('locAnoFabr').value = '';
+            document.getElementById('locAnoModel').value = '';
+            document.getElementById('locCaucao').value = '';
+            document.getElementById('locValorAluguel').value = '';
+            document.getElementById('locProprietario').value = '';
+            document.getElementById('locCpfPropr').value = '';
+        }
+
+        function calcularDataFim() {
+            const dataInicio = document.getElementById('locDataInicio').value;
+            if (dataInicio) {
+                const data = new Date(dataInicio);
+                data.setMonth(data.getMonth() + 6);
+                const dataFim = data.toISOString().split('T')[0];
+                document.getElementById('locDataFim').value = dataFim;
+            } else {
+                document.getElementById('locDataFim').value = '';
+            }
+        }
+
+        function salvarLocacao() {
+            const locatario = document.getElementById('locLocatario').value;
+            const veiculo = document.getElementById('locVeiculo').value;
+            const placa = document.getElementById('locPlaca').value;
+            const dataInicio = document.getElementById('locDataInicio').value;
+            const dataFim = document.getElementById('locDataFim').value;
+            const fabModelo = document.getElementById('locFabModelo').value;
+            const cor = document.getElementById('locCor').value;
+            const anoFabr = document.getElementById('locAnoFabr').value;
+            const anoModel = document.getElementById('locAnoModel').value;
+            const caucao = document.getElementById('locCaucao').value;
+            const valorAluguel = document.getElementById('locValorAluguel').value;
+            const proprietario = document.getElementById('locProprietario').value;
+            const cpfPropr = document.getElementById('locCpfPropr').value;
+            const pagCaucao = document.getElementById('locPagCaucao').value;
+
+            if (!locatario || !veiculo || !placa || !dataInicio) {
+                alert('Preencha todos os campos obrigatórios: Locatário, Veículo, Placa e Data Início!');
+                return;
+            }
+
+            const locacao = {
+                locatario,
+                veiculo,
+                placa,
+                dataInicio,
+                dataFim,
+                fabModelo,
+                cor,
+                anoFabr,
+                anoModel,
+                caucao,
+                valorAluguel,
+                proprietario,
+                cpfPropr,
+                pagCaucao
+            };
+            db.locacoes.push(locacao);
+            atualizarTabelaLocacoes();
+            criarUsuarioLocatario(locacao);
+            criarAlugueisParaLocacao(locacao);
+            
+            const valorStr = valorAluguel.replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorNum = parseFloat(valorStr) || 0;
+            
+            if (valorNum > 0) {
+                const hoje = new Date().toISOString().split('T')[0];
+                const entrada = {
+                    data: hoje,
+                    descricao: `Locação - ${locatario} - ${placa}`,
+                    categoria: 'Locação de Veículos',
+                    valor: valorAluguel,
+                    tipo: 'entrada'
+                };
+                db.fluxoCaixa.push(entrada);
+                atualizarTabelaFluxoCaixa();
+                atualizarResumoFinanceiro();
+            }
+
+            limparCamposLocacao();
+            atualizarTabelaAlugueis();
+            registrarAuditoria('Cadastro', `Locação: ${locatario} - ${placa}`);
+            alert('Locação salva com sucesso! Lançamento adicionado ao Fluxo de Caixa.');
+        }
+
+        function criarAlugueisParaLocacao(locacao) {
+            const existe = db.alugueis.some(a => 
+                a.locatario === locacao.locatario && 
+                a.placa === locacao.placa && 
+                a.dataContrato === locacao.dataInicio
+            );
+            
+            if (!existe) {
+                const dataContrato = new Date(locacao.dataInicio);
+                const dataVenc = new Date(dataContrato);
+                dataVenc.setDate(dataVenc.getDate() + 7);
+                
+                const novoAluguel = {
+                    locatario: locacao.locatario,
+                    dataContrato: locacao.dataInicio,
+                    placa: locacao.placa,
+                    valorAluguel: locacao.valorAluguel,
+                    dataVencimento: dataVenc.toISOString().split('T')[0],
+                    status: 'Pendente',
+                    parcela: 1,
+                    contratoId: locacao.dataInicio + locacao.placa
+                };
+                db.alugueis.push(novoAluguel);
+            }
+        }
+
+        function criarUsuarioLocatario(locacao) {
+            const nomeLocatario = locacao.locatario.trim();
+            if (!nomeLocatario) return;
+
+            const primeiroNome = nomeLocatario.split(/\s+/)[0].toUpperCase();
+
+            const cliente = db.clientes.find(c => c.nome.toLowerCase() === nomeLocatario.toLowerCase());
+            if (!cliente) {
+                console.warn('Cliente não encontrado para criar usuário:', nomeLocatario);
+                return;
+            }
+
+            const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
+            let senha = telefoneLimpo;
+
+            if (telefoneLimpo.length >= 10) {
+                senha = telefoneLimpo.substring(2);
+            }
+            if (!senha) {
+                senha = '';
+            }
+
+            if (db.usuarios.some(u => u.nome === primeiroNome)) {
+                console.log('Usuário já existe:', primeiroNome);
+                return;
+            }
+
+            const novoUsuario = {
+                nome: primeiroNome,
+                senha: senha,
+                tipo: 'MOTORISTA',
+                permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA))
+            };
+
+            db.usuarios.push(novoUsuario);
+            atualizarTabelaUsuario();
+            registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
+        }
+
+        function atualizarTabelaLocacoes() {
+            const tbody = document.querySelector('#tabelaLocacoes tbody');
+            tbody.innerHTML = '';
+            db.locacoes.forEach((l, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${l.valorAluguel}</td>
+                    <td><button class="btn-warning" onclick="editarLocacao(${index})">✏️</button><button class="btn-danger" onclick="excluirLocacao(${index})">🗑️</button></td>`;
+            });
+        }
+        function editarLocacao(index) {
+            const l = db.locacoes[index];
+            document.getElementById('locLocatario').value = l.locatario;
+            document.getElementById('locVeiculo').value = l.veiculo;
+            document.getElementById('locDataInicio').value = l.dataInicio;
+            document.getElementById('locDataFim').value = l.dataFim;
+            document.getElementById('locFabModelo').value = l.fabModelo;
+            document.getElementById('locCor').value = l.cor;
+            document.getElementById('locPlaca').value = l.placa;
+            document.getElementById('locAnoFabr').value = l.anoFabr;
+            document.getElementById('locAnoModel').value = l.anoModel;
+            document.getElementById('locCaucao').value = l.caucao;
+            document.getElementById('locValorAluguel').value = l.valorAluguel;
+            document.getElementById('locProprietario').value = l.proprietario;
+            document.getElementById('locCpfPropr').value = l.cpfPropr;
+            document.getElementById('locPagCaucao').value = l.pagCaucao;
+            db.locacoes.splice(index, 1);
+            atualizarTabelaLocacoes();
+            registrarAuditoria('Edição', `Locação editada: ${l.locatario}`);
+        }
+        function excluirLocacao(index) {
+            if (confirm('Excluir locação?')) {
+                const l = db.locacoes[index];
+                db.locacoes.splice(index, 1);
+                atualizarTabelaLocacoes();
+                registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario}`);
+            }
+        }
+        function limparCamposLocacao() {
+            document.getElementById('locLocatario').value = '';
+            document.getElementById('locVeiculo').value = '';
+            document.getElementById('locDataInicio').value = '';
+            document.getElementById('locDataFim').value = '';
+            document.getElementById('locFabModelo').value = '';
+            document.getElementById('locCor').value = '';
+            document.getElementById('locPlaca').value = '';
+            document.getElementById('locAnoFabr').value = '';
+            document.getElementById('locAnoModel').value = '';
+            document.getElementById('locCaucao').value = '';
+            document.getElementById('locValorAluguel').value = '';
+            document.getElementById('locProprietario').value = '';
+            document.getElementById('locCpfPropr').value = '';
+            document.getElementById('locPagCaucao').value = 'avista';
+        }
+        function gerarContrato() {
+            alert('📄 Contrato gerado!');
+            registrarAuditoria('Cadastro', 'Contrato gerado');
+        }
+
+        function salvarVeiculo() {
+            const veiculo = {
+                fabricante: document.getElementById('veicFabricante').value,
+                cor: document.getElementById('veicCor').value,
+                placa: document.getElementById('veicPlaca').value,
+                motor: document.getElementById('veicMotor').value,
+                cambio: document.getElementById('veicCambio').value,
+                anoFabr: document.getElementById('veicAnoFabr').value,
+                anoModel: document.getElementById('veicAnoModel').value,
+                km: document.getElementById('veicKm').value,
+                renavan: document.getElementById('veicRenavan').value,
+                chassi: document.getElementById('veicChassi').value,
+                fipe: document.getElementById('veicFipe').value,
+                caucao: document.getElementById('veicCaucao').value,
+                aluguel: document.getElementById('veicAluguel').value,
+                proprietario: document.getElementById('veicProprietario').value,
+                cpfPropr: document.getElementById('veicCpfPropr').value
+            };
+            db.veiculos.push(veiculo);
+            atualizarTabelaVeiculos();
+            atualizarPermissoesVeiculos();
+            atualizarCombosLocacao();
+            if (usuarioLogado && usuarioLogado.tipo !== 'ADM') {
+                const check = document.getElementById(`perm_veiculo_${veiculo.placa}`);
+                if (check) check.checked = false;
+            }
+            registrarAuditoria('Cadastro', `Novo veículo: ${veiculo.fabricante} - ${veiculo.placa}`);
+            alert('Veículo salvo!');
+            limparCamposVeiculo();
+            
+            // Focar no primeiro campo após salvar
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formVeiculos .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function atualizarTabelaVeiculos() {
+            const tbody = document.querySelector('#tabelaVeiculos tbody');
+            tbody.innerHTML = '';
+            const veiculosFiltrados = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
+            veiculosFiltrados.forEach((v, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${v.fabricante}</td><td>${v.placa}</td><td>${v.cor}</td>
+                    <td>${v.anoFabr}/${v.anoModel}</td><td>${v.aluguel}</td>
+                    <td>
+                        <button class="btn-warning" data-permissao="veiculos_editar" onclick="editarVeiculo(${index})">✏️</button>
+                        <button class="btn-danger" data-permissao="veiculos_excluir" onclick="excluirVeiculo(${index})">🗑️</button>
+                    </td>`;
+            });
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+        function editarVeiculo(index) {
+            const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
+            const v = veiculosPermitidos[index];
+            if (!v) return;
+            document.getElementById('veicFabricante').value = v.fabricante;
+            document.getElementById('veicCor').value = v.cor;
+            document.getElementById('veicPlaca').value = v.placa;
+            document.getElementById('veicMotor').value = v.motor;
+            document.getElementById('veicCambio').value = v.cambio;
+            document.getElementById('veicAnoFabr').value = v.anoFabr;
+            document.getElementById('veicAnoModel').value = v.anoModel;
+            document.getElementById('veicKm').value = v.km;
+            document.getElementById('veicRenavan').value = v.renavan;
+            document.getElementById('veicChassi').value = v.chassi;
+            document.getElementById('veicFipe').value = v.fipe;
+            document.getElementById('veicCaucao').value = v.caucao;
+            document.getElementById('veicAluguel').value = v.aluguel;
+            document.getElementById('veicProprietario').value = v.proprietario;
+            document.getElementById('veicCpfPropr').value = v.cpfPropr;
+            const originalIndex = db.veiculos.indexOf(v);
+            if (originalIndex > -1) db.veiculos.splice(originalIndex, 1);
+            atualizarTabelaVeiculos();
+            atualizarCombosLocacao();
+            registrarAuditoria('Edição', `Veículo editado: ${v.fabricante} - ${v.placa}`);
+        }
+        function excluirVeiculo(index) {
+            const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
+            const v = veiculosPermitidos[index];
+            if (!v) return;
+            if (confirm(`Excluir veículo ${v.placa}?`)) {
+                const originalIndex = db.veiculos.indexOf(v);
+                if (originalIndex > -1) db.veiculos.splice(originalIndex, 1);
+                atualizarTabelaVeiculos();
+                atualizarPermissoesVeiculos();
+                atualizarCombosLocacao();
+                registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
+            }
+        }
+        function limparCamposVeiculo() {
+            ['veicFabricante','veicCor','veicPlaca','veicMotor','veicCambio','veicAnoFabr','veicAnoModel','veicKm','veicRenavan','veicChassi','veicFipe','veicCaucao','veicAluguel','veicProprietario','veicCpfPropr'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function salvarCliente() {
+            const cliente = {
+                dataCadastro: document.getElementById('cliDataCadastro').value,
+                nome: document.getElementById('cliNome').value,
+                cpf: document.getElementById('cliCpf').value,
+                rg: document.getElementById('cliRg').value,
+                cnh: document.getElementById('cliCnh').value,
+                dataCnh: document.getElementById('cliDataCnh').value,
+                telefone: document.getElementById('cliTelefone').value,
+                endereco: document.getElementById('cliEndereco').value,
+                cep: document.getElementById('cliCep').value,
+                cidade: document.getElementById('cliCidade').value,
+                estado: document.getElementById('cliEstado').value
+            };
+            db.clientes.push(cliente);
+            atualizarTabelaClientes();
+            atualizarCombosLocacao();
+            registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
+            alert('Cliente salvo!');
+            limparCamposCliente();
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formClientes .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function atualizarTabelaClientes() {
+            const tbody = document.querySelector('#tabelaClientes tbody');
+            tbody.innerHTML = '';
+            db.clientes.forEach((c, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${c.nome}</td><td>${c.cpf}</td><td>${c.telefone}</td><td>${c.cidade}</td>
+                    <td><button class="btn-warning" onclick="editarCliente(${index})">✏️</button><button class="btn-danger" onclick="excluirCliente(${index})">🗑️</button></td>`;
+            });
+        }
+        function editarCliente(index) {
+            const c = db.clientes[index];
+            document.getElementById('cliDataCadastro').value = c.dataCadastro;
+            document.getElementById('cliNome').value = c.nome;
+            document.getElementById('cliCpf').value = c.cpf;
+            document.getElementById('cliRg').value = c.rg;
+            document.getElementById('cliCnh').value = c.cnh;
+            document.getElementById('cliDataCnh').value = c.dataCnh;
+            document.getElementById('cliTelefone').value = c.telefone;
+            document.getElementById('cliEndereco').value = c.endereco;
+            document.getElementById('cliCep').value = c.cep;
+            document.getElementById('cliCidade').value = c.cidade;
+            document.getElementById('cliEstado').value = c.estado;
+            db.clientes.splice(index, 1);
+            atualizarTabelaClientes();
+            atualizarCombosLocacao();
+            registrarAuditoria('Edição', `Cliente editado: ${c.nome}`);
+        }
+        function excluirCliente(index) {
+            if (confirm('Excluir cliente?')) {
+                const c = db.clientes[index];
+                db.clientes.splice(index, 1);
+                atualizarTabelaClientes();
+                atualizarCombosLocacao();
+                registrarAuditoria('Exclusão', `Cliente excluído: ${c.nome}`);
+            }
+        }
+        function limparCamposCliente() {
+            ['cliDataCadastro','cliNome','cliCpf','cliRg','cliCnh','cliDataCnh','cliTelefone','cliEndereco','cliCep','cliCidade','cliEstado'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function atualizarTabelaAlugueis() {
+            const tbody = document.querySelector('#tabelaPagamentos tbody');
+            tbody.innerHTML = '';
+            
+            db.locacoes.forEach(locacao => {
+                const existe = db.alugueis.some(a => 
+                    a.locatario === locacao.locatario && 
+                    a.placa === locacao.placa && 
+                    a.dataContrato === locacao.dataInicio
+                );
+                if (!existe) {
+                    criarAlugueisParaLocacao(locacao);
+                }
+            });
+            
+            db.alugueis.forEach((a, index) => {
+                const row = tbody.insertRow();
+                let statusClass = a.status === 'Pendente' ? 'status-pendente' : 
+                                 a.status === 'Pago' ? 'status-pago' : 'status-atrasado';
+                
+                const hoje = new Date();
+                const vencimento = new Date(a.dataVencimento);
+                if (a.status === 'Pendente' && vencimento < hoje) {
+                    statusClass = 'status-atrasado';
+                }
+                
+                row.innerHTML = `
+                    <td>${a.locatario}</td>
+                    <td>${formatarDataBR(a.dataContrato)}</td>
+                    <td>${a.placa}</td>
+                    <td>${a.valorAluguel}</td>
+                    <td>${formatarDataBR(a.dataVencimento)}</td>
+                    <td><span class="${statusClass}">${a.status}</span></td>
+                    <td>
+                        <button class="btn-success" data-permissao="pagamentos_acoes" onclick="marcarComoPago(${index})">✓ Pago</button>
+                        <button class="btn-danger" data-permissao="pagamentos_acoes" onclick="excluirAluguel(${index})">🗑️</button>
+                    </td>
+                `;
+            });
+            
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function marcarComoPago(index) {
+            if (!confirm('Confirmar pagamento?')) return;
+            
+            const aluguel = db.alugueis[index];
+            if (!aluguel) return;
+            
+            aluguel.status = 'Pago';
+            
+            const dataVencAtual = new Date(aluguel.dataVencimento);
+            const proximaDataVenc = new Date(dataVencAtual);
+            proximaDataVenc.setDate(proximaDataVenc.getDate() + 7);
+            
+            const locacao = db.locacoes.find(l => 
+                l.locatario === aluguel.locatario && 
+                l.placa === aluguel.placa
+            );
+            
+            const novoAluguel = {
+                locatario: aluguel.locatario,
+                dataContrato: aluguel.dataContrato,
+                placa: aluguel.placa,
+                valorAluguel: aluguel.valorAluguel,
+                dataVencimento: proximaDataVenc.toISOString().split('T')[0],
+                status: 'Pendente',
+                parcela: (aluguel.parcela || 1) + 1,
+                contratoId: aluguel.contratoId
+            };
+            
+            const jaExiste = db.alugueis.some(a => 
+                a.locatario === novoAluguel.locatario && 
+                a.placa === novoAluguel.placa && 
+                a.dataVencimento === novoAluguel.dataVencimento
+            );
+            
+            if (!jaExiste) {
+                db.alugueis.push(novoAluguel);
+            }
+            
+            registrarAuditoria('Edição', `Aluguel pago: ${aluguel.locatario} - Parcela ${aluguel.parcela || 1}`);
+            atualizarTabelaAlugueis();
+            alert('Pagamento confirmado! Próximo vencimento gerado para ' + formatarDataBR(novoAluguel.dataVencimento));
+        }
+
+        function excluirAluguel(index) {
+            if (confirm('Excluir este aluguel?')) {
+                const a = db.alugueis[index];
+                db.alugueis.splice(index, 1);
+                atualizarTabelaAlugueis();
+                registrarAuditoria('Exclusão', `Aluguel excluído: ${a.locatario}`);
+            }
+        }
+
+        function salvarManutencao() {
+            const m = {
+                veiculo: document.getElementById('manVeiculo').value,
+                placa: document.getElementById('manPlaca').value,
+                km: document.getElementById('manKm').value,
+                tipo: document.getElementById('manTipo').value,
+                data: document.getElementById('manData').value,
+                obs: document.getElementById('manObs').value
+            };
+            db.manutencao.push(m);
+            atualizarTabelaManutencao();
+            registrarAuditoria('Cadastro', `Manutenção: ${m.veiculo}`);
+            alert('Manutenção salva!');
+            limparCamposManutencao();
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formManutencao .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function limparCamposManutencao() {
+            ['manVeiculo','manPlaca','manKm','manTipo','manData','manObs'].forEach(id => document.getElementById(id).value = '');
+        }
+        function atualizarTabelaManutencao() {
+            const tbody = document.querySelector('#tabelaManutencao tbody');
+            tbody.innerHTML = '';
+            db.manutencao.forEach((m, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${m.veiculo}</td><td>${m.placa}</td><td>${m.tipo}</td><td>${formatarDataBR(m.data)}</td>
+                    <td><button class="btn-warning" onclick="editarManutencao(${index})">✏️</button><button class="btn-danger" onclick="excluirManutencao(${index})">🗑️</button></td>`;
+            });
+        }
+        function editarManutencao(index) {
+            const m = db.manutencao[index];
+            document.getElementById('manVeiculo').value = m.veiculo;
+            document.getElementById('manPlaca').value = m.placa;
+            document.getElementById('manKm').value = m.km;
+            document.getElementById('manTipo').value = m.tipo;
+            document.getElementById('manData').value = m.data;
+            document.getElementById('manObs').value = m.obs;
+            db.manutencao.splice(index, 1);
+            atualizarTabelaManutencao();
+            registrarAuditoria('Edição', `Manutenção editada: ${m.veiculo}`);
+        }
+        function excluirManutencao(index) {
+            if (confirm('Excluir manutenção?')) {
+                const m = db.manutencao[index];
+                db.manutencao.splice(index, 1);
+                atualizarTabelaManutencao();
+                registrarAuditoria('Exclusão', `Manutenção excluída: ${m.veiculo}`);
+            }
+        }
+
+        function salvarMecanico() {
+            const m = {
+                data: document.getElementById('mecData').value,
+                oficina: document.getElementById('mecOficina').value,
+                servico: document.getElementById('mecServico').value,
+                responsavel: document.getElementById('mecResponsavel').value,
+                carro: document.getElementById('mecCarro').value,
+                placa: document.getElementById('mecPlaca').value,
+                valor: document.getElementById('mecValor').value,
+                obs: document.getElementById('mecObs').value
+            };
+            db.mecanico.push(m);
+            atualizarTabelaMecanico();
+            registrarAuditoria('Cadastro', `Serviço mecânico: ${m.servico}`);
+            alert('Serviço salvo!');
+            limparCamposMecanico();
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formMecanico .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function limparCamposMecanico() {
+            ['mecData','mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => document.getElementById(id).value = '');
+        }
+        function atualizarTabelaMecanico() {
+            const tbody = document.querySelector('#tabelaMecanico tbody');
+            tbody.innerHTML = '';
+            db.mecanico.forEach((m, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${formatarDataBR(m.data)}</td><td>${m.oficina}</td><td>${m.servico}</td><td>${m.carro}</td><td>${m.valor}</td>
+                    <td><button class="btn-warning" onclick="editarMecanico(${index})">✏️</button><button class="btn-danger" onclick="excluirMecanico(${index})">🗑️</button></td>`;
+            });
+        }
+        function editarMecanico(index) {
+            const m = db.mecanico[index];
+            document.getElementById('mecData').value = m.data;
+            document.getElementById('mecOficina').value = m.oficina;
+            document.getElementById('mecServico').value = m.servico;
+            document.getElementById('mecResponsavel').value = m.responsavel;
+            document.getElementById('mecCarro').value = m.carro;
+            document.getElementById('mecPlaca').value = m.placa;
+            document.getElementById('mecValor').value = m.valor;
+            document.getElementById('mecObs').value = m.obs;
+            db.mecanico.splice(index, 1);
+            atualizarTabelaMecanico();
+            registrarAuditoria('Edição', `Serviço editado: ${m.servico}`);
+        }
+        function excluirMecanico(index) {
+            if (confirm('Excluir serviço?')) {
+                const m = db.mecanico[index];
+                db.mecanico.splice(index, 1);
+                atualizarTabelaMecanico();
+                registrarAuditoria('Exclusão', `Serviço excluído: ${m.servico}`);
+            }
+        }
+
+        function salvarUsuario() {
+            const nome = document.getElementById('userNome').value.trim().toUpperCase();
+            const senha = document.getElementById('userSenha').value;
+            const tipo = document.getElementById('userTipo').value;
+            const permissoes = coletarPermissoes();
+            if (!nome || !senha) { alert('Preencha nome e senha!'); return; }
+            if (db.usuarios.some(u => u.nome === nome)) { alert('Usuário já existe!'); return; }
+            db.usuarios.push({ nome, senha, tipo, permissoes });
+            atualizarTabelaUsuario();
+            registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
+            alert('Usuário salvo!');
+            limparCamposUsuario();
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formUsuario .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function atualizarTabelaUsuario() {
+            const tbody = document.querySelector('#tabelaUsuario tbody');
+            tbody.innerHTML = '';
+            db.usuarios.forEach((u, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${u.nome}</td><td>${u.tipo}</td>
+                    <td><button class="btn-warning" onclick="editarUsuario(${index})">✏️</button><button class="btn-danger" onclick="excluirUsuario(${index})">🗑️</button></td>`;
+            });
+        }
+        function editarUsuario(index) {
+            if (index === undefined) { alert('Selecione um usuário!'); return; }
+            const u = db.usuarios[index];
+            document.getElementById('userNome').value = u.nome;
+            document.getElementById('userSenha').value = u.senha;
+            document.getElementById('userTipo').value = u.tipo;
+            todasAbas.forEach(aba => {
+                const check = document.getElementById(`perm_aba_${aba.id}`);
+                if (check) check.checked = u.permissoes.abas[aba.id] || false;
+            });
+            Object.values(todosBotoes).flat().forEach(b => {
+                const check = document.getElementById(`perm_botao_${b.id}`);
+                if (check) check.checked = u.permissoes.botoes[b.id] || false;
+            });
+            db.veiculos.forEach(v => {
+                const check = document.getElementById(`perm_veiculo_${v.placa}`);
+                if (check) check.checked = u.permissoes.veiculos[v.placa] || false;
+            });
+            db.usuarios.splice(index, 1);
+            atualizarTabelaUsuario();
+            registrarAuditoria('Edição', `Usuário editado: ${u.nome}`);
+        }
+        function excluirUsuario(index) {
+            if (index === undefined) { alert('Selecione um usuário!'); return; }
+            const u = db.usuarios[index];
+            if (u.nome === 'SERGIO') { alert('Não pode excluir admin principal!'); return; }
+            if (confirm(`Excluir usuário ${u.nome}?`)) {
+                db.usuarios.splice(index, 1);
+                atualizarTabelaUsuario();
+                registrarAuditoria('Exclusão', `Usuário excluído: ${u.nome}`);
+            }
+        }
+        function limparCamposUsuario() {
+            document.getElementById('userNome').value = '';
+            document.getElementById('userSenha').value = '';
+            document.getElementById('userTipo').value = 'ADM';
+            preencherPermissoesPadrao();
+        }
+
+        function salvarBanco() {
+            const banco = {
+                nome: document.getElementById('bancoNome').value,
+                agencia: document.getElementById('bancoAgencia').value,
+                conta: document.getElementById('bancoConta').value,
+                pix: document.getElementById('bancoPix').value,
+                titular: document.getElementById('bancoTitular').value
+            };
+            db.bancos.push(banco);
+            atualizarTabelaBancos();
+            limparCamposBanco();
+            registrarAuditoria('Cadastro', 'Banco salvo');
+            alert('Banco salvo!');
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formBanco .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function editarBanco(index) {
+            if (index === undefined) { alert('Selecione um banco!'); return; }
+            const b = db.bancos[index];
+            document.getElementById('bancoNome').value = b.nome;
+            document.getElementById('bancoAgencia').value = b.agencia;
+            document.getElementById('bancoConta').value = b.conta;
+            document.getElementById('bancoPix').value = b.pix;
+            document.getElementById('bancoTitular').value = b.titular;
+            db.bancos.splice(index, 1);
+            atualizarTabelaBancos();
+            registrarAuditoria('Edição', `Banco editado: ${b.nome}`);
+        }
+        function excluirBanco(index) {
+            if (confirm('Excluir banco?')) {
+                const b = db.bancos[index];
+                db.bancos.splice(index, 1);
+                atualizarTabelaBancos();
+                registrarAuditoria('Exclusão', `Banco excluído: ${b.nome}`);
+            }
+        }
+        function limparCamposBanco() {
+            ['bancoNome','bancoAgencia','bancoConta','bancoPix','bancoTitular'].forEach(id => document.getElementById(id).value = '');
+        }
+        function atualizarTabelaBancos() {
+            const tbody = document.querySelector('#tabelaBancos tbody');
+            tbody.innerHTML = '';
+            db.bancos.forEach((b, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${b.nome}</td><td>${b.agencia}</td><td>${b.conta}</td><td>${b.pix}</td><td>${b.titular}</td>
+                    <td>
+                        <button class="btn-copy" data-permissao="banco_copiar" onclick="copiarPix(${index})">📋 Copiar PIX</button>
+                        <button class="btn-warning" data-permissao="banco_editar" onclick="editarBanco(${index})">✏️</button>
+                        <button class="btn-danger" data-permissao="banco_excluir" onclick="excluirBanco(${index})">🗑️</button>
+                    </td>`;
+            });
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function salvarFluxoCaixa() {
+            const f = {
+                data: document.getElementById('fcData').value,
+                descricao: document.getElementById('fcDescricao').value,
+                categoria: document.getElementById('fcCategoria').value,
+                valor: document.getElementById('fcValor').value,
+                tipo: document.getElementById('fcTipo').value
+            };
+            db.fluxoCaixa.push(f);
+            atualizarTabelaFluxoCaixa();
+            atualizarResumoFinanceiro();
+            registrarAuditoria('Cadastro', `Lançamento: ${f.descricao}`);
+            alert('Lançamento salvo!');
+            limparCamposFluxoCaixa();
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formFluxoCaixa .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function atualizarTabelaFluxoCaixa() {
+            const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
+            tbody.innerHTML = '';
+            db.fluxoCaixa.forEach((f, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${f.descricao}</td><td>${f.categoria}</td><td>${f.valor}</td><td>${f.tipo}</td>
+                    <td><button class="btn-warning" onclick="editarFluxoCaixa(${index})">✏️</button><button class="btn-danger" onclick="excluirFluxoCaixa(${index})">🗑️</button></td>`;
+            });
+        }
+        function editarFluxoCaixa(index) {
+            const f = db.fluxoCaixa[index];
+            document.getElementById('fcData').value = f.data;
+            document.getElementById('fcDescricao').value = f.descricao;
+            document.getElementById('fcCategoria').value = f.categoria;
+            document.getElementById('fcValor').value = f.valor;
+            document.getElementById('fcTipo').value = f.tipo;
+            db.fluxoCaixa.splice(index, 1);
+            atualizarTabelaFluxoCaixa();
+            atualizarResumoFinanceiro();
+            registrarAuditoria('Edição', `Lançamento editado: ${f.descricao}`);
+        }
+        function excluirFluxoCaixa(index) {
+            if (confirm('Excluir lançamento?')) {
+                const f = db.fluxoCaixa[index];
+                db.fluxoCaixa.splice(index, 1);
+                atualizarTabelaFluxoCaixa();
+                atualizarResumoFinanceiro();
+                registrarAuditoria('Exclusão', `Lançamento excluído: ${f.descricao}`);
+            }
+        }
+        function limparCamposFluxoCaixa() {
+            document.getElementById('fcData').value = '';
+            document.getElementById('fcDescricao').value = '';
+            document.getElementById('fcCategoria').value = '';
+            document.getElementById('fcValor').value = '';
+            document.getElementById('fcTipo').value = 'entrada';
+        }
+        function atualizarResumoFinanceiro() {
+            let entradas = 0, saidas = 0;
+            db.fluxoCaixa.forEach(f => {
+                const valor = parseFloat(f.valor.replace('R$ ','').replace('.','').replace(',','.')) || 0;
+                if (f.tipo === 'entrada') entradas += valor; else saidas += valor;
+            });
+            document.getElementById('totalEntradas').textContent = 'R$ ' + entradas.toFixed(2).replace('.', ',');
+            document.getElementById('totalSaidas').textContent = 'R$ ' + saidas.toFixed(2).replace('.', ',');
+            document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
+        }
+
+        function salvarDoc() {
+            const d = {
+                nome: document.getElementById('docNome').value,
+                tipo: document.getElementById('docTipo').value,
+                data: document.getElementById('docData').value,
+                referencia: document.getElementById('docReferencia').value,
+                obs: document.getElementById('docObs').value
+            };
+            db.documentos.push(d);
+            atualizarTabelaDoc();
+            registrarAuditoria('Cadastro', `Documento: ${d.nome}`);
+            alert('Documento salvo!');
+            limparCamposDoc();
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formDoc .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function uploadDoc() { alert('Upload iniciado...'); registrarAuditoria('Cadastro', 'Upload doc'); }
+        function atualizarTabelaDoc() {
+            const tbody = document.querySelector('#tabelaDoc tbody');
+            tbody.innerHTML = '';
+            db.documentos.forEach((d, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${d.nome}</td><td>${d.tipo}</td><td>${formatarDataBR(d.data)}</td><td>${d.referencia}</td>
+                    <td><button class="btn-warning" onclick="editarDoc(${index})">✏️</button><button class="btn-danger" onclick="excluirDoc(${index})">🗑️</button></td>`;
+            });
+        }
+        function editarDoc(index) {
+            const d = db.documentos[index];
+            document.getElementById('docNome').value = d.nome;
+            document.getElementById('docTipo').value = d.tipo;
+            document.getElementById('docData').value = d.data;
+            document.getElementById('docReferencia').value = d.referencia;
+            document.getElementById('docObs').value = d.obs;
+            db.documentos.splice(index, 1);
+            atualizarTabelaDoc();
+            registrarAuditoria('Edição', `Doc editado: ${d.nome}`);
+        }
+        function excluirDoc(index) {
+            if (confirm('Excluir documento?')) {
+                const d = db.documentos[index];
+                db.documentos.splice(index, 1);
+                atualizarTabelaDoc();
+                registrarAuditoria('Exclusão', `Doc excluído: ${d.nome}`);
+            }
+        }
+        function limparCamposDoc() {
+            ['docNome','docTipo','docData','docReferencia','docObs'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        // =============================================
+        // FUNÇÕES DA ABA COMPRAS
+        // =============================================
+        function salvarCompra() {
+            const compra = {
+                data: document.getElementById('compData').value,
+                produto: document.getElementById('compProduto').value,
+                fornecedor: document.getElementById('compFornecedor').value,
+                cnpjFornecedor: document.getElementById('compCnpjFornecedor').value,
+                quantidade: document.getElementById('compQuantidade').value,
+                valorUnitario: document.getElementById('compValorUnitario').value,
+                valorTotal: document.getElementById('compValorTotal').value,
+                formaPagamento: document.getElementById('compFormaPagamento').value,
+                status: document.getElementById('compStatus').value,
+                categoria: document.getElementById('compCategoria').value,
+                obs: document.getElementById('compObs').value
+            };
+
+            if (!compra.data || !compra.produto || !compra.fornecedor) {
+                alert('Preencha os campos obrigatórios: Data, Produto e Fornecedor!');
+                return;
+            }
+
+            if (compraEditandoIndex !== null) {
+                db.compras[compraEditandoIndex] = compra;
+                compraEditandoIndex = null;
+                registrarAuditoria('Edição', `Compra editada: ${compra.produto}`);
+                alert('Compra atualizada com sucesso!');
+            } else {
+                db.compras.push(compra);
+                registrarAuditoria('Cadastro', `Nova compra: ${compra.produto}`);
+                alert('Compra salva com sucesso!');
+            }
+
+            // Adicionar ao fluxo de caixa como saída
+            const valorTotalStr = compra.valorTotal.replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorTotalNum = parseFloat(valorTotalStr) || 0;
+            if (valorTotalNum > 0 && compra.status !== 'cancelado') {
+                const saida = {
+                    data: compra.data,
+                    descricao: `Compra - ${compra.produto}`,
+                    categoria: compra.categoria || 'Compras',
+                    valor: compra.valorTotal,
+                    tipo: 'saida'
+                };
+                db.fluxoCaixa.push(saida);
+                atualizarTabelaFluxoCaixa();
+                atualizarResumoFinanceiro();
+            }
+
+            atualizarTabelaCompras();
+            limparCamposCompra();
+        }
+
+        function editarCompra() {
+            const index = compraEditandoIndex;
+            if (index === null) {
+                alert('Selecione uma compra na tabela para editar!');
+                return;
+            }
+            salvarCompra();
+        }
+
+        function excluirCompra() {
+            const index = compraEditandoIndex;
+            if (index === null) {
+                alert('Selecione uma compra na tabela para excluir!');
+                return;
+            }
+            if (confirm('Excluir esta compra?')) {
+                const compra = db.compras[index];
+                db.compras.splice(index, 1);
+                compraEditandoIndex = null;
+                atualizarTabelaCompras();
+                limparCamposCompra();
+                registrarAuditoria('Exclusão', `Compra excluída: ${compra.produto}`);
+                alert('Compra excluída!');
+            }
+        }
+
+        function limparCamposCompra() {
+            document.getElementById('compData').value = '';
+            document.getElementById('compProduto').value = '';
+            document.getElementById('compFornecedor').value = '';
+            document.getElementById('compCnpjFornecedor').value = '';
+            document.getElementById('compQuantidade').value = '';
+            document.getElementById('compValorUnitario').value = '';
+            document.getElementById('compValorTotal').value = '';
+            document.getElementById('compFormaPagamento').value = 'dinheiro';
+            document.getElementById('compStatus').value = 'pendente';
+            document.getElementById('compCategoria').value = '';
+            document.getElementById('compObs').value = '';
+            compraEditandoIndex = null;
+        }
+
+        function atualizarTabelaCompras() {
+            const tbody = document.querySelector('#tabelaCompras tbody');
+            tbody.innerHTML = '';
+            db.compras.forEach((c, index) => {
+                const row = tbody.insertRow();
+                const statusClass = c.status === 'pago' ? 'status-pago' : 
+                                   c.status === 'cancelado' ? 'status-atrasado' : 'status-pendente';
+                const statusLabel = c.status === 'pago' ? 'Pago' : 
+                                   c.status === 'cancelado' ? 'Cancelado' : 'Pendente';
+                row.innerHTML = `
+                    <td>${formatarDataBR(c.data)}</td>
+                    <td>${c.produto}</td>
+                    <td>${c.fornecedor}</td>
+                    <td>${c.valorTotal}</td>
+                    <td><span class="${statusClass}">${statusLabel}</span></td>
+                    <td>
+                        <button class="btn-warning" onclick="carregarCompraParaEdicao(${index})">✏️</button>
+                        <button class="btn-danger" onclick="excluirCompraDireto(${index})">🗑️</button>
+                    </td>
+                `;
+            });
+        }
+
+        function carregarCompraParaEdicao(index) {
+            const c = db.compras[index];
+            document.getElementById('compData').value = c.data;
+            document.getElementById('compProduto').value = c.produto;
+            document.getElementById('compFornecedor').value = c.fornecedor;
+            document.getElementById('compCnpjFornecedor').value = c.cnpjFornecedor || '';
+            document.getElementById('compQuantidade').value = c.quantidade;
+            document.getElementById('compValorUnitario').value = c.valorUnitario;
+            document.getElementById('compValorTotal').value = c.valorTotal;
+            document.getElementById('compFormaPagamento').value = c.formaPagamento || 'dinheiro';
+            document.getElementById('compStatus').value = c.status || 'pendente';
+            document.getElementById('compCategoria').value = c.categoria || '';
+            document.getElementById('compObs').value = c.obs || '';
+            compraEditandoIndex = index;
+            
+            // Rolar para o formulário
+            document.getElementById('formCompras').scrollIntoView({ behavior: 'smooth' });
+            
+            // Focar no primeiro campo
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formCompras .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 100);
+        }
+
+        function excluirCompraDireto(index) {
+            if (confirm('Excluir esta compra?')) {
+                const compra = db.compras[index];
+                db.compras.splice(index, 1);
+                if (compraEditandoIndex === index) compraEditandoIndex = null;
+                atualizarTabelaCompras();
+                registrarAuditoria('Exclusão', `Compra excluída: ${compra.produto}`);
+                alert('Compra excluída!');
+            }
+        }
+
+        // =============================================
+        // FUNÇÕES DE CONFIGURAÇÃO
+        // =============================================
+        function salvarConfiguracao() { 
+            alert('Configurações salvas!'); 
+            registrarAuditoria('Cadastro', 'Config salva');
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formConfig .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+        function restaurarPadroes() {
+            if (confirm('Restaurar padrões?')) {
+                document.getElementById('configEmpresa').value = 'PAIZÃO RENT A CAR';
+                document.getElementById('configCnpj').value = '';
+                document.getElementById('configTelefone').value = '';
+                document.getElementById('configEmail').value = '';
+                document.getElementById('configEndereco').value = '';
+                document.getElementById('configJuros').value = '';
+                document.getElementById('configMulta').value = '';
+                document.getElementById('configMinAluguel').value = '';
+                document.getElementById('configPrazoMax').value = '';
+                document.getElementById('configSenhaMin').value = '';
+                document.getElementById('configSessao').value = '';
+                document.getElementById('configBackup').value = 'sim';
+                registrarAuditoria('Edição', 'Config restaurada');
+                alert('Configurações restauradas!');
+            }
+        }
+
+        function registrarAuditoria(acao, descricao) {
+            const registro = {
+                data: new Date(),
+                usuario: usuarioLogado ? usuarioLogado.nome : 'SERGIO',
+                acao,
+                descricao,
+                ip: '192.168.1.1'
+            };
+            db.auditoria.push(registro);
+            atualizarTabelaAuditoria();
+        }
+        function atualizarTabelaAuditoria() {
+            const tbody = document.querySelector('#tabelaAuditoria tbody');
+            tbody.innerHTML = '';
+            db.auditoria.forEach(a => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${a.data.toLocaleString('pt-BR')}</td><td>${a.usuario}</td><td>${a.acao}</td><td>${a.descricao}</td><td>${a.ip}</td>`;
+            });
+        }
+        function aplicarFiltroAuditoria() {
+            const dataInicio = document.getElementById('audDataInicio').value;
+            const dataFim = document.getElementById('audDataFim').value;
+            const tipoAcao = document.getElementById('audTipoAcao').value;
+            document.querySelectorAll('#tabelaAuditoria tbody tr').forEach(row => {
+                const data = row.cells[0].textContent;
+                const acao = row.cells[2].textContent;
+                let show = true;
+                if (tipoAcao !== 'todas' && acao !== tipoAcao) show = false;
+                if (dataInicio && data < dataInicio) show = false;
+                if (dataFim && data > dataFim) show = false;
+                row.style.display = show ? '' : 'none';
+            });
+        }
+        function limparFiltroAuditoria() {
+            document.getElementById('audDataInicio').value = '';
+            document.getElementById('audDataFim').value = '';
+            document.getElementById('audTipoAcao').value = 'todas';
+            document.querySelectorAll('#tabelaAuditoria tbody tr').forEach(row => row.style.display = '');
+        }
+
+        // =============================================
+        // FUNÇÕES DE IMAGENS
+        // =============================================
+        function previewGaragemImagem() {
+            const file = document.getElementById('garagemImagem').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('garagemPreview').src = e.target.result;
+                    document.getElementById('garagemPreview').style.display = 'block';
+                    document.getElementById('garagemNoImage').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function previewSOSImagem() {
+            const file = document.getElementById('sosImagem').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('sosPreview').src = e.target.result;
+                    document.getElementById('sosPreview').style.display = 'block';
+                    document.getElementById('sosNoImage').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function previewCompImagem() {
+            const file = document.getElementById('compImagem').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('compPreview').src = e.target.result;
+                    document.getElementById('compPreview').style.display = 'block';
+                    document.getElementById('compNoImage').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function salvarGaragem() {
+            const file = document.getElementById('garagemImagem').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    db.imagens.garagem.fotos.push({ nome: file.name, data: e.target.result });
+                    atualizarGaleriaGaragem();
+                    alert('Imagem salva!');
+                    document.getElementById('garagemImagem').value = '';
+                    document.getElementById('garagemPreview').style.display = 'none';
+                    document.getElementById('garagemPreview').src = '';
+                    document.getElementById('garagemNoImage').style.display = 'flex';
+                    registrarAuditoria('Cadastro', 'Imagem garagem');
+                };
+                reader.readAsDataURL(file);
+            } else alert('Selecione uma imagem!');
+        }
+        function atualizarGaleriaGaragem() {
+            const container = document.getElementById('garagemSavedImages');
+            container.innerHTML = '';
+            db.imagens.garagem.fotos.forEach((foto, i) => {
+                const div = document.createElement('div');
+                div.className = 'saved-image-item';
+                div.innerHTML = `<img src="${foto.data}" onclick="openImageModal('${foto.data}')"><button class="delete-btn" onclick="excluirImagemGaragem(${i})">×</button>`;
+                container.appendChild(div);
+            });
+        }
+        function excluirImagemGaragem(i) {
+            if (confirm('Excluir imagem?')) { db.imagens.garagem.fotos.splice(i,1); atualizarGaleriaGaragem(); }
+        }
+        function salvarSOS() {
+            const file = document.getElementById('sosImagem').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    db.imagens.sos.fotos.push({ nome: file.name, data: e.target.result });
+                    atualizarGaleriaSOS();
+                    alert('Imagem SOS salva!');
+                    document.getElementById('sosImagem').value = '';
+                    document.getElementById('sosPreview').style.display = 'none';
+                    document.getElementById('sosPreview').src = '';
+                    document.getElementById('sosNoImage').style.display = 'flex';
+                    registrarAuditoria('Cadastro', 'Imagem SOS');
+                };
+                reader.readAsDataURL(file);
+            } else alert('Selecione uma imagem!');
+        }
+        function atualizarGaleriaSOS() {
+            const container = document.getElementById('sosSavedImages');
+            container.innerHTML = '';
+            db.imagens.sos.fotos.forEach((foto, i) => {
+                const div = document.createElement('div');
+                div.className = 'saved-image-item';
+                div.innerHTML = `<img src="${foto.data}" onclick="openImageModal('${foto.data}')"><button class="delete-btn" onclick="excluirImagemSOS(${i})">×</button>`;
+                container.appendChild(div);
+            });
+        }
+        function excluirImagemSOS(i) {
+            if (confirm('Excluir imagem?')) { db.imagens.sos.fotos.splice(i,1); atualizarGaleriaSOS(); }
+        }
+        function baixarSOS() {
+            if (db.imagens.sos.fotos.length > 0) {
+                const img = db.imagens.sos.fotos[db.imagens.sos.fotos.length-1];
+                const a = document.createElement('a');
+                a.href = img.data;
+                a.download = img.nome;
+                a.click();
+            } else alert('Nenhuma imagem SOS salva!');
+        }
+        function salvarComprovante() {
+            const file = document.getElementById('compImagem').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    db.imagens.comprovantes.fotos.push({ nome: file.name, data: e.target.result });
+                    atualizarGaleriaComprovantes();
+                    alert('Comprovante salvo!');
+                    document.getElementById('compImagem').value = '';
+                    document.getElementById('compPreview').style.display = 'none';
+                    document.getElementById('compPreview').src = '';
+                    document.getElementById('compNoImage').style.display = 'flex';
+                    registrarAuditoria('Cadastro', 'Comprovante');
+                };
+                reader.readAsDataURL(file);
+            } else alert('Selecione um comprovante!');
+        }
+        function atualizarGaleriaComprovantes() {
+            const container = document.getElementById('compSavedImages');
+            container.innerHTML = '';
+            db.imagens.comprovantes.fotos.forEach((foto, i) => {
+                const div = document.createElement('div');
+                div.className = 'saved-image-item';
+                div.innerHTML = `<img src="${foto.data}" onclick="openImageModal('${foto.data}')"><button class="delete-btn" onclick="excluirComprovante(${i})">×</button>`;
+                container.appendChild(div);
+            });
+        }
+        function excluirComprovante(i) {
+            if (confirm('Excluir comprovante?')) { db.imagens.comprovantes.fotos.splice(i,1); atualizarGaleriaComprovantes(); }
+        }
+
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+        }
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+
+        function abrirRastreador() {
+            window.open('http://app.alertavirtual.com.br/t/3b6chl2rmvtafde16', '_blank');
+            registrarAuditoria('Cadastro', 'Acesso Rastreador');
+        }
+        function abrirMultas() {
+            alert('🚨 Multas - Em desenvolvimento');
+            registrarAuditoria('Cadastro', 'Acesso Multas');
+        }
+
+        function aplicarPermissoesBotoesDinamicos() {
+            if (!usuarioLogado) return;
+            const permissoes = usuarioLogado.permissoes;
+            document.querySelectorAll('[data-permissao]').forEach(btn => {
+                const perm = btn.dataset.permissao;
+                if (!permissoes.botoes[perm]) btn.style.display = 'none';
+                else btn.style.display = '';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarSistema();
+        });
+    </script>
+</body>
+</html>
