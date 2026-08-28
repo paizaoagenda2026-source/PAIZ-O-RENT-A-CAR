@@ -429,13 +429,13 @@
             position: relative;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: inline-block;
         }
 
         .saved-image-item:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
             border-color: var(--primary);
         }
 
@@ -673,6 +673,168 @@
             gap: 8px;
             margin-top: 5px;
         }
+
+        .contrato-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 99999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .contrato-modal.active {
+            display: flex;
+        }
+
+        .contrato-modal-content {
+            background: white;
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .contrato-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .contrato-modal-header h3 {
+            font-size: 18px;
+        }
+
+        .contrato-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 10px;
+        }
+
+        .contrato-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .contrato-sub-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .contrato-sub-tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .contrato-sub-tab:hover {
+            background: #e0e0e0;
+        }
+
+        .contrato-sub-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .contrato-sub-content {
+            display: none;
+        }
+
+        .contrato-sub-content.active {
+            display: block;
+        }
+
+        .contrato-form-group {
+            margin-bottom: 12px;
+        }
+
+        .contrato-form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .contrato-form-group input,
+        .contrato-form-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .contrato-form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .contrato-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area,
+            .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .print-area {
+            display: none;
+        }
+
+        .print-area.print-visible {
+            display: block;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
@@ -806,16 +968,21 @@
                 <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" readonly></div>
                 <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" readonly></div>
                 <div class="form-group">
-                    <label>Pagamento Caução</label>
+                    <label>Modo Caução</label>
                     <select id="locPagCaucao" class="campo-enter">
                         <option value="avista">À Vista</option>
                         <option value="parcelado">Parcelado C/Aluguel</option>
                         <option value="entrada">Entrada + Parcelas</option>
                     </select>
                 </div>
+                <!-- Novo campo Pgto Caução -->
+                <div class="form-group">
+                    <label>Pgto Caução</label>
+                    <input type="text" id="locPgtoCaucao" class="money campo-enter" placeholder="R$ 0,00">
+                </div>
             </div>
             <button class="btn-primary" data-permissao="locacoes_salvar" onclick="salvarLocacao()">💾 Salvar</button>
-            <button class="btn-secondary" data-permissao="locacoes_contrato" onclick="gerarContrato()">📄 Contrato</button>
+            <button class="btn-secondary" data-permissao="locacoes_contrato" onclick="abrirModalContratos()">📄 Contrato</button>
             <div class="table-container">
                 <table id="tabelaLocacoes">
                     <thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Aluguel</th><th>Ações</th></tr></thead>
@@ -885,7 +1052,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <div class="config-section">
                 <h3>🔐 Permissões de Acesso</h3>
                 <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
@@ -893,7 +1060,7 @@
                 </p>
                 <div id="permissoesContainer"></div>
             </div>
-            
+
             <button class="btn-primary" data-permissao="usuario_salvar" onclick="salvarUsuario()">💾 Salvar</button>
             <button class="btn-warning" data-permissao="usuario_editar" onclick="editarUsuario()">✏️ Editar</button>
             <button class="btn-danger" data-permissao="usuario_excluir" onclick="excluirUsuario()">🗑️ Excluir</button>
@@ -1181,7 +1348,6 @@
                 <table id="tabelaAuditoria">
                     <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>IP</th></tr></thead>
                     <tbody>
-                        <!-- Os registros serão carregados do localStorage -->
                     </tbody>
                 </table>
             </div>
@@ -1195,6 +1361,115 @@
             <img id="modalImage" src="" alt="Imagem ampliada">
         </div>
     </div>
+
+    <!-- MODAL DE CONTRATOS -->
+    <div class="contrato-modal" id="contratoModal">
+        <div class="contrato-modal-content">
+            <div class="contrato-modal-header">
+                <h3>📄 Gerenciador de Contratos</h3>
+                <button class="contrato-modal-close" onclick="fecharModalContratos()">×</button>
+            </div>
+            <div class="contrato-modal-body">
+                <div class="contrato-sub-tabs">
+                    <button class="contrato-sub-tab active" onclick="switchContratoTab('contratoLocacao')">📋 Contrato de Locação</button>
+                    <button class="contrato-sub-tab" onclick="switchContratoTab('termoResponsabilidade')">📝 Termo de Responsabilidade</button>
+                    <button class="contrato-sub-tab" onclick="switchContratoTab('notaPromissoria')">💰 Nota Promissória</button>
+                </div>
+
+                <!-- CONTRATO DE LOCAÇÃO -->
+                <div class="contrato-sub-content active" id="contratoLocacao">
+                    <h4 style="margin-bottom: 15px; color: var(--primary);">📋 Contrato de Locação de Veículos</h4>
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="contrato-form-group"><label>Número do Contrato:</label><input type="text" id="ctNumero" value="0001"></div>
+                        <div class="contrato-form-group"><label>Locadora (Razão Social):</label><input type="text" id="ctLocadora" value="PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME"></div>
+                        <div class="contrato-form-group"><label>Endereço da Locadora:</label><input type="text" id="ctEnderecoLocadora" value="AV. Vila Ema 5445 Vila Ema São Paulo SP"></div>
+                        <div class="contrato-form-group"><label>CNPJ da Locadora:</label><input type="text" id="ctCnpjLocadora" value="74.410.606.0001-31"></div>
+                        <div class="contrato-form-group"><label>Locatário (Nome):</label><input type="text" id="ctLocatario" value="PABLO MEDEIRO"></div>
+                        <div class="contrato-form-group"><label>Endereço do Locatário:</label><input type="text" id="ctEnderecoLocatario" value="Rua Joaquim Abreu Luiz 150 Parque São Lucas São Paulo SP"></div>
+                        <div class="contrato-form-group"><label>CEP do Locatário:</label><input type="text" id="ctCepLocatario" value="03263-020"></div>
+                        <div class="contrato-form-group"><label>RG do Locatário:</label><input type="text" id="ctRgLocatario" value="54.806-749-1"></div>
+                        <div class="contrato-form-group"><label>CPF do Locatário:</label><input type="text" id="ctCpfLocatario" value="464.065.988-14"></div>
+                        <div class="contrato-form-group"><label>Veículo (Modelo):</label><input type="text" id="ctVeiculoModelo" value="Nissan/Kicks Sense CVT"></div>
+                        <div class="contrato-form-group"><label>Cor do Veículo:</label><input type="text" id="ctVeiculoCor" value="cinza"></div>
+                        <div class="contrato-form-group"><label>Placa do Veículo:</label><input type="text" id="ctVeiculoPlaca" value="QMK3B93"></div>
+                        <div class="contrato-form-group"><label>Ano de Fabricação:</label><input type="text" id="ctAnoFabr" value="2020"></div>
+                        <div class="contrato-form-group"><label>Ano Modelo:</label><input type="text" id="ctAnoModel" value="2020"></div>
+                        <div class="contrato-form-group"><label>Gestor do Contrato:</label><input type="text" id="ctGestor" value="Sergio Pereira da Silva"></div>
+                        <div class="contrato-form-group"><label>Local de Vistoria:</label><input type="text" id="ctLocalVistoria" value="AV. VILA EMA 5445 VILA EMA SÃO PAULO"></div>
+                        <div class="contrato-form-group"><label>Multa por Rescisão Antecipada:</label><input type="text" id="ctMultaRescisao" value="R$ 2.500,00 (dois e quinhentos reais)"></div>
+                        <div class="contrato-form-group"><label>Taxa de Troca de Veículo:</label><input type="text" id="ctTaxaTroca" value="R$ 600,00 (seiscentos reais)"></div>
+                        <div class="contrato-form-group"><label>Valor do Aluguel Semanal:</label><input type="text" id="ctValorAluguel" value="R$ 1.200,00 (um mil e duzentos reais)"></div>
+                        <div class="contrato-form-group"><label>Limite de KM por Semana:</label><input type="text" id="ctLimiteKm" value="1.750"></div>
+                        <div class="contrato-form-group"><label>Valor por KM Excedente:</label><input type="text" id="ctValorKmExcedente" value="R$ 0,90 centavos"></div>
+                        <div class="contrato-form-group"><label>Valor da Caução:</label><input type="text" id="ctValorCaucao" value="R$ 2.500,00"></div>
+                        <div class="contrato-form-group"><label>Caução Dividida em:</label><input type="text" id="ctCaucaoParcelas" value="10 semanas"></div>
+                        <div class="contrato-form-group"><label>Valor Devolvido após Contrato:</label><input type="text" id="ctValorDevolvido" value="R$ 2.000,00"></div>
+                        <div class="contrato-form-group"><label>Multa por Não Pagamento:</label><input type="text" id="ctMultaNaoPagamento" value="R$ 2.500,00 (dois mil e quinhentos reais)"></div>
+                        <div class="contrato-form-group"><label>Taxa de Higienização:</label><input type="text" id="ctTaxaHigienizacao" value="R$220,00"></div>
+                        <div class="contrato-form-group"><label>Taxa para Entrega em Local Diverso:</label><input type="text" id="ctTaxaEntregaDiversa" value="R$ 500,00 (quinhentos reais)"></div>
+                        <div class="contrato-form-group"><label>Data do Contrato:</label><input type="text" id="ctDataContrato" value="22 de julho de 2026"></div>
+                        <div class="contrato-form-group"><label>Testemunha 1:</label><input type="text" id="ctTestemunha1" value="Testemunha 1"></div>
+                        <div class="contrato-form-group"><label>Testemunha 2:</label><input type="text" id="ctTestemunha2" value="Testemunha 2"></div>
+                    </div>
+                    <div class="contrato-actions">
+                        <button class="btn-primary" onclick="imprimirDocumento('contratoLocacao')">🖨️ Imprimir / Gerar PDF</button>
+                        <button class="btn-secondary" onclick="fecharModalContratos()">❌ Fechar</button>
+                    </div>
+                </div>
+
+                <!-- TERMO DE RESPONSABILIDADE -->
+                <div class="contrato-sub-content" id="termoResponsabilidade">
+                    <h4 style="margin-bottom: 15px; color: var(--primary);">📝 Termo de Responsabilidade e Autorização de Transferência de Pontuações</h4>
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="contrato-form-group"><label>Nome do Condutor:</label><input type="text" id="trNome" value="PABLO MEDEIRO"></div>
+                        <div class="contrato-form-group"><label>RG:</label><input type="text" id="trRg" value="54.806-749-1"></div>
+                        <div class="contrato-form-group"><label>CPF:</label><input type="text" id="trCpf" value="464.065.988-14"></div>
+                        <div class="contrato-form-group"><label>CNH - Número de Registro:</label><input type="text" id="trCnhRegistro" value="06607239173"></div>
+                        <div class="contrato-form-group"><label>CNH - Validade:</label><input type="text" id="trCnhValidade" value="07/05/2033"></div>
+                        <div class="contrato-form-group"><label>Veículo (Marca/Modelo):</label><input type="text" id="trVeiculoMarca" value="NISSAN KICKS SV CVT"></div>
+                        <div class="contrato-form-group"><label>Placa do Veículo:</label><input type="text" id="trVeiculoPlaca" value="QMK3B93"></div>
+                        <div class="contrato-form-group"><label>Proprietária do Veículo:</label><input type="text" id="trProprietaria" value="SIMONE GONÇALVES DA SILVA"></div>
+                        <div class="contrato-form-group"><label>CPF da Proprietária:</label><input type="text" id="trCpfProprietaria" value="329.678.268-04"></div>
+                        <div class="contrato-form-group"><label>Data do Termo:</label><input type="text" id="trData" value="23 de julho de 2026"></div>
+                    </div>
+                    <div class="contrato-actions">
+                        <button class="btn-primary" onclick="imprimirDocumento('termoResponsabilidade')">🖨️ Imprimir / Gerar PDF</button>
+                        <button class="btn-secondary" onclick="fecharModalContratos()">❌ Fechar</button>
+                    </div>
+                </div>
+
+                <!-- NOTA PROMISSÓRIA -->
+                <div class="contrato-sub-content" id="notaPromissoria">
+                    <h4 style="margin-bottom: 15px; color: var(--primary);">💰 Nota Promissória</h4>
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="contrato-form-group"><label>Número da Nota:</label><input type="text" id="npNumero" value="0001"></div>
+                        <div class="contrato-form-group"><label>Vencimento:</label><input type="text" id="npVencimento" value="24 de julho de 2026"></div>
+                        <div class="contrato-form-group"><label>Valor:</label><input type="text" id="npValor" value="R$ 2.500,00"></div>
+                        <div class="contrato-form-group"><label>Data de Emissão:</label><input type="text" id="npDataEmissao" value="14 de julho de 2025"></div>
+                        <div class="contrato-form-group"><label>Beneficiário (Locadora):</label><input type="text" id="npBeneficiario" value="PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME"></div>
+                        <div class="contrato-form-group"><label>CNPJ do Beneficiário:</label><input type="text" id="npCnpjBeneficiario" value="74.410.606.0001-31"></div>
+                        <div class="contrato-form-group"><label>Valor por Extenso:</label><input type="text" id="npValorExtenso" value="dois mil e quinhentos reais"></div>
+                        <div class="contrato-form-group"><label>Pagável em:</label><input type="text" id="npPagavelEm" value="São Paulo (SP)"></div>
+                        <div class="contrato-form-group"><label>Nome do Emitente:</label><input type="text" id="npEmitenteNome" value="PABLO MEDEIRO"></div>
+                        <div class="contrato-form-group"><label>CPF do Emitente:</label><input type="text" id="npEmitenteCpf" value="464.065.988-14"></div>
+                        <div class="contrato-form-group"><label>Documento de Identificação:</label><input type="text" id="npEmitenteDoc" value="Carteira Nacional de Habilitação (CNH) n. 06607239173, expedida por DETRAN SP"></div>
+                        <div class="contrato-form-group"><label>Endereço do Emitente:</label><input type="text" id="npEmitenteEndereco" value="Rua Joaquim Abreu Luiz 150 PARQUE SÃO LUCAS"></div>
+                        <div class="contrato-form-group"><label>Cidade/UF:</label><input type="text" id="npEmitenteCidade" value="São Paulo SP"></div>
+                        <div class="contrato-form-group"><label>CEP:</label><input type="text" id="npEmitenteCep" value="03263-020"></div>
+                        <div class="contrato-form-group"><label>Cartório:</label><input type="text" id="npCartorio" value="Cartório de Registro Civil de Sapopemba"></div>
+                        <div class="contrato-form-group"><label>Data da Assinatura:</label><input type="text" id="npDataAssinatura" value="23 de julho de 2026"></div>
+                    </div>
+                    <div class="contrato-actions">
+                        <button class="btn-primary" onclick="imprimirDocumento('notaPromissoria')">🖨️ Imprimir / Gerar PDF</button>
+                        <button class="btn-secondary" onclick="fecharModalContratos()">❌ Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÁREA DE IMPRESSÃO (oculta na tela) -->
+    <div id="printArea" class="print-area"></div>
 
     <script>
         // =============================================
@@ -1216,6 +1491,11 @@
                 compras: [],
                 auditoria: [],
                 bancos: [],
+                contratos: {
+                    contratoLocacao: {},
+                    termoResponsabilidade: {},
+                    notaPromissoria: {}
+                },
                 imagens: {
                     garagem: { subpasta: 'Fotos da Garagem', fotos: [] },
                     sos: { subpasta: 'Imagens SOS', fotos: [] },
@@ -1247,29 +1527,21 @@
             }
         }
 
-        // Carrega o banco de dados do localStorage
         let db = carregarDB();
 
         // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
         // =============================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Configurar navegação por Enter para todos os campos com a classe .campo-enter
             document.querySelectorAll('.campo-enter').forEach(function(campo) {
                 campo.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        
-                        // Encontrar todos os campos do mesmo formulário/container
                         const form = this.closest('.form-grid') || this.closest('form') || this.closest('.tab-content');
                         if (!form) return;
-                        
-                        // Pegar todos os campos interativos dentro do mesmo container
                         const campos = form.querySelectorAll('input:not([type="hidden"]):not([readonly]), select, textarea, button');
                         const index = Array.from(campos).indexOf(this);
-                        
                         if (index !== -1 && index < campos.length - 1) {
-                            // Próximo campo
                             const proximo = campos[index + 1];
                             if (proximo) {
                                 proximo.focus();
@@ -1278,7 +1550,6 @@
                                 }
                             }
                         } else if (index === campos.length - 1) {
-                            // Se for o último campo, procurar o botão Salvar
                             const botoes = form.querySelectorAll('.btn-primary, .btn-success, .btn-secondary');
                             if (botoes.length > 0) {
                                 botoes[0].focus();
@@ -1288,7 +1559,6 @@
                 });
             });
 
-            // Calcular valor total automaticamente
             document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
         });
@@ -1304,7 +1574,7 @@
         // =============================================
         // SISTEMA DE PERMISSÕES
         // =============================================
-        
+
         const todasAbas = [
             { id: 'veiculos', label: '🚗 Veículos' },
             { id: 'clientes', label: '👤 Clientes' },
@@ -1401,18 +1671,18 @@
                 veiculos: {}
             },
             MOTORISTA: {
-                abas: { veiculos:false, clientes:false, locacoes:false, manutencao:false, mecanico:false, usuario:false, garagem:true, sos:true, comprovantes:true, pagamentos:false, banco:true, fluxocaixa:false, doc:true, compras:false, configuracao:false, auditoria:false },
-                botoes: { garagem_buscar:true, garagem_salvar:true, sos_buscar:true, sos_salvar:true, sos_baixar:true, comprovantes_buscar:true, comprovantes_salvar:true, banco_copiar:true },
+                abas: { veiculos: false, clientes: false, locacoes: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false },
+                botoes: { garagem_buscar: true, garagem_salvar: true, sos_buscar: true, sos_salvar: true, sos_baixar: true, comprovantes_buscar: true, comprovantes_salvar: true, banco_copiar: true },
                 veiculos: {}
             },
             OFICINA: {
-                abas: { veiculos:true, clientes:false, locacoes:false, manutencao:true, mecanico:true, usuario:false, garagem:false, sos:false, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, doc:false, compras:false, configuracao:false, auditoria:false },
-                botoes: { veiculos_salvar:true, veiculos_rastreador:false, veiculos_multas:false, manutencao_salvar:true, mecanico_salvar:true },
+                abas: { veiculos: true, clientes: false, locacoes: false, manutencao: true, mecanico: true, usuario: false, garagem: false, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
+                botoes: { veiculos_salvar: true, veiculos_rastreador: false, veiculos_multas: false, manutencao_salvar: true, mecanico_salvar: true },
                 veiculos: {}
             },
             VISITANTE: {
-                abas: { veiculos:false, clientes:false, locacoes:false, manutencao:false, mecanico:false, usuario:false, garagem:true, sos:false, comprovantes:false, pagamentos:false, banco:false, fluxocaixa:false, doc:false, compras:false, configuracao:false, auditoria:false },
-                botoes: { garagem_buscar:true, garagem_salvar:true },
+                abas: { veiculos: false, clientes: false, locacoes: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
+                botoes: { garagem_buscar: true, garagem_salvar: true },
                 veiculos: {}
             }
         };
@@ -1420,8 +1690,12 @@
         let usuarioLogado = null;
         let compraEditandoIndex = null;
 
+        // Função auxiliar para verificar campos vazios
+        function campoVazio(valor) {
+            return !valor || valor.trim() === '';
+        }
+
         function inicializarSistema() {
-            // Garantir que o usuário admin padrão exista
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
                     nome: 'SERGIO',
@@ -1429,9 +1703,16 @@
                     tipo: 'ADM',
                     permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM))
                 });
-                salvarDB(); // Salva após criar usuário padrão
+                salvarDB();
             }
-            // Atualizar todas as tabelas e componentes com os dados carregados
+            if (!db.contratos) {
+                db.contratos = {
+                    contratoLocacao: {},
+                    termoResponsabilidade: {},
+                    notaPromissoria: {}
+                };
+                salvarDB();
+            }
             atualizarTabelaUsuario();
             gerarPermissoesUI();
             atualizarResumoFinanceiro();
@@ -1450,14 +1731,13 @@
             atualizarGaleriaGaragem();
             atualizarGaleriaSOS();
             atualizarGaleriaComprovantes();
-            // Aplicar permissões iniciais (nenhum usuário logado ainda)
-            // As permissões serão aplicadas após o login
+            carregarDadosContratos();
         }
 
         function gerarPermissoesUI() {
             const container = document.getElementById('permissoesContainer');
             container.innerHTML = '';
-            
+
             const abasDiv = document.createElement('div');
             abasDiv.className = 'permissao-grupo';
             abasDiv.innerHTML = '<h5>📑 Abas do Sistema</h5>';
@@ -1524,17 +1804,17 @@
             const tipo = document.getElementById('userTipo').value;
             const padrao = permissoesPadrao[tipo];
             if (!padrao) return;
-            
+
             todasAbas.forEach(aba => {
                 const checkbox = document.getElementById(`perm_aba_${aba.id}`);
                 if (checkbox) checkbox.checked = padrao.abas[aba.id] || false;
             });
-            
+
             Object.values(todosBotoes).flat().forEach(botao => {
                 const checkbox = document.getElementById(`perm_botao_${botao.id}`);
                 if (checkbox) checkbox.checked = padrao.botoes[botao.id] || false;
             });
-            
+
             db.veiculos.forEach(v => {
                 const checkbox = document.getElementById(`perm_veiculo_${v.placa}`);
                 if (checkbox) checkbox.checked = tipo === 'ADM';
@@ -1547,29 +1827,29 @@
                 botoes: {},
                 veiculos: {}
             };
-            
+
             todasAbas.forEach(aba => {
                 const checkbox = document.getElementById(`perm_aba_${aba.id}`);
                 permissoes.abas[aba.id] = checkbox ? checkbox.checked : false;
             });
-            
+
             Object.values(todosBotoes).flat().forEach(botao => {
                 const checkbox = document.getElementById(`perm_botao_${botao.id}`);
                 permissoes.botoes[botao.id] = checkbox ? checkbox.checked : false;
             });
-            
+
             db.veiculos.forEach(v => {
                 const checkbox = document.getElementById(`perm_veiculo_${v.placa}`);
                 permissoes.veiculos[v.placa] = checkbox ? checkbox.checked : false;
             });
-            
+
             return permissoes;
         }
 
         function aplicarPermissoes(usuario) {
             usuarioLogado = usuario;
             const permissoes = usuario.permissoes;
-            
+
             document.querySelectorAll('.tab[data-tab]').forEach(tab => {
                 const tabId = tab.dataset.tab;
                 if (permissoes.abas[tabId]) {
@@ -1578,7 +1858,7 @@
                     tab.classList.add('hidden-tab');
                 }
             });
-            
+
             document.querySelectorAll('.tab-content').forEach(content => {
                 const contentId = content.id;
                 if (!permissoes.abas[contentId]) {
@@ -1588,7 +1868,7 @@
                     content.classList.remove('hidden-content');
                 }
             });
-            
+
             document.querySelectorAll('[data-permissao]').forEach(btn => {
                 const permissao = btn.dataset.permissao;
                 if (!permissoes.botoes[permissao]) {
@@ -1597,9 +1877,9 @@
                     btn.style.display = '';
                 }
             });
-            
+
             atualizarTabelaVeiculos();
-            
+
             const activeTab = document.querySelector('.tab.active');
             if (activeTab && activeTab.classList.contains('hidden-tab')) {
                 const firstAllowedTab = document.querySelector('.tab[data-tab]:not(.hidden-tab)');
@@ -1650,6 +1930,10 @@
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim().toUpperCase();
             const pass = document.getElementById('loginPassword').value;
+            if (campoVazio(user) || campoVazio(pass)) {
+                alert('Preencha usuário e senha!');
+                return;
+            }
             const usuarioEncontrado = db.usuarios.find(u => u.nome === user && u.senha === pass);
             if (usuarioEncontrado) {
                 document.getElementById('loginContainer').style.display = 'none';
@@ -1658,7 +1942,7 @@
                 enterFullscreen();
                 registrarAuditoria('Login', `Login realizado com sucesso por ${user}`);
                 document.getElementById('loginError').style.display = 'none';
-                salvarDB(); // Salva após login (registro de auditoria)
+                salvarDB();
             } else {
                 document.getElementById('loginError').style.display = 'block';
                 registrarAuditoria('Login', 'Tentativa de login falhou');
@@ -1700,8 +1984,7 @@
                 if (tabId === 'pagamentos') atualizarTabelaAlugueis();
                 if (tabId === 'locacoes') atualizarCombosLocacao();
                 if (tabId === 'compras') atualizarTabelaCompras();
-                
-                // Focar no primeiro campo da aba
+
                 setTimeout(function() {
                     const primeiroCampo = document.querySelector('.tab-content.active .campo-enter, .tab-content.active input:not([readonly]), .tab-content.active select, .tab-content.active textarea');
                     if (primeiroCampo) primeiroCampo.focus();
@@ -1720,6 +2003,7 @@
                 document.getElementById('subTabSalvos').classList.add('active');
             }
         }
+
         function switchSubTabPagamentos(tabName) {
             document.querySelectorAll('#pagamentos .sub-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('#pagamentos .sub-tab-content').forEach(c => c.classList.remove('active'));
@@ -1727,6 +2011,7 @@
             document.getElementById('subTabAluguel').classList.add('active');
             atualizarTabelaAlugueis();
         }
+
         function switchSubTabBanco(tabName) {
             document.querySelectorAll('#banco .sub-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('#banco .sub-tab-content').forEach(c => c.classList.remove('active'));
@@ -1776,8 +2061,8 @@
                 });
             }
         }
-        ['filterVeiculos','filterClientes','filterLocacoes','filterManutencao','filterMecanico','filterUsuario','filterPagamentos','filterBancos','filterFluxoCaixa','filterDoc','filterCompras','filterAuditoria'].forEach(id => {
-            const tableId = id.replace('filter','tabela');
+        ['filterVeiculos', 'filterClientes', 'filterLocacoes', 'filterManutencao', 'filterMecanico', 'filterUsuario', 'filterPagamentos', 'filterBancos', 'filterFluxoCaixa', 'filterDoc', 'filterCompras', 'filterAuditoria'].forEach(id => {
+            const tableId = id.replace('filter', 'tabela');
             setupFilter(id, tableId);
         });
 
@@ -1891,24 +2176,138 @@
             }
         }
 
+        // =============================================
+        // FUNÇÕES DE SALVAMENTO COM VALIDAÇÕES
+        // =============================================
+
+        // VEÍCULOS
+        function salvarVeiculo() {
+            const fabricante = document.getElementById('veicFabricante').value;
+            const cor = document.getElementById('veicCor').value;
+            const placa = document.getElementById('veicPlaca').value;
+            const anoFabr = document.getElementById('veicAnoFabr').value;
+            const anoModel = document.getElementById('veicAnoModel').value;
+            const aluguel = document.getElementById('veicAluguel').value;
+            const caucao = document.getElementById('veicCaucao').value;
+            const proprietario = document.getElementById('veicProprietario').value;
+            const cpfPropr = document.getElementById('veicCpfPropr').value;
+
+            if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) || campoVazio(anoModel) || campoVazio(aluguel) || campoVazio(caucao) || campoVazio(proprietario) || campoVazio(cpfPropr)) {
+                alert('Preencha todos os campos obrigatórios do veículo!');
+                return;
+            }
+
+            // Verificar placa duplicada
+            if (db.veiculos.some(v => v.placa.toLowerCase() === placa.toLowerCase())) {
+                alert('Já existe um veículo com essa placa!');
+                return;
+            }
+
+            const veiculo = {
+                fabricante,
+                cor,
+                placa,
+                motor: document.getElementById('veicMotor').value,
+                cambio: document.getElementById('veicCambio').value,
+                anoFabr,
+                anoModel,
+                km: document.getElementById('veicKm').value,
+                renavan: document.getElementById('veicRenavan').value,
+                chassi: document.getElementById('veicChassi').value,
+                fipe: document.getElementById('veicFipe').value,
+                caucao,
+                aluguel,
+                proprietario,
+                cpfPropr
+            };
+            db.veiculos.push(veiculo);
+            atualizarTabelaVeiculos();
+            atualizarPermissoesVeiculos();
+            atualizarCombosLocacao();
+            if (usuarioLogado && usuarioLogado.tipo !== 'ADM') {
+                const check = document.getElementById(`perm_veiculo_${veiculo.placa}`);
+                if (check) check.checked = false;
+            }
+            registrarAuditoria('Cadastro', `Novo veículo: ${veiculo.fabricante} - ${veiculo.placa}`);
+            salvarDB();
+            alert('Veículo salvo!');
+            limparCamposVeiculo();
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formVeiculos .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // CLIENTES
+        function salvarCliente() {
+            const nome = document.getElementById('cliNome').value;
+            const cpf = document.getElementById('cliCpf').value;
+            const rg = document.getElementById('cliRg').value;
+            const telefone = document.getElementById('cliTelefone').value;
+            const endereco = document.getElementById('cliEndereco').value;
+            const cidade = document.getElementById('cliCidade').value;
+            const estado = document.getElementById('cliEstado').value;
+
+            if (campoVazio(nome) || campoVazio(cpf) || campoVazio(rg) || campoVazio(telefone) || campoVazio(endereco) || campoVazio(cidade) || campoVazio(estado)) {
+                alert('Preencha todos os campos obrigatórios do cliente!');
+                return;
+            }
+
+            // Verificar CPF duplicado
+            if (db.clientes.some(c => c.cpf.replace(/\D/g, '') === cpf.replace(/\D/g, ''))) {
+                alert('Já existe um cliente com esse CPF!');
+                return;
+            }
+
+            const cliente = {
+                dataCadastro: document.getElementById('cliDataCadastro').value,
+                nome,
+                cpf,
+                rg,
+                cnh: document.getElementById('cliCnh').value,
+                dataCnh: document.getElementById('cliDataCnh').value,
+                telefone,
+                endereco,
+                cep: document.getElementById('cliCep').value,
+                cidade,
+                estado
+            };
+            db.clientes.push(cliente);
+            atualizarTabelaClientes();
+            atualizarCombosLocacao();
+            registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
+            salvarDB();
+            alert('Cliente salvo!');
+            limparCamposCliente();
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formClientes .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // LOCAÇÕES
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
             const veiculo = document.getElementById('locVeiculo').value;
             const placa = document.getElementById('locPlaca').value;
             const dataInicio = document.getElementById('locDataInicio').value;
             const dataFim = document.getElementById('locDataFim').value;
-            const fabModelo = document.getElementById('locFabModelo').value;
-            const cor = document.getElementById('locCor').value;
-            const anoFabr = document.getElementById('locAnoFabr').value;
-            const anoModel = document.getElementById('locAnoModel').value;
             const caucao = document.getElementById('locCaucao').value;
             const valorAluguel = document.getElementById('locValorAluguel').value;
-            const proprietario = document.getElementById('locProprietario').value;
-            const cpfPropr = document.getElementById('locCpfPropr').value;
-            const pagCaucao = document.getElementById('locPagCaucao').value;
+            const pgtoCaucao = document.getElementById('locPgtoCaucao').value; // Novo campo
 
-            if (!locatario || !veiculo || !placa || !dataInicio) {
-                alert('Preencha todos os campos obrigatórios: Locatário, Veículo, Placa e Data Início!');
+            if (campoVazio(locatario) || campoVazio(veiculo) || campoVazio(placa) || campoVazio(dataInicio) || campoVazio(dataFim) || campoVazio(caucao) || campoVazio(valorAluguel)) {
+                alert('Preencha todos os campos obrigatórios da locação!');
+                return;
+            }
+
+            // Verificar duplicidade: mesma locação (locatário + placa + dataInicio)
+            if (db.locacoes.some(l =>
+                l.locatario === locatario &&
+                l.placa === placa &&
+                l.dataInicio === dataInicio
+            )) {
+                alert('Já existe uma locação para este veículo, locatário e data de início!');
                 return;
             }
 
@@ -1918,24 +2317,24 @@
                 placa,
                 dataInicio,
                 dataFim,
-                fabModelo,
-                cor,
-                anoFabr,
-                anoModel,
+                fabModelo: document.getElementById('locFabModelo').value,
+                cor: document.getElementById('locCor').value,
+                anoFabr: document.getElementById('locAnoFabr').value,
+                anoModel: document.getElementById('locAnoModel').value,
                 caucao,
                 valorAluguel,
-                proprietario,
-                cpfPropr,
-                pagCaucao
+                proprietario: document.getElementById('locProprietario').value,
+                cpfPropr: document.getElementById('locCpfPropr').value,
+                pagCaucao: document.getElementById('locPagCaucao').value,
+                pgtoCaucao: pgtoCaucao // Adicionado novo campo
             };
             db.locacoes.push(locacao);
             atualizarTabelaLocacoes();
             criarUsuarioLocatario(locacao);
             criarAlugueisParaLocacao(locacao);
-            
+
             const valorStr = valorAluguel.replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorNum = parseFloat(valorStr) || 0;
-            
             if (valorNum > 0) {
                 const hoje = new Date().toISOString().split('T')[0];
                 const entrada = {
@@ -1945,30 +2344,759 @@
                     valor: valorAluguel,
                     tipo: 'entrada'
                 };
-                db.fluxoCaixa.push(entrada);
-                atualizarTabelaFluxoCaixa();
-                atualizarResumoFinanceiro();
+                // Verificar duplicidade no fluxo de caixa
+                const duplicadoFluxo = db.fluxoCaixa.some(f =>
+                    f.data === hoje &&
+                    f.descricao === entrada.descricao &&
+                    f.valor === entrada.valor &&
+                    f.tipo === 'entrada'
+                );
+                if (!duplicadoFluxo) {
+                    db.fluxoCaixa.push(entrada);
+                    atualizarTabelaFluxoCaixa();
+                    atualizarResumoFinanceiro();
+                }
             }
 
+            preencherContratosComLocacao(locacao);
             limparCamposLocacao();
             atualizarTabelaAlugueis();
             registrarAuditoria('Cadastro', `Locação: ${locatario} - ${placa}`);
-            salvarDB(); // SALVAR APÓS TODAS AS ALTERAÇÕES
-            alert('Locação salva com sucesso! Lançamento adicionado ao Fluxo de Caixa.');
+            salvarDB();
+            alert('Locação salva com sucesso!');
+        }
+
+        // PREENCHER CONTRATOS (mantido igual, sem validações adicionais)
+        function preencherContratosComLocacao(locacao) {
+            const cliente = db.clientes.find(c => c.nome === locacao.locatario);
+            const veiculoObj = db.veiculos.find(v => v.placa === locacao.placa);
+
+            document.getElementById('ctLocatario').value = locacao.locatario;
+            document.getElementById('ctVeiculoModelo').value = locacao.veiculo;
+            document.getElementById('ctVeiculoPlaca').value = locacao.placa;
+            document.getElementById('ctVeiculoCor').value = locacao.cor;
+            document.getElementById('ctAnoFabr').value = locacao.anoFabr;
+            document.getElementById('ctAnoModel').value = locacao.anoModel;
+            document.getElementById('ctValorAluguel').value = locacao.valorAluguel;
+            document.getElementById('ctValorCaucao').value = locacao.caucao;
+            document.getElementById('ctDataContrato').value = formatarDataBR(locacao.dataInicio);
+
+            if (cliente) {
+                document.getElementById('ctCpfLocatario').value = cliente.cpf;
+                document.getElementById('ctRgLocatario').value = cliente.rg;
+                document.getElementById('ctEnderecoLocatario').value = cliente.endereco;
+                document.getElementById('ctCepLocatario').value = cliente.cep;
+            }
+            if (veiculoObj) {
+                document.getElementById('ctVeiculoModelo').value = veiculoObj.fabricante;
+                document.getElementById('ctVeiculoCor').value = veiculoObj.cor;
+                document.getElementById('ctAnoFabr').value = veiculoObj.anoFabr;
+                document.getElementById('ctAnoModel').value = veiculoObj.anoModel;
+            }
+
+            document.getElementById('trNome').value = locacao.locatario;
+            document.getElementById('trVeiculoMarca').value = locacao.veiculo;
+            document.getElementById('trVeiculoPlaca').value = locacao.placa;
+            document.getElementById('trData').value = formatarDataBR(locacao.dataInicio);
+
+            if (cliente) {
+                document.getElementById('trCpf').value = cliente.cpf;
+                document.getElementById('trRg').value = cliente.rg;
+                document.getElementById('trCnhRegistro').value = cliente.cnh;
+                if (cliente.dataCnh) {
+                    document.getElementById('trCnhValidade').value = formatarDataBR(cliente.dataCnh);
+                }
+            }
+            if (veiculoObj) {
+                document.getElementById('trProprietaria').value = veiculoObj.proprietario || '';
+                document.getElementById('trCpfProprietaria').value = veiculoObj.cpfPropr || '';
+            }
+
+            document.getElementById('npEmitenteNome').value = locacao.locatario;
+            document.getElementById('npValor').value = locacao.caucao || 'R$ 2.500,00';
+            document.getElementById('npDataAssinatura').value = formatarDataBR(locacao.dataInicio);
+
+            if (cliente) {
+                document.getElementById('npEmitenteCpf').value = cliente.cpf;
+                document.getElementById('npEmitenteEndereco').value = cliente.endereco;
+                document.getElementById('npEmitenteCep').value = cliente.cep;
+                document.getElementById('npEmitenteDoc').value = `Carteira Nacional de Habilitação (CNH) n. ${cliente.cnh || '...'}, expedida por DETRAN SP`;
+            }
+
+            salvarDadosContratos();
+        }
+
+        // MANUTENÇÃO
+        function salvarManutencao() {
+            const veiculo = document.getElementById('manVeiculo').value;
+            const placa = document.getElementById('manPlaca').value;
+            const km = document.getElementById('manKm').value;
+            const tipo = document.getElementById('manTipo').value;
+            const data = document.getElementById('manData').value;
+            const obs = document.getElementById('manObs').value;
+
+            if (campoVazio(veiculo) || campoVazio(placa) || campoVazio(km) || campoVazio(tipo) || campoVazio(data)) {
+                alert('Preencha todos os campos obrigatórios da manutenção!');
+                return;
+            }
+
+            // Verificar duplicidade: mesma manutenção (veiculo + placa + tipo + data)
+            if (db.manutencao.some(m =>
+                m.veiculo === veiculo &&
+                m.placa === placa &&
+                m.tipo === tipo &&
+                m.data === data
+            )) {
+                alert('Já existe uma manutenção idêntica registrada!');
+                return;
+            }
+
+            const m = { veiculo, placa, km, tipo, data, obs };
+            db.manutencao.push(m);
+            atualizarTabelaManutencao();
+            registrarAuditoria('Cadastro', `Manutenção: ${m.veiculo}`);
+            salvarDB();
+            alert('Manutenção salva!');
+            limparCamposManutencao();
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formManutencao .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // MECÂNICO
+        function salvarMecanico() {
+            const data = document.getElementById('mecData').value;
+            const oficina = document.getElementById('mecOficina').value;
+            const servico = document.getElementById('mecServico').value;
+            const responsavel = document.getElementById('mecResponsavel').value;
+            const carro = document.getElementById('mecCarro').value;
+            const placa = document.getElementById('mecPlaca').value;
+            const valor = document.getElementById('mecValor').value;
+            const obs = document.getElementById('mecObs').value;
+
+            if (campoVazio(data) || campoVazio(oficina) || campoVazio(servico) || campoVazio(responsavel) || campoVazio(carro) || campoVazio(placa) || campoVazio(valor)) {
+                alert('Preencha todos os campos obrigatórios do serviço mecânico!');
+                return;
+            }
+
+            // Verificar duplicidade: mesma data + oficina + serviço + placa
+            if (db.mecanico.some(m =>
+                m.data === data &&
+                m.oficina === oficina &&
+                m.servico === servico &&
+                m.placa === placa
+            )) {
+                alert('Já existe um serviço mecânico idêntico registrado!');
+                return;
+            }
+
+            const m = { data, oficina, servico, responsavel, carro, placa, valor, obs };
+            db.mecanico.push(m);
+            atualizarTabelaMecanico();
+            registrarAuditoria('Cadastro', `Serviço mecânico: ${m.servico}`);
+            salvarDB();
+            alert('Serviço salvo!');
+            limparCamposMecanico();
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formMecanico .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // USUÁRIOS
+        function salvarUsuario() {
+            const nome = document.getElementById('userNome').value.trim().toUpperCase();
+            const senha = document.getElementById('userSenha').value;
+            const tipo = document.getElementById('userTipo').value;
+            const permissoes = coletarPermissoes();
+
+            if (campoVazio(nome) || campoVazio(senha)) {
+                alert('Preencha nome e senha do usuário!');
+                return;
+            }
+            if (db.usuarios.some(u => u.nome === nome)) {
+                alert('Já existe um usuário com esse nome!');
+                return;
+            }
+            db.usuarios.push({ nome, senha, tipo, permissoes });
+            atualizarTabelaUsuario();
+            registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
+            salvarDB();
+            alert('Usuário salvo!');
+            limparCamposUsuario();
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formUsuario .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // BANCOS
+        function salvarBanco() {
+            const nome = document.getElementById('bancoNome').value;
+            const agencia = document.getElementById('bancoAgencia').value;
+            const conta = document.getElementById('bancoConta').value;
+            const pix = document.getElementById('bancoPix').value;
+            const titular = document.getElementById('bancoTitular').value;
+
+            if (campoVazio(nome) || campoVazio(agencia) || campoVazio(conta) || campoVazio(titular)) {
+                alert('Preencha todos os campos obrigatórios do banco!');
+                return;
+            }
+
+            // Verificar duplicidade: mesma combinação banco+agência+conta
+            if (db.bancos.some(b =>
+                b.nome.toLowerCase() === nome.toLowerCase() &&
+                b.agencia === agencia &&
+                b.conta === conta
+            )) {
+                alert('Já existe um banco com essa agência e conta!');
+                return;
+            }
+
+            const banco = { nome, agencia, conta, pix, titular };
+            db.bancos.push(banco);
+            atualizarTabelaBancos();
+            limparCamposBanco();
+            registrarAuditoria('Cadastro', 'Banco salvo');
+            salvarDB();
+            alert('Banco salvo!');
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formBanco .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // FLUXO DE CAIXA
+        function salvarFluxoCaixa() {
+            const data = document.getElementById('fcData').value;
+            const descricao = document.getElementById('fcDescricao').value;
+            const categoria = document.getElementById('fcCategoria').value;
+            const valor = document.getElementById('fcValor').value;
+            const tipo = document.getElementById('fcTipo').value;
+
+            if (campoVazio(data) || campoVazio(descricao) || campoVazio(categoria) || campoVazio(valor)) {
+                alert('Preencha todos os campos obrigatórios do lançamento!');
+                return;
+            }
+
+            // Verificar duplicidade: mesma data + descrição + valor + tipo
+            if (db.fluxoCaixa.some(f =>
+                f.data === data &&
+                f.descricao === descricao &&
+                f.valor === valor &&
+                f.tipo === tipo
+            )) {
+                alert('Já existe um lançamento idêntico no fluxo de caixa!');
+                return;
+            }
+
+            const f = { data, descricao, categoria, valor, tipo };
+            db.fluxoCaixa.push(f);
+            atualizarTabelaFluxoCaixa();
+            atualizarResumoFinanceiro();
+            registrarAuditoria('Cadastro', `Lançamento: ${f.descricao}`);
+            salvarDB();
+            alert('Lançamento salvo!');
+            limparCamposFluxoCaixa();
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formFluxoCaixa .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // DOCUMENTOS
+        function salvarDoc() {
+            const nome = document.getElementById('docNome').value;
+            const tipo = document.getElementById('docTipo').value;
+            const data = document.getElementById('docData').value;
+            const referencia = document.getElementById('docReferencia').value;
+            const obs = document.getElementById('docObs').value;
+
+            if (campoVazio(nome) || campoVazio(tipo) || campoVazio(data) || campoVazio(referencia)) {
+                alert('Preencha todos os campos obrigatórios do documento!');
+                return;
+            }
+
+            // Verificar duplicidade: mesmo nome
+            if (db.documentos.some(d => d.nome.toLowerCase() === nome.toLowerCase())) {
+                alert('Já existe um documento com esse nome!');
+                return;
+            }
+
+            const d = { nome, tipo, data, referencia, obs };
+            db.documentos.push(d);
+            atualizarTabelaDoc();
+            registrarAuditoria('Cadastro', `Documento: ${d.nome}`);
+            salvarDB();
+            alert('Documento salvo!');
+            limparCamposDoc();
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formDoc .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        // COMPRAS
+        function salvarCompra() {
+            const data = document.getElementById('compData').value;
+            const produto = document.getElementById('compProduto').value;
+            const fornecedor = document.getElementById('compFornecedor').value;
+            const quantidade = document.getElementById('compQuantidade').value;
+            const valorUnitario = document.getElementById('compValorUnitario').value;
+            const valorTotal = document.getElementById('compValorTotal').value;
+            const formaPagamento = document.getElementById('compFormaPagamento').value;
+            const status = document.getElementById('compStatus').value;
+            const categoria = document.getElementById('compCategoria').value;
+            const obs = document.getElementById('compObs').value;
+
+            if (campoVazio(data) || campoVazio(produto) || campoVazio(fornecedor) || campoVazio(quantidade) || campoVazio(valorUnitario) || campoVazio(valorTotal)) {
+                alert('Preencha todos os campos obrigatórios da compra!');
+                return;
+            }
+
+            // Verificar duplicidade: mesma data + produto + fornecedor
+            if (db.compras.some(c =>
+                c.data === data &&
+                c.produto.toLowerCase() === produto.toLowerCase() &&
+                c.fornecedor.toLowerCase() === fornecedor.toLowerCase()
+            )) {
+                alert('Já existe uma compra idêntica registrada!');
+                return;
+            }
+
+            const compra = {
+                data,
+                produto,
+                fornecedor,
+                cnpjFornecedor: document.getElementById('compCnpjFornecedor').value,
+                quantidade,
+                valorUnitario,
+                valorTotal,
+                formaPagamento,
+                status,
+                categoria,
+                obs
+            };
+
+            if (compraEditandoIndex !== null) {
+                db.compras[compraEditandoIndex] = compra;
+                compraEditandoIndex = null;
+                registrarAuditoria('Edição', `Compra editada: ${compra.produto}`);
+                alert('Compra atualizada com sucesso!');
+            } else {
+                db.compras.push(compra);
+                registrarAuditoria('Cadastro', `Nova compra: ${compra.produto}`);
+                alert('Compra salva com sucesso!');
+            }
+
+            const valorTotalStr = compra.valorTotal.replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorTotalNum = parseFloat(valorTotalStr) || 0;
+            if (valorTotalNum > 0 && compra.status !== 'cancelado') {
+                const saida = {
+                    data: compra.data,
+                    descricao: `Compra - ${compra.produto}`,
+                    categoria: compra.categoria || 'Compras',
+                    valor: compra.valorTotal,
+                    tipo: 'saida'
+                };
+                // Verificar duplicidade no fluxo
+                const duplicadoFluxo = db.fluxoCaixa.some(f =>
+                    f.data === saida.data &&
+                    f.descricao === saida.descricao &&
+                    f.valor === saida.valor &&
+                    f.tipo === 'saida'
+                );
+                if (!duplicadoFluxo) {
+                    db.fluxoCaixa.push(saida);
+                    atualizarTabelaFluxoCaixa();
+                    atualizarResumoFinanceiro();
+                }
+            }
+
+            atualizarTabelaCompras();
+            limparCamposCompra();
+            salvarDB();
+        }
+
+        // Demais funções de edição/exclusão/limpeza permanecem inalteradas
+        // (não precisam de validação extra)
+
+        // =============================================
+        // FUNÇÕES DOS CONTRATOS
+        // =============================================
+        function abrirModalContratos() {
+            carregarDadosContratos();
+            document.getElementById('contratoModal').classList.add('active');
+            switchContratoTab('contratoLocacao');
+        }
+
+        function fecharModalContratos() {
+            document.getElementById('contratoModal').classList.remove('active');
+            salvarDadosContratos();
+        }
+
+        function switchContratoTab(tabName) {
+            document.querySelectorAll('.contrato-sub-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.contrato-sub-content').forEach(c => c.classList.remove('active'));
+
+            if (tabName === 'contratoLocacao') {
+                document.querySelector('.contrato-sub-tab[onclick*="contratoLocacao"]').classList.add('active');
+                document.getElementById('contratoLocacao').classList.add('active');
+            } else if (tabName === 'termoResponsabilidade') {
+                document.querySelector('.contrato-sub-tab[onclick*="termoResponsabilidade"]').classList.add('active');
+                document.getElementById('termoResponsabilidade').classList.add('active');
+            } else if (tabName === 'notaPromissoria') {
+                document.querySelector('.contrato-sub-tab[onclick*="notaPromissoria"]').classList.add('active');
+                document.getElementById('notaPromissoria').classList.add('active');
+            }
+        }
+
+        function carregarDadosContratos() {
+            if (db.contratos && db.contratos.contratoLocacao) {
+                const cl = db.contratos.contratoLocacao;
+                Object.keys(cl).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = cl[key];
+                });
+            }
+            if (db.contratos && db.contratos.termoResponsabilidade) {
+                const tr = db.contratos.termoResponsabilidade;
+                Object.keys(tr).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = tr[key];
+                });
+            }
+            if (db.contratos && db.contratos.notaPromissoria) {
+                const np = db.contratos.notaPromissoria;
+                Object.keys(np).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = np[key];
+                });
+            }
+        }
+
+        function salvarDadosContratos() {
+            const contratoLocacao = {};
+            document.querySelectorAll('#contratoLocacao input').forEach(input => {
+                contratoLocacao[input.id] = input.value;
+            });
+
+            const termoResponsabilidade = {};
+            document.querySelectorAll('#termoResponsabilidade input').forEach(input => {
+                termoResponsabilidade[input.id] = input.value;
+            });
+
+            const notaPromissoria = {};
+            document.querySelectorAll('#notaPromissoria input').forEach(input => {
+                notaPromissoria[input.id] = input.value;
+            });
+
+            db.contratos.contratoLocacao = contratoLocacao;
+            db.contratos.termoResponsabilidade = termoResponsabilidade;
+            db.contratos.notaPromissoria = notaPromissoria;
+            salvarDB();
+        }
+
+        function imprimirDocumento(tipo) {
+            salvarDadosContratos();
+
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = '';
+
+            if (tipo === 'contratoLocacao') {
+                printArea.innerHTML = gerarHtmlContratoLocacao();
+            } else if (tipo === 'termoResponsabilidade') {
+                printArea.innerHTML = gerarHtmlTermoResponsabilidade();
+            } else if (tipo === 'notaPromissoria') {
+                printArea.innerHTML = gerarHtmlNotaPromissoria();
+            }
+
+            printArea.classList.add('print-visible');
+
+            setTimeout(function() {
+                window.print();
+                printArea.classList.remove('print-visible');
+                printArea.innerHTML = '';
+            }, 200);
+        }
+
+        function gerarHtmlContratoLocacao() {
+            const d = {};
+            document.querySelectorAll('#contratoLocacao input').forEach(input => {
+                d[input.id] = input.value;
+            });
+
+            return `
+            <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto;">
+                <h2 style="text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px;">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h2>
+                <p><strong>Contrato Número:</strong> ${d.ctNumero || '0001'}</p>
+                <p style="text-align: justify;">Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número 001220, e na melhor forma de direito, de um lado, <strong>${d.ctLocadora || 'PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME'}</strong>, com sede na <strong>${d.ctEnderecoLocadora || 'AV. Vila Ema 5445 Vila Ema São Paulo SP'}</strong>, inscrita no CNPJ sob o nº <strong>${d.ctCnpjLocadora || '74.410.606.0001-31'}</strong>, doravante denominada LOCADORA, e, de outro lado, <strong>${d.ctLocatario || 'PABLO MEDEIRO'}</strong>, residente e domiciliado à <strong>${d.ctEnderecoLocatario || 'Rua Joaquim Abreu Luiz 150 Parque São Lucas São Paulo SP'}</strong>, CEP <strong>${d.ctCepLocatario || '03263-020'}</strong>, portador do RG nº <strong>${d.ctRgLocatario || '54.806-749-1'}</strong> e inscrito no CPF sob o nº <strong>${d.ctCpfLocatario || '464.065.988-14'}</strong>, doravante denominado LOCATÁRIO, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.</p>
+                
+                <h3 style="margin-top: 20px;">CLÁUSULA PRIMEIRA - DO OBJETO</h3>
+                <p>1. O presente contrato tem por objeto a locação do veículo <strong>${d.ctVeiculoModelo || 'Nissan/Kicks Sense CVT'}</strong>, cor ${d.ctVeiculoCor || 'cinza'}, placas <strong>${d.ctVeiculoPlaca || 'QMK3B93'}</strong>, quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimídia, ano de fabricação <strong>${d.ctAnoFabr || '2020'}</strong> e ano modelo <strong>${d.ctAnoModel || '2020'}</strong>.</p>
+                
+                <h3>CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR</h3>
+                <p>2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.</p>
+                <p>3. Manter o seguro do veículo vigente.</p>
+                <p>4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.</p>
+                <p>5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.</p>
+                <p>6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.</p>
+                
+                <h3>CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO</h3>
+                <p>6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.</p>
+                <p>7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.</p>
+                <p>7.1 O locatário compromete-se a utilizar o veículo de forma adequada, em conformidade com as leis de trânsito e as normas de segurança pública, abstendo-se de exceder a lotação e o peso suportado pelo veículo e de praticar atos que possam causar danos ou prejuízos ao veículo ou a terceiros.</p>
+                <p>8. É vedado ao LOCATÁRIO: utilizar o veículo para fins comerciais de competição ou para qualquer outra finalidade não prevista neste contrato. É vedado conduzir o veículo sob a influência de álcool, drogas ou substâncias psicoativas que possam comprometer sua capacidade de condução. É vedado emprestar, sublocar, ceder ou transferir, de qualquer forma, o veículo a terceiros. O locatário se compromete a não realizar modificações, reparos ou adaptações no veículo sem autorização prévia e expressa do Locador.</p>
+                <p>9. O locatário será o único responsável por eventuais multas, taxas, impostos e outras despesas decorrentes do uso do veículo durante o período de locação.</p>
+                <p>9.1 Considerando o prazo estendido deste contrato de locação, e com o propósito de o veículo manter-se em condições de uso, o locatário assumirá a responsabilidade de realizar checklist semanal, verificando e informando à empresa sobre as condições dos seguintes itens: Nível de óleo do motor; Parte elétrica; Freios; Nível de água; Pneus. A omissão de informação ou a sua prestação inverídica sobre a situação do veículo poderá dar causa à rescisão contratual, e as avarias oportunamente identificadas, e seus respectivos consertos, correrão por conta do locatário.</p>
+                <p>10. O locatário se compromete a utilizar o veículo somente em território nacional e dentro do Estado da Federação em que foi locado, sendo expressamente proibido ultrapassar qualquer fronteira ou limite geográfico diverso deste aqui mencionado.</p>
+                <p>10.1 As partes ajustam que, havendo necessidade de deslocamento do veículo para além de cem quilômetros a partir desta cidade, o locatário deverá informar previamente o locador.</p>
+                <p>11. Em relação às multas de trânsito, o Locatário, sendo responsável pelo cometimento delas, obriga-se a fornecer, no prazo de 3 (três) dias após ser comunicado, uma cópia da CNH contendo sua assinatura, bem como de arcar com os custos operacionais e administrativos para transferência dos pontos.</p>
+                <p>12. A inobservância das Cláusulas 3.1 e 3.2 ensejará a imediata devolução do veículo locado, e sua retenção imotivada poderá configurar apropriação indébita. 12.1 É de inteira responsabilidade do Locatário os custos de pagamento das multas de trânsito e custos administrativos decorrentes das infrações durante o período em que estiver na posse do veículo, salvo se tais multas ou penalidades forem imputáveis à Locadora por irregularidade na documentação do veículo.</p>
+                <p>12.2 A taxa administrativa por multa será R$ 100,00, que deverá ser paga junto com o valor da multa apresentada.</p>
+                <p>13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.</p>
+                <p>14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.</p>
+                <p>15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.</p>
+                <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong>.</p>
+                
+                <h3>CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO</h3>
+                <p>17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante prévia comunicação.</p>
+                <p>18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a <strong>${d.ctLocalVistoria || 'AV. VILA EMA 5445 VILA EMA SÃO PAULO'}</strong>, por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.</p>
+                <p>19. O Locador se compromete a utilizar o veículo em conformidade com as regras aqui estabelecidas e em obediência às especificidades do veículo, ditadas pela montadora.</p>
+                <p>20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.</p>
+                <p>21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.</p>
+                <p>22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.</p>
+                
+                <h3>CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA</h3>
+                <p>23. O presente Contrato tem vigência de 180 (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de <strong>${d.ctMultaRescisao || 'R$ 2.500,00 (dois e quinhentos reais)'}</strong>.</p>
+                <p>23.1. Após os primeiros 90 dias de contrato o LOCATÁRIO poderá se achar necessário solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de <strong>${d.ctTaxaTroca || 'R$ 600,00 (seiscentos reais)'}</strong>.</p>
+                <p>24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.</p>
+                <p>25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.</p>
+                
+                <h3>CLÁUSULA SEXTA - DO PREÇO</h3>
+                <p>26. Preço da Locação: O valor ajustado entre as partes neste contrato é de <strong>${d.ctValorAluguel || 'R$ 1.200,00 (um mil e duzentos reais)'}</strong> semanais, bem como de que o limite de quilometragem estabelecido será de <strong>${d.ctLimiteKm || '1.750'}</strong> km por semana, e que por quilômetro excedente o locatário pagará o equivalente a <strong>${d.ctValorKmExcedente || 'R$ 0,90 centavos'}</strong>. As partes ajustam ainda que nesse contrato que a caução no valor de <strong>${d.ctValorCaucao || 'R$ 2.500,00'}</strong>, deverá ser dividido em <strong>${d.ctCaucaoParcelas || '10 semanas'}</strong> e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de <strong>${d.ctValorDevolvido || 'R$ 2.000,00'}</strong> não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória prévia garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.</p>
+                <p>27. Estão inclusos no preço: Manutenção preventiva (por desgaste), Documentação atualizada, Seguro, Troca de óleo, Pneus, Pastilha de freio.</p>
+                <p>28. Não estão inclusos nos preços: Motorista, Combustível, Troca de sonda lambda, Peças de suspensão do veículo, Lâmpadas, Bomba de combustível, Pré-filtro de combustível, Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.</p>
+                <p>29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.</p>
+                <p>30. O declara ter ciência de que os valores das multas penalidades variam de acordo com o município de sua ocorrência.</p>
+                
+                <h3>CLÁUSULA SÉTIMA – DO FATURAMENTO E PAGAMENTO</h3>
+                <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong> para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
+                <p>31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.</p>
+                <p>32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de <strong>${d.ctMultaNaoPagamento || 'R$ 2.500,00 (dois mil e quinhentos reais)'}</strong>.</p>
+                
+                <h3>CLÁUSULA OITAVA - DA RESCISÃO</h3>
+                <p>33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7(sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventual dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de <strong>${d.ctTaxaHigienizacao || 'R$220,00'}</strong> caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de <strong>${d.ctTaxaEntregaDiversa || 'R$ 500,00 (quinhentos reais)'}</strong>.</p>
+                <p>34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias de locação não pagos.</p>
+                <p>35. O não cumprimento de qualquer uma das cláusulas constantes neste contrato por parte do Locatário dará o direito à rescisão sem aviso prévio e aplicação de multa no valor de <strong>${d.ctMultaNaoPagamento || 'R$ 2.500,00 (dois mil e quinhentos reais)'}</strong>.</p>
+                <p>36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.</p>
+                <p>37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.</p>
+                <p>38. Motivos que podem levar à rescisão contratual sem a necessidade prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem prévia autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.</p>
+                
+                <h3>CLÁUSULA NONA - DO FORO</h3>
+                <p>39. Fica eleito o Foro da Comarca de Vila Prudente como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.</p>
+                
+                <p style="margin-top: 30px; text-align: justify;">E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.</p>
+                
+                <p style="margin-top: 30px;">São Paulo, ${d.ctDataContrato || '22 de julho de 2026'}</p>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 50px; gap: 30px;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctLocadora || 'PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME'}</div>
+                        <div style="font-size: 11px;">CNPJ nº ${d.ctCnpjLocadora || '74.410.606.0001-31'} (Locador)</div>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctLocatario || 'PABLO MEDEIRO'}</div>
+                        <div style="font-size: 11px;">CPF nº ${d.ctCpfLocatario || '464.065.988-14'} (Locatário)</div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 60px; gap: 30px;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctTestemunha1 || 'Testemunha 1'}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctTestemunha2 || 'Testemunha 2'}</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        function gerarHtmlTermoResponsabilidade() {
+            const d = {};
+            document.querySelectorAll('#termoResponsabilidade input').forEach(input => {
+                d[input.id] = input.value;
+            });
+
+            return `
+            <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+                <h2 style="text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px;">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h2>
+                <p style="text-align: justify; text-indent: 40px;">Eu, <strong>${d.trNome || 'PABLO MEDEIRO'}</strong>, portador da cédula de identidade RG nº <strong>${d.trRg || '54.806-749-1'}</strong> e inscrito no CPF sob o nº <strong>${d.trCpf || '464.065.988-14'}</strong>, CNH número de registro: <strong>${d.trCnhRegistro || '06607239173'}</strong> validade <strong>${d.trCnhValidade || '07/05/2033'}</strong> que sou contratante do veículo de marca <strong>${d.trVeiculoMarca || 'NISSAN KICKS SV CVT'}</strong>, placas <strong>${d.trVeiculoPlaca || 'QMK3B93'}</strong> de propriedade da Sra. <strong>${d.trProprietaria || 'SIMONE GONÇALVES DA SILVA'}</strong>, devidamente inscrita no C.P.F N. <strong>${d.trCpfProprietaria || '329.678.268-04'}</strong>, assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de 90 dias a contar da assinatura do mesmo. Sem mais.</p>
+                <p style="margin-top: 30px;">São Paulo, ${d.trData || '23 de julho de 2026'}</p>
+                <p style="margin-top: 20px;">Atenciosamente:</p>
+                <div style="margin-top: 50px; text-align: center;">
+                    <div style="display: inline-block; border-top: 1px solid #333; padding-top: 8px; font-weight: bold; min-width: 250px;">${d.trNome || 'PABLO MEDEIRO'}</div>
+                    <div style="font-size: 11px;">CPF nº ${d.trCpf || '464.065.988-14'}</div>
+                    <div style="font-size: 11px;">RG nº ${d.trRg || '54.806-749-1'}</div>
+                    <div style="font-size: 11px;">CNH: ${d.trCnhRegistro || '06607239173'}</div>
+                </div>
+            </div>
+            `;
+        }
+
+        function gerarHtmlNotaPromissoria() {
+            const d = {};
+            document.querySelectorAll('#notaPromissoria input').forEach(input => {
+                d[input.id] = input.value;
+            });
+
+            return `
+            <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+                <h2 style="text-align: center; font-size: 16px; margin-bottom: 30px;">NOTA PROMISSÓRIA</h2>
+                <p style="text-align: right;"><strong>Nº:</strong> ${d.npNumero || '0001'}</p>
+                <p><strong>Vencimento:</strong> ${d.npVencimento || '24 de julho de 2026'}</p>
+                <p><strong>Valor:</strong> ${d.npValor || 'R$ 2.500,00'}</p>
+                <p style="text-align: justify;">Aos ${d.npDataEmissao || '14 de julho de 2025'}, pagarei por esta única via de NOTA PROMISSÓRIA a <strong>${d.npBeneficiario || 'PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME'}</strong>, CNPJ nº <strong>${d.npCnpjBeneficiario || '74.410.606.0001-31'}</strong>, ou a sua ordem, a quantia de <strong>${d.npValorExtenso || 'dois mil e quinhentos reais'}</strong>, em moeda corrente nacional. Pagável em: ${d.npPagavelEm || 'São Paulo (SP)'}.</p>
+                <p style="margin-top: 20px;"><strong>EMITENTE:</strong></p>
+                <p>Nome: <strong>${d.npEmitenteNome || 'PABLO MEDEIRO'}</strong></p>
+                <p>CPF nº: <strong>${d.npEmitenteCpf || '464.065.988-14'}</strong></p>
+                <p>Documento de identificação: <strong>${d.npEmitenteDoc || 'Carteira Nacional de Habilitação (CNH) n. 06607239173, expedida por DETRAN SP'}</strong></p>
+                <p>Endereço: <strong>${d.npEmitenteEndereco || 'Rua Joaquim Abreu Luiz 150 PARQUE SÃO LUCAS'}</strong></p>
+                <p>Cidade/UF: <strong>${d.npEmitenteCidade || 'São Paulo SP'}</strong>, CEP <strong>${d.npEmitenteCep || '03263-020'}</strong></p>
+                <p style="margin-top: 20px;"><strong>Cartório:</strong> ${d.npCartorio || 'Cartório de Registro Civil de Sapopemba'}</p>
+                <p style="margin-top: 20px;">São Paulo, ${d.npDataAssinatura || '23 de julho de 2026'}</p>
+                <div style="margin-top: 60px; text-align: center;">
+                    <div style="display: inline-block; border-top: 1px solid #333; padding-top: 8px; font-weight: bold; min-width: 250px;">${d.npEmitenteNome || 'PABLO MEDEIRO'}</div>
+                </div>
+            </div>
+            `;
+        }
+
+        // =============================================
+        // DEMAIS FUNÇÕES (sem alterações de validação)
+        // =============================================
+        function atualizarTabelaVeiculos() {
+            const tbody = document.querySelector('#tabelaVeiculos tbody');
+            tbody.innerHTML = '';
+            const veiculosFiltrados = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
+            veiculosFiltrados.forEach((v, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${v.fabricante}</td><td>${v.placa}</td><td>${v.cor}</td>
+                    <td>${v.anoFabr}/${v.anoModel}</td><td>${v.aluguel}</td>
+                    <td>
+                        <button class="btn-warning" data-permissao="veiculos_editar" onclick="editarVeiculo(${index})">✏️</button>
+                        <button class="btn-danger" data-permissao="veiculos_excluir" onclick="excluirVeiculo(${index})">🗑️</button>
+                    </td>`;
+            });
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function editarVeiculo(index) {
+            const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
+            const v = veiculosPermitidos[index];
+            if (!v) return;
+            document.getElementById('veicFabricante').value = v.fabricante;
+            document.getElementById('veicCor').value = v.cor;
+            document.getElementById('veicPlaca').value = v.placa;
+            document.getElementById('veicMotor').value = v.motor;
+            document.getElementById('veicCambio').value = v.cambio;
+            document.getElementById('veicAnoFabr').value = v.anoFabr;
+            document.getElementById('veicAnoModel').value = v.anoModel;
+            document.getElementById('veicKm').value = v.km;
+            document.getElementById('veicRenavan').value = v.renavan;
+            document.getElementById('veicChassi').value = v.chassi;
+            document.getElementById('veicFipe').value = v.fipe;
+            document.getElementById('veicCaucao').value = v.caucao;
+            document.getElementById('veicAluguel').value = v.aluguel;
+            document.getElementById('veicProprietario').value = v.proprietario;
+            document.getElementById('veicCpfPropr').value = v.cpfPropr;
+            const originalIndex = db.veiculos.indexOf(v);
+            if (originalIndex > -1) db.veiculos.splice(originalIndex, 1);
+            atualizarTabelaVeiculos();
+            atualizarCombosLocacao();
+            registrarAuditoria('Edição', `Veículo editado: ${v.fabricante} - ${v.placa}`);
+            salvarDB();
+        }
+
+        function excluirVeiculo(index) {
+            const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
+            const v = veiculosPermitidos[index];
+            if (!v) return;
+            if (confirm(`Excluir veículo ${v.placa}?`)) {
+                const originalIndex = db.veiculos.indexOf(v);
+                if (originalIndex > -1) db.veiculos.splice(originalIndex, 1);
+                atualizarTabelaVeiculos();
+                atualizarPermissoesVeiculos();
+                atualizarCombosLocacao();
+                registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
+                salvarDB();
+            }
+        }
+
+        function limparCamposVeiculo() {
+            ['veicFabricante', 'veicCor', 'veicPlaca', 'veicMotor', 'veicCambio', 'veicAnoFabr', 'veicAnoModel', 'veicKm', 'veicRenavan', 'veicChassi', 'veicFipe', 'veicCaucao', 'veicAluguel', 'veicProprietario', 'veicCpfPropr'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function atualizarTabelaClientes() {
+            const tbody = document.querySelector('#tabelaClientes tbody');
+            tbody.innerHTML = '';
+            db.clientes.forEach((c, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${c.nome}</td><td>${c.cpf}</td><td>${c.telefone}</td><td>${c.cidade}</td>
+                    <td><button class="btn-warning" onclick="editarCliente(${index})">✏️</button><button class="btn-danger" onclick="excluirCliente(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function editarCliente(index) {
+            const c = db.clientes[index];
+            document.getElementById('cliDataCadastro').value = c.dataCadastro;
+            document.getElementById('cliNome').value = c.nome;
+            document.getElementById('cliCpf').value = c.cpf;
+            document.getElementById('cliRg').value = c.rg;
+            document.getElementById('cliCnh').value = c.cnh;
+            document.getElementById('cliDataCnh').value = c.dataCnh;
+            document.getElementById('cliTelefone').value = c.telefone;
+            document.getElementById('cliEndereco').value = c.endereco;
+            document.getElementById('cliCep').value = c.cep;
+            document.getElementById('cliCidade').value = c.cidade;
+            document.getElementById('cliEstado').value = c.estado;
+            db.clientes.splice(index, 1);
+            atualizarTabelaClientes();
+            atualizarCombosLocacao();
+            registrarAuditoria('Edição', `Cliente editado: ${c.nome}`);
+            salvarDB();
+        }
+
+        function excluirCliente(index) {
+            if (confirm('Excluir cliente?')) {
+                const c = db.clientes[index];
+                db.clientes.splice(index, 1);
+                atualizarTabelaClientes();
+                atualizarCombosLocacao();
+                registrarAuditoria('Exclusão', `Cliente excluído: ${c.nome}`);
+                salvarDB();
+            }
+        }
+
+        function limparCamposCliente() {
+            ['cliDataCadastro', 'cliNome', 'cliCpf', 'cliRg', 'cliCnh', 'cliDataCnh', 'cliTelefone', 'cliEndereco', 'cliCep', 'cliCidade', 'cliEstado'].forEach(id => document.getElementById(id).value = '');
         }
 
         function criarAlugueisParaLocacao(locacao) {
-            const existe = db.alugueis.some(a => 
-                a.locatario === locacao.locatario && 
-                a.placa === locacao.placa && 
+            const existe = db.alugueis.some(a =>
+                a.locatario === locacao.locatario &&
+                a.placa === locacao.placa &&
                 a.dataContrato === locacao.dataInicio
             );
-            
+
             if (!existe) {
                 const dataContrato = new Date(locacao.dataInicio);
                 const dataVenc = new Date(dataContrato);
                 dataVenc.setDate(dataVenc.getDate() + 7);
-                
+
                 const novoAluguel = {
                     locatario: locacao.locatario,
                     dataContrato: locacao.dataInicio,
@@ -2031,6 +3159,7 @@
                     <td><button class="btn-warning" onclick="editarLocacao(${index})">✏️</button><button class="btn-danger" onclick="excluirLocacao(${index})">🗑️</button></td>`;
             });
         }
+
         function editarLocacao(index) {
             const l = db.locacoes[index];
             document.getElementById('locLocatario').value = l.locatario;
@@ -2047,11 +3176,13 @@
             document.getElementById('locProprietario').value = l.proprietario;
             document.getElementById('locCpfPropr').value = l.cpfPropr;
             document.getElementById('locPagCaucao').value = l.pagCaucao;
+            document.getElementById('locPgtoCaucao').value = l.pgtoCaucao || ''; // Preencher novo campo
             db.locacoes.splice(index, 1);
             atualizarTabelaLocacoes();
             registrarAuditoria('Edição', `Locação editada: ${l.locatario}`);
             salvarDB();
         }
+
         function excluirLocacao(index) {
             if (confirm('Excluir locação?')) {
                 const l = db.locacoes[index];
@@ -2061,6 +3192,7 @@
                 salvarDB();
             }
         }
+
         function limparCamposLocacao() {
             document.getElementById('locLocatario').value = '';
             document.getElementById('locVeiculo').value = '';
@@ -2076,204 +3208,35 @@
             document.getElementById('locProprietario').value = '';
             document.getElementById('locCpfPropr').value = '';
             document.getElementById('locPagCaucao').value = 'avista';
-        }
-        function gerarContrato() {
-            alert('📄 Contrato gerado!');
-            registrarAuditoria('Cadastro', 'Contrato gerado');
-            salvarDB();
-        }
-
-        function salvarVeiculo() {
-            const veiculo = {
-                fabricante: document.getElementById('veicFabricante').value,
-                cor: document.getElementById('veicCor').value,
-                placa: document.getElementById('veicPlaca').value,
-                motor: document.getElementById('veicMotor').value,
-                cambio: document.getElementById('veicCambio').value,
-                anoFabr: document.getElementById('veicAnoFabr').value,
-                anoModel: document.getElementById('veicAnoModel').value,
-                km: document.getElementById('veicKm').value,
-                renavan: document.getElementById('veicRenavan').value,
-                chassi: document.getElementById('veicChassi').value,
-                fipe: document.getElementById('veicFipe').value,
-                caucao: document.getElementById('veicCaucao').value,
-                aluguel: document.getElementById('veicAluguel').value,
-                proprietario: document.getElementById('veicProprietario').value,
-                cpfPropr: document.getElementById('veicCpfPropr').value
-            };
-            db.veiculos.push(veiculo);
-            atualizarTabelaVeiculos();
-            atualizarPermissoesVeiculos();
-            atualizarCombosLocacao();
-            if (usuarioLogado && usuarioLogado.tipo !== 'ADM') {
-                const check = document.getElementById(`perm_veiculo_${veiculo.placa}`);
-                if (check) check.checked = false;
-            }
-            registrarAuditoria('Cadastro', `Novo veículo: ${veiculo.fabricante} - ${veiculo.placa}`);
-            salvarDB();
-            alert('Veículo salvo!');
-            limparCamposVeiculo();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formVeiculos .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
-        }
-        function atualizarTabelaVeiculos() {
-            const tbody = document.querySelector('#tabelaVeiculos tbody');
-            tbody.innerHTML = '';
-            const veiculosFiltrados = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
-            veiculosFiltrados.forEach((v, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${v.fabricante}</td><td>${v.placa}</td><td>${v.cor}</td>
-                    <td>${v.anoFabr}/${v.anoModel}</td><td>${v.aluguel}</td>
-                    <td>
-                        <button class="btn-warning" data-permissao="veiculos_editar" onclick="editarVeiculo(${index})">✏️</button>
-                        <button class="btn-danger" data-permissao="veiculos_excluir" onclick="excluirVeiculo(${index})">🗑️</button>
-                    </td>`;
-            });
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
-        }
-        function editarVeiculo(index) {
-            const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
-            const v = veiculosPermitidos[index];
-            if (!v) return;
-            document.getElementById('veicFabricante').value = v.fabricante;
-            document.getElementById('veicCor').value = v.cor;
-            document.getElementById('veicPlaca').value = v.placa;
-            document.getElementById('veicMotor').value = v.motor;
-            document.getElementById('veicCambio').value = v.cambio;
-            document.getElementById('veicAnoFabr').value = v.anoFabr;
-            document.getElementById('veicAnoModel').value = v.anoModel;
-            document.getElementById('veicKm').value = v.km;
-            document.getElementById('veicRenavan').value = v.renavan;
-            document.getElementById('veicChassi').value = v.chassi;
-            document.getElementById('veicFipe').value = v.fipe;
-            document.getElementById('veicCaucao').value = v.caucao;
-            document.getElementById('veicAluguel').value = v.aluguel;
-            document.getElementById('veicProprietario').value = v.proprietario;
-            document.getElementById('veicCpfPropr').value = v.cpfPropr;
-            const originalIndex = db.veiculos.indexOf(v);
-            if (originalIndex > -1) db.veiculos.splice(originalIndex, 1);
-            atualizarTabelaVeiculos();
-            atualizarCombosLocacao();
-            registrarAuditoria('Edição', `Veículo editado: ${v.fabricante} - ${v.placa}`);
-            salvarDB();
-        }
-        function excluirVeiculo(index) {
-            const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
-            const v = veiculosPermitidos[index];
-            if (!v) return;
-            if (confirm(`Excluir veículo ${v.placa}?`)) {
-                const originalIndex = db.veiculos.indexOf(v);
-                if (originalIndex > -1) db.veiculos.splice(originalIndex, 1);
-                atualizarTabelaVeiculos();
-                atualizarPermissoesVeiculos();
-                atualizarCombosLocacao();
-                registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
-                salvarDB();
-            }
-        }
-        function limparCamposVeiculo() {
-            ['veicFabricante','veicCor','veicPlaca','veicMotor','veicCambio','veicAnoFabr','veicAnoModel','veicKm','veicRenavan','veicChassi','veicFipe','veicCaucao','veicAluguel','veicProprietario','veicCpfPropr'].forEach(id => document.getElementById(id).value = '');
-        }
-
-        function salvarCliente() {
-            const cliente = {
-                dataCadastro: document.getElementById('cliDataCadastro').value,
-                nome: document.getElementById('cliNome').value,
-                cpf: document.getElementById('cliCpf').value,
-                rg: document.getElementById('cliRg').value,
-                cnh: document.getElementById('cliCnh').value,
-                dataCnh: document.getElementById('cliDataCnh').value,
-                telefone: document.getElementById('cliTelefone').value,
-                endereco: document.getElementById('cliEndereco').value,
-                cep: document.getElementById('cliCep').value,
-                cidade: document.getElementById('cliCidade').value,
-                estado: document.getElementById('cliEstado').value
-            };
-            db.clientes.push(cliente);
-            atualizarTabelaClientes();
-            atualizarCombosLocacao();
-            registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
-            salvarDB();
-            alert('Cliente salvo!');
-            limparCamposCliente();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formClientes .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
-        }
-        function atualizarTabelaClientes() {
-            const tbody = document.querySelector('#tabelaClientes tbody');
-            tbody.innerHTML = '';
-            db.clientes.forEach((c, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${c.nome}</td><td>${c.cpf}</td><td>${c.telefone}</td><td>${c.cidade}</td>
-                    <td><button class="btn-warning" onclick="editarCliente(${index})">✏️</button><button class="btn-danger" onclick="excluirCliente(${index})">🗑️</button></td>`;
-            });
-        }
-        function editarCliente(index) {
-            const c = db.clientes[index];
-            document.getElementById('cliDataCadastro').value = c.dataCadastro;
-            document.getElementById('cliNome').value = c.nome;
-            document.getElementById('cliCpf').value = c.cpf;
-            document.getElementById('cliRg').value = c.rg;
-            document.getElementById('cliCnh').value = c.cnh;
-            document.getElementById('cliDataCnh').value = c.dataCnh;
-            document.getElementById('cliTelefone').value = c.telefone;
-            document.getElementById('cliEndereco').value = c.endereco;
-            document.getElementById('cliCep').value = c.cep;
-            document.getElementById('cliCidade').value = c.cidade;
-            document.getElementById('cliEstado').value = c.estado;
-            db.clientes.splice(index, 1);
-            atualizarTabelaClientes();
-            atualizarCombosLocacao();
-            registrarAuditoria('Edição', `Cliente editado: ${c.nome}`);
-            salvarDB();
-        }
-        function excluirCliente(index) {
-            if (confirm('Excluir cliente?')) {
-                const c = db.clientes[index];
-                db.clientes.splice(index, 1);
-                atualizarTabelaClientes();
-                atualizarCombosLocacao();
-                registrarAuditoria('Exclusão', `Cliente excluído: ${c.nome}`);
-                salvarDB();
-            }
-        }
-        function limparCamposCliente() {
-            ['cliDataCadastro','cliNome','cliCpf','cliRg','cliCnh','cliDataCnh','cliTelefone','cliEndereco','cliCep','cliCidade','cliEstado'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('locPgtoCaucao').value = ''; // Limpar novo campo
         }
 
         function atualizarTabelaAlugueis() {
             const tbody = document.querySelector('#tabelaPagamentos tbody');
             tbody.innerHTML = '';
-            
+
             db.locacoes.forEach(locacao => {
-                const existe = db.alugueis.some(a => 
-                    a.locatario === locacao.locatario && 
-                    a.placa === locacao.placa && 
+                const existe = db.alugueis.some(a =>
+                    a.locatario === locacao.locatario &&
+                    a.placa === locacao.placa &&
                     a.dataContrato === locacao.dataInicio
                 );
                 if (!existe) {
                     criarAlugueisParaLocacao(locacao);
                 }
             });
-            
+
             db.alugueis.forEach((a, index) => {
                 const row = tbody.insertRow();
-                let statusClass = a.status === 'Pendente' ? 'status-pendente' : 
-                                 a.status === 'Pago' ? 'status-pago' : 'status-atrasado';
-                
+                let statusClass = a.status === 'Pendente' ? 'status-pendente' :
+                    a.status === 'Pago' ? 'status-pago' : 'status-atrasado';
+
                 const hoje = new Date();
                 const vencimento = new Date(a.dataVencimento);
                 if (a.status === 'Pendente' && vencimento < hoje) {
                     statusClass = 'status-atrasado';
                 }
-                
+
                 row.innerHTML = `
                     <td>${a.locatario}</td>
                     <td>${formatarDataBR(a.dataContrato)}</td>
@@ -2287,27 +3250,22 @@
                     </td>
                 `;
             });
-            
+
             if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
         function marcarComoPago(index) {
             if (!confirm('Confirmar pagamento?')) return;
-            
+
             const aluguel = db.alugueis[index];
             if (!aluguel) return;
-            
+
             aluguel.status = 'Pago';
-            
+
             const dataVencAtual = new Date(aluguel.dataVencimento);
             const proximaDataVenc = new Date(dataVencAtual);
             proximaDataVenc.setDate(proximaDataVenc.getDate() + 7);
-            
-            const locacao = db.locacoes.find(l => 
-                l.locatario === aluguel.locatario && 
-                l.placa === aluguel.placa
-            );
-            
+
             const novoAluguel = {
                 locatario: aluguel.locatario,
                 dataContrato: aluguel.dataContrato,
@@ -2318,17 +3276,17 @@
                 parcela: (aluguel.parcela || 1) + 1,
                 contratoId: aluguel.contratoId
             };
-            
-            const jaExiste = db.alugueis.some(a => 
-                a.locatario === novoAluguel.locatario && 
-                a.placa === novoAluguel.placa && 
+
+            const jaExiste = db.alugueis.some(a =>
+                a.locatario === novoAluguel.locatario &&
+                a.placa === novoAluguel.placa &&
                 a.dataVencimento === novoAluguel.dataVencimento
             );
-            
+
             if (!jaExiste) {
                 db.alugueis.push(novoAluguel);
             }
-            
+
             registrarAuditoria('Edição', `Aluguel pago: ${aluguel.locatario} - Parcela ${aluguel.parcela || 1}`);
             salvarDB();
             atualizarTabelaAlugueis();
@@ -2345,30 +3303,6 @@
             }
         }
 
-        function salvarManutencao() {
-            const m = {
-                veiculo: document.getElementById('manVeiculo').value,
-                placa: document.getElementById('manPlaca').value,
-                km: document.getElementById('manKm').value,
-                tipo: document.getElementById('manTipo').value,
-                data: document.getElementById('manData').value,
-                obs: document.getElementById('manObs').value
-            };
-            db.manutencao.push(m);
-            atualizarTabelaManutencao();
-            registrarAuditoria('Cadastro', `Manutenção: ${m.veiculo}`);
-            salvarDB();
-            alert('Manutenção salva!');
-            limparCamposManutencao();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formManutencao .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
-        }
-        function limparCamposManutencao() {
-            ['manVeiculo','manPlaca','manKm','manTipo','manData','manObs'].forEach(id => document.getElementById(id).value = '');
-        }
         function atualizarTabelaManutencao() {
             const tbody = document.querySelector('#tabelaManutencao tbody');
             tbody.innerHTML = '';
@@ -2378,6 +3312,7 @@
                     <td><button class="btn-warning" onclick="editarManutencao(${index})">✏️</button><button class="btn-danger" onclick="excluirManutencao(${index})">🗑️</button></td>`;
             });
         }
+
         function editarManutencao(index) {
             const m = db.manutencao[index];
             document.getElementById('manVeiculo').value = m.veiculo;
@@ -2391,6 +3326,7 @@
             registrarAuditoria('Edição', `Manutenção editada: ${m.veiculo}`);
             salvarDB();
         }
+
         function excluirManutencao(index) {
             if (confirm('Excluir manutenção?')) {
                 const m = db.manutencao[index];
@@ -2401,32 +3337,10 @@
             }
         }
 
-        function salvarMecanico() {
-            const m = {
-                data: document.getElementById('mecData').value,
-                oficina: document.getElementById('mecOficina').value,
-                servico: document.getElementById('mecServico').value,
-                responsavel: document.getElementById('mecResponsavel').value,
-                carro: document.getElementById('mecCarro').value,
-                placa: document.getElementById('mecPlaca').value,
-                valor: document.getElementById('mecValor').value,
-                obs: document.getElementById('mecObs').value
-            };
-            db.mecanico.push(m);
-            atualizarTabelaMecanico();
-            registrarAuditoria('Cadastro', `Serviço mecânico: ${m.servico}`);
-            salvarDB();
-            alert('Serviço salvo!');
-            limparCamposMecanico();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formMecanico .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
+        function limparCamposManutencao() {
+            ['manVeiculo', 'manPlaca', 'manKm', 'manTipo', 'manData', 'manObs'].forEach(id => document.getElementById(id).value = '');
         }
-        function limparCamposMecanico() {
-            ['mecData','mecOficina','mecServico','mecResponsavel','mecCarro','mecPlaca','mecValor','mecObs'].forEach(id => document.getElementById(id).value = '');
-        }
+
         function atualizarTabelaMecanico() {
             const tbody = document.querySelector('#tabelaMecanico tbody');
             tbody.innerHTML = '';
@@ -2436,6 +3350,7 @@
                     <td><button class="btn-warning" onclick="editarMecanico(${index})">✏️</button><button class="btn-danger" onclick="excluirMecanico(${index})">🗑️</button></td>`;
             });
         }
+
         function editarMecanico(index) {
             const m = db.mecanico[index];
             document.getElementById('mecData').value = m.data;
@@ -2451,6 +3366,7 @@
             registrarAuditoria('Edição', `Serviço editado: ${m.servico}`);
             salvarDB();
         }
+
         function excluirMecanico(index) {
             if (confirm('Excluir serviço?')) {
                 const m = db.mecanico[index];
@@ -2461,25 +3377,10 @@
             }
         }
 
-        function salvarUsuario() {
-            const nome = document.getElementById('userNome').value.trim().toUpperCase();
-            const senha = document.getElementById('userSenha').value;
-            const tipo = document.getElementById('userTipo').value;
-            const permissoes = coletarPermissoes();
-            if (!nome || !senha) { alert('Preencha nome e senha!'); return; }
-            if (db.usuarios.some(u => u.nome === nome)) { alert('Usuário já existe!'); return; }
-            db.usuarios.push({ nome, senha, tipo, permissoes });
-            atualizarTabelaUsuario();
-            registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
-            salvarDB();
-            alert('Usuário salvo!');
-            limparCamposUsuario();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formUsuario .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
+        function limparCamposMecanico() {
+            ['mecData', 'mecOficina', 'mecServico', 'mecResponsavel', 'mecCarro', 'mecPlaca', 'mecValor', 'mecObs'].forEach(id => document.getElementById(id).value = '');
         }
+
         function atualizarTabelaUsuario() {
             const tbody = document.querySelector('#tabelaUsuario tbody');
             tbody.innerHTML = '';
@@ -2489,6 +3390,7 @@
                     <td><button class="btn-warning" onclick="editarUsuario(${index})">✏️</button><button class="btn-danger" onclick="excluirUsuario(${index})">🗑️</button></td>`;
             });
         }
+
         function editarUsuario(index) {
             if (index === undefined) { alert('Selecione um usuário!'); return; }
             const u = db.usuarios[index];
@@ -2512,6 +3414,7 @@
             registrarAuditoria('Edição', `Usuário editado: ${u.nome}`);
             salvarDB();
         }
+
         function excluirUsuario(index) {
             if (index === undefined) { alert('Selecione um usuário!'); return; }
             const u = db.usuarios[index];
@@ -2523,6 +3426,7 @@
                 salvarDB();
             }
         }
+
         function limparCamposUsuario() {
             document.getElementById('userNome').value = '';
             document.getElementById('userSenha').value = '';
@@ -2530,51 +3434,6 @@
             preencherPermissoesPadrao();
         }
 
-        function salvarBanco() {
-            const banco = {
-                nome: document.getElementById('bancoNome').value,
-                agencia: document.getElementById('bancoAgencia').value,
-                conta: document.getElementById('bancoConta').value,
-                pix: document.getElementById('bancoPix').value,
-                titular: document.getElementById('bancoTitular').value
-            };
-            db.bancos.push(banco);
-            atualizarTabelaBancos();
-            limparCamposBanco();
-            registrarAuditoria('Cadastro', 'Banco salvo');
-            salvarDB();
-            alert('Banco salvo!');
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formBanco .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
-        }
-        function editarBanco(index) {
-            if (index === undefined) { alert('Selecione um banco!'); return; }
-            const b = db.bancos[index];
-            document.getElementById('bancoNome').value = b.nome;
-            document.getElementById('bancoAgencia').value = b.agencia;
-            document.getElementById('bancoConta').value = b.conta;
-            document.getElementById('bancoPix').value = b.pix;
-            document.getElementById('bancoTitular').value = b.titular;
-            db.bancos.splice(index, 1);
-            atualizarTabelaBancos();
-            registrarAuditoria('Edição', `Banco editado: ${b.nome}`);
-            salvarDB();
-        }
-        function excluirBanco(index) {
-            if (confirm('Excluir banco?')) {
-                const b = db.bancos[index];
-                db.bancos.splice(index, 1);
-                atualizarTabelaBancos();
-                registrarAuditoria('Exclusão', `Banco excluído: ${b.nome}`);
-                salvarDB();
-            }
-        }
-        function limparCamposBanco() {
-            ['bancoNome','bancoAgencia','bancoConta','bancoPix','bancoTitular'].forEach(id => document.getElementById(id).value = '');
-        }
         function atualizarTabelaBancos() {
             const tbody = document.querySelector('#tabelaBancos tbody');
             tbody.innerHTML = '';
@@ -2590,27 +3449,34 @@
             if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
-        function salvarFluxoCaixa() {
-            const f = {
-                data: document.getElementById('fcData').value,
-                descricao: document.getElementById('fcDescricao').value,
-                categoria: document.getElementById('fcCategoria').value,
-                valor: document.getElementById('fcValor').value,
-                tipo: document.getElementById('fcTipo').value
-            };
-            db.fluxoCaixa.push(f);
-            atualizarTabelaFluxoCaixa();
-            atualizarResumoFinanceiro();
-            registrarAuditoria('Cadastro', `Lançamento: ${f.descricao}`);
+        function editarBanco(index) {
+            if (index === undefined) { alert('Selecione um banco!'); return; }
+            const b = db.bancos[index];
+            document.getElementById('bancoNome').value = b.nome;
+            document.getElementById('bancoAgencia').value = b.agencia;
+            document.getElementById('bancoConta').value = b.conta;
+            document.getElementById('bancoPix').value = b.pix;
+            document.getElementById('bancoTitular').value = b.titular;
+            db.bancos.splice(index, 1);
+            atualizarTabelaBancos();
+            registrarAuditoria('Edição', `Banco editado: ${b.nome}`);
             salvarDB();
-            alert('Lançamento salvo!');
-            limparCamposFluxoCaixa();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formFluxoCaixa .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
+
+        function excluirBanco(index) {
+            if (confirm('Excluir banco?')) {
+                const b = db.bancos[index];
+                db.bancos.splice(index, 1);
+                atualizarTabelaBancos();
+                registrarAuditoria('Exclusão', `Banco excluído: ${b.nome}`);
+                salvarDB();
+            }
+        }
+
+        function limparCamposBanco() {
+            ['bancoNome', 'bancoAgencia', 'bancoConta', 'bancoPix', 'bancoTitular'].forEach(id => document.getElementById(id).value = '');
+        }
+
         function atualizarTabelaFluxoCaixa() {
             const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
             tbody.innerHTML = '';
@@ -2620,6 +3486,7 @@
                     <td><button class="btn-warning" onclick="editarFluxoCaixa(${index})">✏️</button><button class="btn-danger" onclick="excluirFluxoCaixa(${index})">🗑️</button></td>`;
             });
         }
+
         function editarFluxoCaixa(index) {
             const f = db.fluxoCaixa[index];
             document.getElementById('fcData').value = f.data;
@@ -2633,6 +3500,7 @@
             registrarAuditoria('Edição', `Lançamento editado: ${f.descricao}`);
             salvarDB();
         }
+
         function excluirFluxoCaixa(index) {
             if (confirm('Excluir lançamento?')) {
                 const f = db.fluxoCaixa[index];
@@ -2643,6 +3511,7 @@
                 salvarDB();
             }
         }
+
         function limparCamposFluxoCaixa() {
             document.getElementById('fcData').value = '';
             document.getElementById('fcDescricao').value = '';
@@ -2650,38 +3519,20 @@
             document.getElementById('fcValor').value = '';
             document.getElementById('fcTipo').value = 'entrada';
         }
+
         function atualizarResumoFinanceiro() {
-            let entradas = 0, saidas = 0;
+            let entradas = 0,
+                saidas = 0;
             db.fluxoCaixa.forEach(f => {
-                const valor = parseFloat(f.valor.replace('R$ ','').replace('.','').replace(',','.')) || 0;
-                if (f.tipo === 'entrada') entradas += valor; else saidas += valor;
+                const valor = parseFloat(f.valor.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
+                if (f.tipo === 'entrada') entradas += valor;
+                else saidas += valor;
             });
             document.getElementById('totalEntradas').textContent = 'R$ ' + entradas.toFixed(2).replace('.', ',');
             document.getElementById('totalSaidas').textContent = 'R$ ' + saidas.toFixed(2).replace('.', ',');
             document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
         }
 
-        function salvarDoc() {
-            const d = {
-                nome: document.getElementById('docNome').value,
-                tipo: document.getElementById('docTipo').value,
-                data: document.getElementById('docData').value,
-                referencia: document.getElementById('docReferencia').value,
-                obs: document.getElementById('docObs').value
-            };
-            db.documentos.push(d);
-            atualizarTabelaDoc();
-            registrarAuditoria('Cadastro', `Documento: ${d.nome}`);
-            salvarDB();
-            alert('Documento salvo!');
-            limparCamposDoc();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formDoc .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
-        }
-        function uploadDoc() { alert('Upload iniciado...'); registrarAuditoria('Cadastro', 'Upload doc'); salvarDB(); }
         function atualizarTabelaDoc() {
             const tbody = document.querySelector('#tabelaDoc tbody');
             tbody.innerHTML = '';
@@ -2691,6 +3542,7 @@
                     <td><button class="btn-warning" onclick="editarDoc(${index})">✏️</button><button class="btn-danger" onclick="excluirDoc(${index})">🗑️</button></td>`;
             });
         }
+
         function editarDoc(index) {
             const d = db.documentos[index];
             document.getElementById('docNome').value = d.nome;
@@ -2703,6 +3555,7 @@
             registrarAuditoria('Edição', `Doc editado: ${d.nome}`);
             salvarDB();
         }
+
         function excluirDoc(index) {
             if (confirm('Excluir documento?')) {
                 const d = db.documentos[index];
@@ -2712,64 +3565,12 @@
                 salvarDB();
             }
         }
+
         function limparCamposDoc() {
-            ['docNome','docTipo','docData','docReferencia','docObs'].forEach(id => document.getElementById(id).value = '');
+            ['docNome', 'docTipo', 'docData', 'docReferencia', 'docObs'].forEach(id => document.getElementById(id).value = '');
         }
 
-        // =============================================
-        // FUNÇÕES DA ABA COMPRAS
-        // =============================================
-        function salvarCompra() {
-            const compra = {
-                data: document.getElementById('compData').value,
-                produto: document.getElementById('compProduto').value,
-                fornecedor: document.getElementById('compFornecedor').value,
-                cnpjFornecedor: document.getElementById('compCnpjFornecedor').value,
-                quantidade: document.getElementById('compQuantidade').value,
-                valorUnitario: document.getElementById('compValorUnitario').value,
-                valorTotal: document.getElementById('compValorTotal').value,
-                formaPagamento: document.getElementById('compFormaPagamento').value,
-                status: document.getElementById('compStatus').value,
-                categoria: document.getElementById('compCategoria').value,
-                obs: document.getElementById('compObs').value
-            };
-
-            if (!compra.data || !compra.produto || !compra.fornecedor) {
-                alert('Preencha os campos obrigatórios: Data, Produto e Fornecedor!');
-                return;
-            }
-
-            if (compraEditandoIndex !== null) {
-                db.compras[compraEditandoIndex] = compra;
-                compraEditandoIndex = null;
-                registrarAuditoria('Edição', `Compra editada: ${compra.produto}`);
-                alert('Compra atualizada com sucesso!');
-            } else {
-                db.compras.push(compra);
-                registrarAuditoria('Cadastro', `Nova compra: ${compra.produto}`);
-                alert('Compra salva com sucesso!');
-            }
-
-            // Adicionar ao fluxo de caixa como saída
-            const valorTotalStr = compra.valorTotal.replace('R$ ', '').replace('.', '').replace(',', '.');
-            const valorTotalNum = parseFloat(valorTotalStr) || 0;
-            if (valorTotalNum > 0 && compra.status !== 'cancelado') {
-                const saida = {
-                    data: compra.data,
-                    descricao: `Compra - ${compra.produto}`,
-                    categoria: compra.categoria || 'Compras',
-                    valor: compra.valorTotal,
-                    tipo: 'saida'
-                };
-                db.fluxoCaixa.push(saida);
-                atualizarTabelaFluxoCaixa();
-                atualizarResumoFinanceiro();
-            }
-
-            atualizarTabelaCompras();
-            limparCamposCompra();
-            salvarDB();
-        }
+        function uploadDoc() { alert('Upload iniciado...'); registrarAuditoria('Cadastro', 'Upload doc'); salvarDB(); }
 
         function editarCompra() {
             const index = compraEditandoIndex;
@@ -2818,10 +3619,10 @@
             tbody.innerHTML = '';
             db.compras.forEach((c, index) => {
                 const row = tbody.insertRow();
-                const statusClass = c.status === 'pago' ? 'status-pago' : 
-                                   c.status === 'cancelado' ? 'status-atrasado' : 'status-pendente';
-                const statusLabel = c.status === 'pago' ? 'Pago' : 
-                                   c.status === 'cancelado' ? 'Cancelado' : 'Pendente';
+                const statusClass = c.status === 'pago' ? 'status-pago' :
+                    c.status === 'cancelado' ? 'status-atrasado' : 'status-pendente';
+                const statusLabel = c.status === 'pago' ? 'Pago' :
+                    c.status === 'cancelado' ? 'Cancelado' : 'Pendente';
                 row.innerHTML = `
                     <td>${formatarDataBR(c.data)}</td>
                     <td>${c.produto}</td>
@@ -2850,10 +3651,9 @@
             document.getElementById('compCategoria').value = c.categoria || '';
             document.getElementById('compObs').value = c.obs || '';
             compraEditandoIndex = index;
-            
-            // Rolar para o formulário
+
             document.getElementById('formCompras').scrollIntoView({ behavior: 'smooth' });
-            
+
             setTimeout(function() {
                 const primeiroCampo = document.querySelector('#formCompras .campo-enter');
                 if (primeiroCampo) primeiroCampo.focus();
@@ -2872,19 +3672,17 @@
             }
         }
 
-        // =============================================
-        // FUNÇÕES DE CONFIGURAÇÃO
-        // =============================================
-        function salvarConfiguracao() { 
-            alert('Configurações salvas!'); 
+        function salvarConfiguracao() {
+            alert('Configurações salvas!');
             registrarAuditoria('Cadastro', 'Config salva');
             salvarDB();
-            
+
             setTimeout(function() {
                 const primeiroCampo = document.querySelector('#formConfig .campo-enter');
                 if (primeiroCampo) primeiroCampo.focus();
             }, 50);
         }
+
         function restaurarPadroes() {
             if (confirm('Restaurar padrões?')) {
                 document.getElementById('configEmpresa').value = 'PAIZÃO RENT A CAR';
@@ -2915,9 +3713,8 @@
             };
             db.auditoria.push(registro);
             atualizarTabelaAuditoria();
-            // Não chamamos salvarDB() aqui porque é chamado nas funções que já salvam.
-            // Mas para garantir, as funções que chamam registrarAuditoria devem chamar salvarDB() após.
         }
+
         function atualizarTabelaAuditoria() {
             const tbody = document.querySelector('#tabelaAuditoria tbody');
             tbody.innerHTML = '';
@@ -2926,6 +3723,7 @@
                 row.innerHTML = `<td>${a.data.toLocaleString('pt-BR')}</td><td>${a.usuario}</td><td>${a.acao}</td><td>${a.descricao}</td><td>${a.ip}</td>`;
             });
         }
+
         function aplicarFiltroAuditoria() {
             const dataInicio = document.getElementById('audDataInicio').value;
             const dataFim = document.getElementById('audDataFim').value;
@@ -2940,6 +3738,7 @@
                 row.style.display = show ? '' : 'none';
             });
         }
+
         function limparFiltroAuditoria() {
             document.getElementById('audDataInicio').value = '';
             document.getElementById('audDataFim').value = '';
@@ -2947,9 +3746,6 @@
             document.querySelectorAll('#tabelaAuditoria tbody tr').forEach(row => row.style.display = '');
         }
 
-        // =============================================
-        // FUNÇÕES DE IMAGENS
-        // =============================================
         function previewGaragemImagem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
@@ -2962,6 +3758,7 @@
                 reader.readAsDataURL(file);
             }
         }
+
         function previewSOSImagem() {
             const file = document.getElementById('sosImagem').files[0];
             if (file) {
@@ -2974,6 +3771,7 @@
                 reader.readAsDataURL(file);
             }
         }
+
         function previewCompImagem() {
             const file = document.getElementById('compImagem').files[0];
             if (file) {
@@ -2986,6 +3784,7 @@
                 reader.readAsDataURL(file);
             }
         }
+
         function salvarGaragem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
@@ -3004,6 +3803,7 @@
                 reader.readAsDataURL(file);
             } else alert('Selecione uma imagem!');
         }
+
         function atualizarGaleriaGaragem() {
             const container = document.getElementById('garagemSavedImages');
             container.innerHTML = '';
@@ -3014,13 +3814,15 @@
                 container.appendChild(div);
             });
         }
+
         function excluirImagemGaragem(i) {
-            if (confirm('Excluir imagem?')) { 
-                db.imagens.garagem.fotos.splice(i,1); 
-                atualizarGaleriaGaragem(); 
-                salvarDB(); 
+            if (confirm('Excluir imagem?')) {
+                db.imagens.garagem.fotos.splice(i, 1);
+                atualizarGaleriaGaragem();
+                salvarDB();
             }
         }
+
         function salvarSOS() {
             const file = document.getElementById('sosImagem').files[0];
             if (file) {
@@ -3039,6 +3841,7 @@
                 reader.readAsDataURL(file);
             } else alert('Selecione uma imagem!');
         }
+
         function atualizarGaleriaSOS() {
             const container = document.getElementById('sosSavedImages');
             container.innerHTML = '';
@@ -3049,22 +3852,25 @@
                 container.appendChild(div);
             });
         }
+
         function excluirImagemSOS(i) {
-            if (confirm('Excluir imagem?')) { 
-                db.imagens.sos.fotos.splice(i,1); 
-                atualizarGaleriaSOS(); 
-                salvarDB(); 
+            if (confirm('Excluir imagem?')) {
+                db.imagens.sos.fotos.splice(i, 1);
+                atualizarGaleriaSOS();
+                salvarDB();
             }
         }
+
         function baixarSOS() {
             if (db.imagens.sos.fotos.length > 0) {
-                const img = db.imagens.sos.fotos[db.imagens.sos.fotos.length-1];
+                const img = db.imagens.sos.fotos[db.imagens.sos.fotos.length - 1];
                 const a = document.createElement('a');
                 a.href = img.data;
                 a.download = img.nome;
                 a.click();
             } else alert('Nenhuma imagem SOS salva!');
         }
+
         function salvarComprovante() {
             const file = document.getElementById('compImagem').files[0];
             if (file) {
@@ -3083,6 +3889,7 @@
                 reader.readAsDataURL(file);
             } else alert('Selecione um comprovante!');
         }
+
         function atualizarGaleriaComprovantes() {
             const container = document.getElementById('compSavedImages');
             container.innerHTML = '';
@@ -3093,11 +3900,12 @@
                 container.appendChild(div);
             });
         }
+
         function excluirComprovante(i) {
-            if (confirm('Excluir comprovante?')) { 
-                db.imagens.comprovantes.fotos.splice(i,1); 
-                atualizarGaleriaComprovantes(); 
-                salvarDB(); 
+            if (confirm('Excluir comprovante?')) {
+                db.imagens.comprovantes.fotos.splice(i, 1);
+                atualizarGaleriaComprovantes();
+                salvarDB();
             }
         }
 
@@ -3105,6 +3913,7 @@
             document.getElementById('modalImage').src = src;
             document.getElementById('imageModal').classList.add('active');
         }
+
         function closeImageModal() {
             document.getElementById('imageModal').classList.remove('active');
         }
@@ -3114,6 +3923,7 @@
             registrarAuditoria('Cadastro', 'Acesso Rastreador');
             salvarDB();
         }
+
         function abrirMultas() {
             alert('🚨 Multas - Em desenvolvimento');
             registrarAuditoria('Cadastro', 'Acesso Multas');
@@ -3130,7 +3940,7 @@
             });
         }
 
-        // Inicialização do sistema: carrega dados e atualiza interface
+        // Inicialização do sistema
         document.addEventListener('DOMContentLoaded', function() {
             inicializarSistema();
         });
