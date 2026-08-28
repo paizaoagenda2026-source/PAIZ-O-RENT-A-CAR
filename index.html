@@ -1181,9 +1181,7 @@
                 <table id="tabelaAuditoria">
                     <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>IP</th></tr></thead>
                     <tbody>
-                        <tr><td>2024-01-15 10:30:00</td><td>SERGIO</td><td>Login</td><td>Login realizado com sucesso</td><td>192.168.1.1</td></tr>
-                        <tr><td>2024-01-15 10:35:00</td><td>SERGIO</td><td>Cadastro</td><td>Novo veículo cadastrado: Fiat Uno - ABC1234</td><td>192.168.1.1</td></tr>
-                        <tr><td>2024-01-15 11:00:00</td><td>SERGIO</td><td>Edição</td><td>Cliente João Silva atualizado</td><td>192.168.1.1</td></tr>
+                        <!-- Os registros serão carregados do localStorage -->
                     </tbody>
                 </table>
             </div>
@@ -1199,6 +1197,59 @@
     </div>
 
     <script>
+        // =============================================
+        // SISTEMA DE PERSISTÊNCIA LOCAL (localStorage)
+        // =============================================
+        const STORAGE_KEY = 'paizao_rentacar_db';
+
+        function criarDBPadrao() {
+            return {
+                veiculos: [],
+                clientes: [],
+                locacoes: [],
+                manutencao: [],
+                mecanico: [],
+                usuarios: [],
+                alugueis: [],
+                fluxoCaixa: [],
+                documentos: [],
+                compras: [],
+                auditoria: [],
+                bancos: [],
+                imagens: {
+                    garagem: { subpasta: 'Fotos da Garagem', fotos: [] },
+                    sos: { subpasta: 'Imagens SOS', fotos: [] },
+                    comprovantes: { subpasta: 'Comprovantes', fotos: [] }
+                }
+            };
+        }
+
+        function carregarDB() {
+            const dados = localStorage.getItem(STORAGE_KEY);
+            if (dados) {
+                try {
+                    return JSON.parse(dados);
+                } catch (e) {
+                    console.error('Erro ao carregar dados do localStorage:', e);
+                    return criarDBPadrao();
+                }
+            } else {
+                return criarDBPadrao();
+            }
+        }
+
+        function salvarDB() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+            } catch (e) {
+                console.error('Erro ao salvar dados no localStorage:', e);
+                alert('Erro ao salvar dados localmente. Verifique o espaço disponível.');
+            }
+        }
+
+        // Carrega o banco de dados do localStorage
+        let db = carregarDB();
+
         // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
         // =============================================
@@ -1366,30 +1417,11 @@
             }
         };
 
-        let db = {
-            veiculos: [],
-            clientes: [],
-            locacoes: [],
-            manutencao: [],
-            mecanico: [],
-            usuarios: [],
-            alugueis: [],
-            fluxoCaixa: [],
-            documentos: [],
-            compras: [],
-            auditoria: [],
-            bancos: [],
-            imagens: {
-                garagem: { subpasta: 'Fotos da Garagem', fotos: [] },
-                sos: { subpasta: 'Imagens SOS', fotos: [] },
-                comprovantes: { subpasta: 'Comprovantes', fotos: [] }
-            }
-        };
-
         let usuarioLogado = null;
         let compraEditandoIndex = null;
 
         function inicializarSistema() {
+            // Garantir que o usuário admin padrão exista
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
                     nome: 'SERGIO',
@@ -1397,12 +1429,29 @@
                     tipo: 'ADM',
                     permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM))
                 });
+                salvarDB(); // Salva após criar usuário padrão
             }
+            // Atualizar todas as tabelas e componentes com os dados carregados
             atualizarTabelaUsuario();
             gerarPermissoesUI();
             atualizarResumoFinanceiro();
             atualizarCombosLocacao();
             atualizarTabelaCompras();
+            atualizarTabelaVeiculos();
+            atualizarTabelaClientes();
+            atualizarTabelaLocacoes();
+            atualizarTabelaManutencao();
+            atualizarTabelaMecanico();
+            atualizarTabelaAlugueis();
+            atualizarTabelaBancos();
+            atualizarTabelaFluxoCaixa();
+            atualizarTabelaDoc();
+            atualizarTabelaAuditoria();
+            atualizarGaleriaGaragem();
+            atualizarGaleriaSOS();
+            atualizarGaleriaComprovantes();
+            // Aplicar permissões iniciais (nenhum usuário logado ainda)
+            // As permissões serão aplicadas após o login
         }
 
         function gerarPermissoesUI() {
@@ -1609,9 +1658,11 @@
                 enterFullscreen();
                 registrarAuditoria('Login', `Login realizado com sucesso por ${user}`);
                 document.getElementById('loginError').style.display = 'none';
+                salvarDB(); // Salva após login (registro de auditoria)
             } else {
                 document.getElementById('loginError').style.display = 'block';
                 registrarAuditoria('Login', 'Tentativa de login falhou');
+                salvarDB();
             }
         });
 
@@ -1625,6 +1676,7 @@
                 document.getElementById('loginError').style.display = 'none';
                 document.getElementById('loginUser').focus();
                 registrarAuditoria('Login', 'Logout do sistema');
+                salvarDB();
                 usuarioLogado = null;
             }
         }
@@ -1901,6 +1953,7 @@
             limparCamposLocacao();
             atualizarTabelaAlugueis();
             registrarAuditoria('Cadastro', `Locação: ${locatario} - ${placa}`);
+            salvarDB(); // SALVAR APÓS TODAS AS ALTERAÇÕES
             alert('Locação salva com sucesso! Lançamento adicionado ao Fluxo de Caixa.');
         }
 
@@ -1997,6 +2050,7 @@
             db.locacoes.splice(index, 1);
             atualizarTabelaLocacoes();
             registrarAuditoria('Edição', `Locação editada: ${l.locatario}`);
+            salvarDB();
         }
         function excluirLocacao(index) {
             if (confirm('Excluir locação?')) {
@@ -2004,6 +2058,7 @@
                 db.locacoes.splice(index, 1);
                 atualizarTabelaLocacoes();
                 registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario}`);
+                salvarDB();
             }
         }
         function limparCamposLocacao() {
@@ -2025,6 +2080,7 @@
         function gerarContrato() {
             alert('📄 Contrato gerado!');
             registrarAuditoria('Cadastro', 'Contrato gerado');
+            salvarDB();
         }
 
         function salvarVeiculo() {
@@ -2054,10 +2110,10 @@
                 if (check) check.checked = false;
             }
             registrarAuditoria('Cadastro', `Novo veículo: ${veiculo.fabricante} - ${veiculo.placa}`);
+            salvarDB();
             alert('Veículo salvo!');
             limparCamposVeiculo();
             
-            // Focar no primeiro campo após salvar
             setTimeout(function() {
                 const primeiroCampo = document.querySelector('#formVeiculos .campo-enter');
                 if (primeiroCampo) primeiroCampo.focus();
@@ -2103,6 +2159,7 @@
             atualizarTabelaVeiculos();
             atualizarCombosLocacao();
             registrarAuditoria('Edição', `Veículo editado: ${v.fabricante} - ${v.placa}`);
+            salvarDB();
         }
         function excluirVeiculo(index) {
             const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
@@ -2115,6 +2172,7 @@
                 atualizarPermissoesVeiculos();
                 atualizarCombosLocacao();
                 registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
+                salvarDB();
             }
         }
         function limparCamposVeiculo() {
@@ -2139,6 +2197,7 @@
             atualizarTabelaClientes();
             atualizarCombosLocacao();
             registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
+            salvarDB();
             alert('Cliente salvo!');
             limparCamposCliente();
             
@@ -2173,6 +2232,7 @@
             atualizarTabelaClientes();
             atualizarCombosLocacao();
             registrarAuditoria('Edição', `Cliente editado: ${c.nome}`);
+            salvarDB();
         }
         function excluirCliente(index) {
             if (confirm('Excluir cliente?')) {
@@ -2181,6 +2241,7 @@
                 atualizarTabelaClientes();
                 atualizarCombosLocacao();
                 registrarAuditoria('Exclusão', `Cliente excluído: ${c.nome}`);
+                salvarDB();
             }
         }
         function limparCamposCliente() {
@@ -2269,6 +2330,7 @@
             }
             
             registrarAuditoria('Edição', `Aluguel pago: ${aluguel.locatario} - Parcela ${aluguel.parcela || 1}`);
+            salvarDB();
             atualizarTabelaAlugueis();
             alert('Pagamento confirmado! Próximo vencimento gerado para ' + formatarDataBR(novoAluguel.dataVencimento));
         }
@@ -2279,6 +2341,7 @@
                 db.alugueis.splice(index, 1);
                 atualizarTabelaAlugueis();
                 registrarAuditoria('Exclusão', `Aluguel excluído: ${a.locatario}`);
+                salvarDB();
             }
         }
 
@@ -2294,6 +2357,7 @@
             db.manutencao.push(m);
             atualizarTabelaManutencao();
             registrarAuditoria('Cadastro', `Manutenção: ${m.veiculo}`);
+            salvarDB();
             alert('Manutenção salva!');
             limparCamposManutencao();
             
@@ -2325,6 +2389,7 @@
             db.manutencao.splice(index, 1);
             atualizarTabelaManutencao();
             registrarAuditoria('Edição', `Manutenção editada: ${m.veiculo}`);
+            salvarDB();
         }
         function excluirManutencao(index) {
             if (confirm('Excluir manutenção?')) {
@@ -2332,6 +2397,7 @@
                 db.manutencao.splice(index, 1);
                 atualizarTabelaManutencao();
                 registrarAuditoria('Exclusão', `Manutenção excluída: ${m.veiculo}`);
+                salvarDB();
             }
         }
 
@@ -2349,6 +2415,7 @@
             db.mecanico.push(m);
             atualizarTabelaMecanico();
             registrarAuditoria('Cadastro', `Serviço mecânico: ${m.servico}`);
+            salvarDB();
             alert('Serviço salvo!');
             limparCamposMecanico();
             
@@ -2382,6 +2449,7 @@
             db.mecanico.splice(index, 1);
             atualizarTabelaMecanico();
             registrarAuditoria('Edição', `Serviço editado: ${m.servico}`);
+            salvarDB();
         }
         function excluirMecanico(index) {
             if (confirm('Excluir serviço?')) {
@@ -2389,6 +2457,7 @@
                 db.mecanico.splice(index, 1);
                 atualizarTabelaMecanico();
                 registrarAuditoria('Exclusão', `Serviço excluído: ${m.servico}`);
+                salvarDB();
             }
         }
 
@@ -2402,6 +2471,7 @@
             db.usuarios.push({ nome, senha, tipo, permissoes });
             atualizarTabelaUsuario();
             registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
+            salvarDB();
             alert('Usuário salvo!');
             limparCamposUsuario();
             
@@ -2440,6 +2510,7 @@
             db.usuarios.splice(index, 1);
             atualizarTabelaUsuario();
             registrarAuditoria('Edição', `Usuário editado: ${u.nome}`);
+            salvarDB();
         }
         function excluirUsuario(index) {
             if (index === undefined) { alert('Selecione um usuário!'); return; }
@@ -2449,6 +2520,7 @@
                 db.usuarios.splice(index, 1);
                 atualizarTabelaUsuario();
                 registrarAuditoria('Exclusão', `Usuário excluído: ${u.nome}`);
+                salvarDB();
             }
         }
         function limparCamposUsuario() {
@@ -2470,6 +2542,7 @@
             atualizarTabelaBancos();
             limparCamposBanco();
             registrarAuditoria('Cadastro', 'Banco salvo');
+            salvarDB();
             alert('Banco salvo!');
             
             setTimeout(function() {
@@ -2488,6 +2561,7 @@
             db.bancos.splice(index, 1);
             atualizarTabelaBancos();
             registrarAuditoria('Edição', `Banco editado: ${b.nome}`);
+            salvarDB();
         }
         function excluirBanco(index) {
             if (confirm('Excluir banco?')) {
@@ -2495,6 +2569,7 @@
                 db.bancos.splice(index, 1);
                 atualizarTabelaBancos();
                 registrarAuditoria('Exclusão', `Banco excluído: ${b.nome}`);
+                salvarDB();
             }
         }
         function limparCamposBanco() {
@@ -2527,6 +2602,7 @@
             atualizarTabelaFluxoCaixa();
             atualizarResumoFinanceiro();
             registrarAuditoria('Cadastro', `Lançamento: ${f.descricao}`);
+            salvarDB();
             alert('Lançamento salvo!');
             limparCamposFluxoCaixa();
             
@@ -2555,6 +2631,7 @@
             atualizarTabelaFluxoCaixa();
             atualizarResumoFinanceiro();
             registrarAuditoria('Edição', `Lançamento editado: ${f.descricao}`);
+            salvarDB();
         }
         function excluirFluxoCaixa(index) {
             if (confirm('Excluir lançamento?')) {
@@ -2563,6 +2640,7 @@
                 atualizarTabelaFluxoCaixa();
                 atualizarResumoFinanceiro();
                 registrarAuditoria('Exclusão', `Lançamento excluído: ${f.descricao}`);
+                salvarDB();
             }
         }
         function limparCamposFluxoCaixa() {
@@ -2594,6 +2672,7 @@
             db.documentos.push(d);
             atualizarTabelaDoc();
             registrarAuditoria('Cadastro', `Documento: ${d.nome}`);
+            salvarDB();
             alert('Documento salvo!');
             limparCamposDoc();
             
@@ -2602,7 +2681,7 @@
                 if (primeiroCampo) primeiroCampo.focus();
             }, 50);
         }
-        function uploadDoc() { alert('Upload iniciado...'); registrarAuditoria('Cadastro', 'Upload doc'); }
+        function uploadDoc() { alert('Upload iniciado...'); registrarAuditoria('Cadastro', 'Upload doc'); salvarDB(); }
         function atualizarTabelaDoc() {
             const tbody = document.querySelector('#tabelaDoc tbody');
             tbody.innerHTML = '';
@@ -2622,6 +2701,7 @@
             db.documentos.splice(index, 1);
             atualizarTabelaDoc();
             registrarAuditoria('Edição', `Doc editado: ${d.nome}`);
+            salvarDB();
         }
         function excluirDoc(index) {
             if (confirm('Excluir documento?')) {
@@ -2629,6 +2709,7 @@
                 db.documentos.splice(index, 1);
                 atualizarTabelaDoc();
                 registrarAuditoria('Exclusão', `Doc excluído: ${d.nome}`);
+                salvarDB();
             }
         }
         function limparCamposDoc() {
@@ -2687,6 +2768,7 @@
 
             atualizarTabelaCompras();
             limparCamposCompra();
+            salvarDB();
         }
 
         function editarCompra() {
@@ -2711,6 +2793,7 @@
                 atualizarTabelaCompras();
                 limparCamposCompra();
                 registrarAuditoria('Exclusão', `Compra excluída: ${compra.produto}`);
+                salvarDB();
                 alert('Compra excluída!');
             }
         }
@@ -2771,7 +2854,6 @@
             // Rolar para o formulário
             document.getElementById('formCompras').scrollIntoView({ behavior: 'smooth' });
             
-            // Focar no primeiro campo
             setTimeout(function() {
                 const primeiroCampo = document.querySelector('#formCompras .campo-enter');
                 if (primeiroCampo) primeiroCampo.focus();
@@ -2785,6 +2867,7 @@
                 if (compraEditandoIndex === index) compraEditandoIndex = null;
                 atualizarTabelaCompras();
                 registrarAuditoria('Exclusão', `Compra excluída: ${compra.produto}`);
+                salvarDB();
                 alert('Compra excluída!');
             }
         }
@@ -2795,6 +2878,7 @@
         function salvarConfiguracao() { 
             alert('Configurações salvas!'); 
             registrarAuditoria('Cadastro', 'Config salva');
+            salvarDB();
             
             setTimeout(function() {
                 const primeiroCampo = document.querySelector('#formConfig .campo-enter');
@@ -2816,6 +2900,7 @@
                 document.getElementById('configSessao').value = '';
                 document.getElementById('configBackup').value = 'sim';
                 registrarAuditoria('Edição', 'Config restaurada');
+                salvarDB();
                 alert('Configurações restauradas!');
             }
         }
@@ -2830,6 +2915,8 @@
             };
             db.auditoria.push(registro);
             atualizarTabelaAuditoria();
+            // Não chamamos salvarDB() aqui porque é chamado nas funções que já salvam.
+            // Mas para garantir, as funções que chamam registrarAuditoria devem chamar salvarDB() após.
         }
         function atualizarTabelaAuditoria() {
             const tbody = document.querySelector('#tabelaAuditoria tbody');
@@ -2906,6 +2993,7 @@
                 reader.onload = e => {
                     db.imagens.garagem.fotos.push({ nome: file.name, data: e.target.result });
                     atualizarGaleriaGaragem();
+                    salvarDB();
                     alert('Imagem salva!');
                     document.getElementById('garagemImagem').value = '';
                     document.getElementById('garagemPreview').style.display = 'none';
@@ -2927,7 +3015,11 @@
             });
         }
         function excluirImagemGaragem(i) {
-            if (confirm('Excluir imagem?')) { db.imagens.garagem.fotos.splice(i,1); atualizarGaleriaGaragem(); }
+            if (confirm('Excluir imagem?')) { 
+                db.imagens.garagem.fotos.splice(i,1); 
+                atualizarGaleriaGaragem(); 
+                salvarDB(); 
+            }
         }
         function salvarSOS() {
             const file = document.getElementById('sosImagem').files[0];
@@ -2936,6 +3028,7 @@
                 reader.onload = e => {
                     db.imagens.sos.fotos.push({ nome: file.name, data: e.target.result });
                     atualizarGaleriaSOS();
+                    salvarDB();
                     alert('Imagem SOS salva!');
                     document.getElementById('sosImagem').value = '';
                     document.getElementById('sosPreview').style.display = 'none';
@@ -2957,7 +3050,11 @@
             });
         }
         function excluirImagemSOS(i) {
-            if (confirm('Excluir imagem?')) { db.imagens.sos.fotos.splice(i,1); atualizarGaleriaSOS(); }
+            if (confirm('Excluir imagem?')) { 
+                db.imagens.sos.fotos.splice(i,1); 
+                atualizarGaleriaSOS(); 
+                salvarDB(); 
+            }
         }
         function baixarSOS() {
             if (db.imagens.sos.fotos.length > 0) {
@@ -2975,6 +3072,7 @@
                 reader.onload = e => {
                     db.imagens.comprovantes.fotos.push({ nome: file.name, data: e.target.result });
                     atualizarGaleriaComprovantes();
+                    salvarDB();
                     alert('Comprovante salvo!');
                     document.getElementById('compImagem').value = '';
                     document.getElementById('compPreview').style.display = 'none';
@@ -2996,7 +3094,11 @@
             });
         }
         function excluirComprovante(i) {
-            if (confirm('Excluir comprovante?')) { db.imagens.comprovantes.fotos.splice(i,1); atualizarGaleriaComprovantes(); }
+            if (confirm('Excluir comprovante?')) { 
+                db.imagens.comprovantes.fotos.splice(i,1); 
+                atualizarGaleriaComprovantes(); 
+                salvarDB(); 
+            }
         }
 
         function openImageModal(src) {
@@ -3010,10 +3112,12 @@
         function abrirRastreador() {
             window.open('http://app.alertavirtual.com.br/t/3b6chl2rmvtafde16', '_blank');
             registrarAuditoria('Cadastro', 'Acesso Rastreador');
+            salvarDB();
         }
         function abrirMultas() {
             alert('🚨 Multas - Em desenvolvimento');
             registrarAuditoria('Cadastro', 'Acesso Multas');
+            salvarDB();
         }
 
         function aplicarPermissoesBotoesDinamicos() {
@@ -3026,6 +3130,7 @@
             });
         }
 
+        // Inicialização do sistema: carrega dados e atualiza interface
         document.addEventListener('DOMContentLoaded', function() {
             inicializarSistema();
         });
