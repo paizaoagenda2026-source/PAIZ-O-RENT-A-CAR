@@ -472,8 +472,8 @@
         }
 
         .image-preview-card {
-            width: 50px;
-            height: 37px;
+            width: 150px;
+            height: 100px;
             border: 1px solid #ddd;
             border-radius: 4px;
             overflow: hidden;
@@ -495,7 +495,7 @@
             justify-content: center;
             height: 100%;
             color: #666;
-            font-size: 3px;
+            font-size: 10px;
             text-align: center;
             padding: 2px;
         }
@@ -806,6 +806,139 @@
             flex-wrap: wrap;
         }
 
+        /* Estilos para o modal de selfie */
+        .selfie-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 999999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .selfie-modal.active {
+            display: flex;
+        }
+
+        .selfie-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .selfie-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transform: scaleX(-1);
+        }
+
+        .selfie-canvas {
+            display: none;
+        }
+
+        .selfie-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .selfie-btn-capture {
+            background: var(--success);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .selfie-btn-capture:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        .selfie-btn-cancel {
+            background: var(--danger);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .selfie-btn-cancel:hover {
+            background: #c82333;
+        }
+
+        .selfie-preview-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 120px;
+            height: 90px;
+            border: 2px solid white;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .selfie-preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .selfie-title {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .selfie-instructions {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .selfie-photo-preview {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .selfie-photo-preview img {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 10px;
+            border: 3px solid white;
+        }
+
+        .selfie-photo-preview p {
+            color: white;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
         @media print {
             body * {
                 visibility: hidden;
@@ -834,6 +967,21 @@
         .print-area.print-visible {
             display: block;
             visibility: visible;
+        }
+
+        .selfie-thumbnail {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-right: 5px;
+        }
+
+        .selfie-thumbnail:hover {
+            transform: scale(1.2);
         }
     </style>
 </head>
@@ -924,11 +1072,17 @@
                 <div class="form-group"><label>CEP</label><input type="text" id="cliCep" class="campo-enter"></div>
                 <div class="form-group"><label>Cidade</label><input type="text" id="cliCidade" class="campo-enter"></div>
                 <div class="form-group"><label>Estado</label><input type="text" id="cliEstado" class="campo-enter"></div>
+                <div class="form-group"><label>Selfie do Cliente</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button type="button" class="btn-buscar" data-permissao="clientes_salvar" onclick="abrirModalSelfie()" style="padding: 10px 20px; font-size: 14px;">📸 Tirar Selfie</button>
+                        <div id="selfiePreviewCliente" style="display: flex; align-items: center;"></div>
+                    </div>
+                </div>
             </div>
-            <button class="btn-primary" data-permissao="clientes_salvar" onclick="salvarCliente()">💾 Salvar</button>
+            <button class="btn-primary" data-permissao="clientes_salvar" onclick="salvarCliente()">💾 Salvar Cliente</button>
             <div class="table-container">
                 <table id="tabelaClientes">
-                    <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Cidade</th><th>Selfie</th><th>Ações</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -968,17 +1122,12 @@
                 <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" readonly></div>
                 <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" readonly></div>
                 <div class="form-group">
-                    <label>Modo Caução</label>
+                    <label>Pagamento Caução</label>
                     <select id="locPagCaucao" class="campo-enter">
                         <option value="avista">À Vista</option>
                         <option value="parcelado">Parcelado C/Aluguel</option>
                         <option value="entrada">Entrada + Parcelas</option>
                     </select>
-                </div>
-                <!-- Novo campo Pgto Caução -->
-                <div class="form-group">
-                    <label>Pgto Caução</label>
-                    <input type="text" id="locPgtoCaucao" class="money campo-enter" placeholder="R$ 0,00">
                 </div>
             </div>
             <button class="btn-primary" data-permissao="locacoes_salvar" onclick="salvarLocacao()">💾 Salvar</button>
@@ -1067,7 +1216,7 @@
             <button class="btn-secondary" data-permissao="usuario_limpar" onclick="limparCamposUsuario()">🔄 Limpar</button>
             <div class="table-container">
                 <table id="tabelaUsuario">
-                    <thead><tr><th>Nome</th><th>Tipo</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Nome</th><th>Tipo</th><th>Selfie</th><th>Ações</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1362,6 +1511,28 @@
         </div>
     </div>
 
+    <!-- MODAL DE SELFIE -->
+    <div class="selfie-modal" id="selfieModal">
+        <div class="selfie-title">📸 Tire sua Selfie</div>
+        <div class="selfie-instructions">Posicione seu rosto na frente da câmera e clique em "Capturar"</div>
+        <div class="selfie-container">
+            <video class="selfie-video" id="selfieVideo" autoplay playsinline></video>
+            <canvas class="selfie-canvas" id="selfieCanvas"></canvas>
+            <div class="selfie-preview-container" id="selfiePreviewContainer">
+                <img id="selfiePreviewImg" alt="Preview">
+            </div>
+        </div>
+        <div class="selfie-photo-preview" id="selfiePhotoPreview">
+            <img id="selfiePhotoResult" alt="Selfie capturada">
+            <p>Selfie capturada com sucesso!</p>
+        </div>
+        <div class="selfie-controls">
+            <button class="selfie-btn-capture" id="selfieCaptureBtn" onclick="capturarSelfie()">📸 Capturar</button>
+            <button class="selfie-btn-cancel" onclick="fecharModalSelfie()">❌ Cancelar</button>
+            <button class="selfie-btn-capture" id="selfieConfirmBtn" onclick="confirmarSelfie()" style="display: none; background: var(--primary);">✅ Confirmar Selfie</button>
+        </div>
+    </div>
+
     <!-- MODAL DE CONTRATOS -->
     <div class="contrato-modal" id="contratoModal">
         <div class="contrato-modal-content">
@@ -1473,9 +1644,14 @@
 
     <script>
         // =============================================
+        // LIMPAR DADOS ANTIGOS DO LOCALSTORAGE
+        // =============================================
+        localStorage.removeItem('paizao_rentacar_db');
+        
+        // =============================================
         // SISTEMA DE PERSISTÊNCIA LOCAL (localStorage)
         // =============================================
-        const STORAGE_KEY = 'paizao_rentacar_db';
+        const STORAGE_KEY = 'paizao_rentacar_db_v2';
 
         function criarDBPadrao() {
             return {
@@ -1530,6 +1706,13 @@
         let db = carregarDB();
 
         // =============================================
+        // VARIÁVEIS DO SISTEMA DE SELFIE
+        // =============================================
+        let selfieStream = null;
+        let selfieDataUrl = null;
+        let selfieClienteTemp = null;
+
+        // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
         // =============================================
         document.addEventListener('DOMContentLoaded', function() {
@@ -1561,6 +1744,9 @@
 
             document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
+
+            // Inicializar sistema
+            inicializarSistema();
         });
 
         function calcularValorTotal() {
@@ -1690,7 +1876,146 @@
         let usuarioLogado = null;
         let compraEditandoIndex = null;
 
-        // Função auxiliar para verificar campos vazios
+        // =============================================
+        // FUNÇÕES DE SELFIE
+        // =============================================
+        function abrirModalSelfie() {
+            selfieDataUrl = null;
+            
+            document.getElementById('selfiePhotoPreview').style.display = 'none';
+            document.getElementById('selfieConfirmBtn').style.display = 'none';
+            document.getElementById('selfieCaptureBtn').style.display = 'inline-block';
+            document.getElementById('selfiePreviewContainer').style.display = 'none';
+            
+            document.getElementById('selfieModal').classList.add('active');
+            
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }, 
+                    audio: false 
+                })
+                .then(function(stream) {
+                    selfieStream = stream;
+                    const video = document.getElementById('selfieVideo');
+                    video.srcObject = stream;
+                    video.play();
+                    
+                    document.getElementById('selfiePreviewContainer').style.display = 'block';
+                    atualizarPreviewSelfie();
+                })
+                .catch(function(err) {
+                    console.error('Erro ao acessar câmera:', err);
+                    alert('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
+                    fecharModalSelfie();
+                });
+            } else {
+                alert('Seu navegador não suporta acesso à câmera.');
+                fecharModalSelfie();
+            }
+        }
+
+        function fecharModalSelfie() {
+            if (selfieStream) {
+                selfieStream.getTracks().forEach(track => track.stop());
+                selfieStream = null;
+            }
+            
+            document.getElementById('selfieModal').classList.remove('active');
+            document.getElementById('selfieVideo').srcObject = null;
+            selfieDataUrl = null;
+        }
+
+        function atualizarPreviewSelfie() {
+            const video = document.getElementById('selfieVideo');
+            const canvas = document.getElementById('selfieCanvas');
+            const previewImg = document.getElementById('selfiePreviewImg');
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                previewImg.src = canvas.toDataURL('image/png');
+                
+                setTimeout(atualizarPreviewSelfie, 100);
+            } else {
+                setTimeout(atualizarPreviewSelfie, 100);
+            }
+        }
+
+        function capturarSelfie() {
+            const video = document.getElementById('selfieVideo');
+            const canvas = document.getElementById('selfieCanvas');
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                selfieDataUrl = canvas.toDataURL('image/png');
+                
+                document.getElementById('selfiePhotoResult').src = selfieDataUrl;
+                document.getElementById('selfiePhotoPreview').style.display = 'block';
+                document.getElementById('selfieCaptureBtn').style.display = 'none';
+                document.getElementById('selfieConfirmBtn').style.display = 'inline-block';
+                
+                if (selfieStream) {
+                    selfieStream.getTracks().forEach(track => track.stop());
+                    selfieStream = null;
+                }
+                document.getElementById('selfieVideo').srcObject = null;
+                document.getElementById('selfiePreviewContainer').style.display = 'none';
+            } else {
+                alert('Câmera não está pronta. Aguarde um momento.');
+            }
+        }
+
+        function confirmarSelfie() {
+            if (!selfieDataUrl) {
+                alert('Nenhuma selfie foi capturada!');
+                return;
+            }
+            
+            selfieClienteTemp = selfieDataUrl;
+            mostrarPreviewSelfieCliente();
+            alert('Selfie do cliente capturada com sucesso!');
+            
+            fecharModalSelfie();
+        }
+
+        function mostrarPreviewSelfieCliente() {
+            const container = document.getElementById('selfiePreviewCliente');
+            container.innerHTML = '';
+            if (selfieClienteTemp) {
+                const img = document.createElement('img');
+                img.src = selfieClienteTemp;
+                img.className = 'selfie-thumbnail';
+                img.onclick = function() {
+                    openImageModal(selfieClienteTemp);
+                };
+                container.appendChild(img);
+            }
+        }
+
+        function limparSelfieCliente() {
+            selfieClienteTemp = null;
+            document.getElementById('selfiePreviewCliente').innerHTML = '';
+        }
+
+        // =============================================
+        // FUNÇÕES AUXILIARES
+        // =============================================
         function campoVazio(valor) {
             return !valor || valor.trim() === '';
         }
@@ -1701,7 +2026,8 @@
                     nome: 'SERGIO',
                     senha: '080888',
                     tipo: 'ADM',
-                    permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM))
+                    permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
+                    selfie: null
                 });
                 salvarDB();
             }
@@ -1732,6 +2058,7 @@
             atualizarGaleriaSOS();
             atualizarGaleriaComprovantes();
             carregarDadosContratos();
+            limparSelfieCliente();
         }
 
         function gerarPermissoesUI() {
@@ -2177,10 +2504,138 @@
         }
 
         // =============================================
-        // FUNÇÕES DE SALVAMENTO COM VALIDAÇÕES
+        // FUNÇÃO SALVAR CLIENTE - CORRIGIDA
+        // =============================================
+        function salvarCliente() {
+            console.log('Iniciando salvamento do cliente...');
+            
+            const nome = document.getElementById('cliNome').value.trim();
+            const cpf = document.getElementById('cliCpf').value.trim();
+            const rg = document.getElementById('cliRg').value.trim();
+            const telefone = document.getElementById('cliTelefone').value.trim();
+            const endereco = document.getElementById('cliEndereco').value.trim();
+            const cidade = document.getElementById('cliCidade').value.trim();
+            const estado = document.getElementById('cliEstado').value.trim();
+
+            console.log('Dados do formulário:', { nome, cpf, rg, telefone, endereco, cidade, estado });
+
+            if (!nome || !cpf || !rg || !telefone || !endereco || !cidade || !estado) {
+                alert('Preencha todos os campos obrigatórios do cliente!');
+                return;
+            }
+
+            // Verificar CPF duplicado
+            const cpfLimpo = cpf.replace(/\D/g, '');
+            console.log('CPF limpo:', cpfLimpo);
+            console.log('Clientes existentes:', db.clientes);
+            
+            const cpfDuplicado = db.clientes.some(c => {
+                const cpfExistente = (c.cpf || '').replace(/\D/g, '');
+                console.log('Comparando:', cpfExistente, 'com', cpfLimpo);
+                return cpfExistente === cpfLimpo;
+            });
+
+            if (cpfDuplicado) {
+                alert('Já existe um cliente com esse CPF!');
+                return;
+            }
+
+            // Criar objeto cliente
+            const cliente = {
+                dataCadastro: document.getElementById('cliDataCadastro').value,
+                nome: nome,
+                cpf: cpf,
+                rg: rg,
+                cnh: document.getElementById('cliCnh').value,
+                dataCnh: document.getElementById('cliDataCnh').value,
+                telefone: telefone,
+                endereco: endereco,
+                cep: document.getElementById('cliCep').value,
+                cidade: cidade,
+                estado: estado,
+                selfie: selfieClienteTemp || null
+            };
+
+            console.log('Novo cliente:', cliente);
+
+            // Salvar cliente
+            db.clientes.push(cliente);
+            console.log('Cliente salvo. Total clientes:', db.clientes.length);
+            
+            // Criar usuário automaticamente
+            criarUsuarioDoCliente(cliente);
+            
+            // Atualizar tabelas
+            atualizarTabelaClientes();
+            atualizarCombosLocacao();
+            
+            // Registrar auditoria
+            registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
+            
+            // Salvar no localStorage
+            salvarDB();
+            console.log('Dados salvos no localStorage');
+            
+            alert('Cliente salvo com sucesso! Usuário criado automaticamente.');
+            
+            // Limpar campos
+            limparCamposCliente();
+            limparSelfieCliente();
+            
+            setTimeout(function() {
+                const primeiroCampo = document.querySelector('#formClientes .campo-enter');
+                if (primeiroCampo) primeiroCampo.focus();
+            }, 50);
+        }
+
+        function criarUsuarioDoCliente(cliente) {
+            console.log('Criando usuário para cliente:', cliente.nome);
+            
+            const nomeCliente = cliente.nome.trim();
+            if (!nomeCliente) return;
+
+            const primeiroNome = nomeCliente.split(/\s+/)[0].toUpperCase();
+            console.log('Primeiro nome:', primeiroNome);
+
+            const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
+            let senha = telefoneLimpo;
+
+            if (telefoneLimpo.length >= 10) {
+                senha = telefoneLimpo.substring(2);
+            }
+            if (!senha) {
+                senha = '';
+            }
+
+            console.log('Senha gerada:', senha);
+
+            // Verificar se usuário já existe
+            const usuarioExistente = db.usuarios.find(u => u.nome === primeiroNome);
+            if (usuarioExistente) {
+                console.log('Usuário já existe:', primeiroNome);
+                return;
+            }
+
+            const novoUsuario = {
+                nome: primeiroNome,
+                senha: senha,
+                tipo: 'MOTORISTA',
+                permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
+                selfie: cliente.selfie || null
+            };
+
+            console.log('Novo usuário:', novoUsuario);
+
+            db.usuarios.push(novoUsuario);
+            atualizarTabelaUsuario();
+            registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
+            console.log('Usuário criado com sucesso!');
+        }
+
+        // =============================================
+        // DEMAIS FUNÇÕES DE SALVAMENTO
         // =============================================
 
-        // VEÍCULOS
         function salvarVeiculo() {
             const fabricante = document.getElementById('veicFabricante').value;
             const cor = document.getElementById('veicCor').value;
@@ -2197,7 +2652,6 @@
                 return;
             }
 
-            // Verificar placa duplicada
             if (db.veiculos.some(v => v.placa.toLowerCase() === placa.toLowerCase())) {
                 alert('Já existe um veículo com essa placa!');
                 return;
@@ -2232,60 +2686,8 @@
             salvarDB();
             alert('Veículo salvo!');
             limparCamposVeiculo();
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formVeiculos .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
-        // CLIENTES
-        function salvarCliente() {
-            const nome = document.getElementById('cliNome').value;
-            const cpf = document.getElementById('cliCpf').value;
-            const rg = document.getElementById('cliRg').value;
-            const telefone = document.getElementById('cliTelefone').value;
-            const endereco = document.getElementById('cliEndereco').value;
-            const cidade = document.getElementById('cliCidade').value;
-            const estado = document.getElementById('cliEstado').value;
-
-            if (campoVazio(nome) || campoVazio(cpf) || campoVazio(rg) || campoVazio(telefone) || campoVazio(endereco) || campoVazio(cidade) || campoVazio(estado)) {
-                alert('Preencha todos os campos obrigatórios do cliente!');
-                return;
-            }
-
-            // Verificar CPF duplicado
-            if (db.clientes.some(c => c.cpf.replace(/\D/g, '') === cpf.replace(/\D/g, ''))) {
-                alert('Já existe um cliente com esse CPF!');
-                return;
-            }
-
-            const cliente = {
-                dataCadastro: document.getElementById('cliDataCadastro').value,
-                nome,
-                cpf,
-                rg,
-                cnh: document.getElementById('cliCnh').value,
-                dataCnh: document.getElementById('cliDataCnh').value,
-                telefone,
-                endereco,
-                cep: document.getElementById('cliCep').value,
-                cidade,
-                estado
-            };
-            db.clientes.push(cliente);
-            atualizarTabelaClientes();
-            atualizarCombosLocacao();
-            registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
-            salvarDB();
-            alert('Cliente salvo!');
-            limparCamposCliente();
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formClientes .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
-        }
-
-        // LOCAÇÕES
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
             const veiculo = document.getElementById('locVeiculo').value;
@@ -2294,14 +2696,12 @@
             const dataFim = document.getElementById('locDataFim').value;
             const caucao = document.getElementById('locCaucao').value;
             const valorAluguel = document.getElementById('locValorAluguel').value;
-            const pgtoCaucao = document.getElementById('locPgtoCaucao').value; // Novo campo
 
             if (campoVazio(locatario) || campoVazio(veiculo) || campoVazio(placa) || campoVazio(dataInicio) || campoVazio(dataFim) || campoVazio(caucao) || campoVazio(valorAluguel)) {
                 alert('Preencha todos os campos obrigatórios da locação!');
                 return;
             }
 
-            // Verificar duplicidade: mesma locação (locatário + placa + dataInicio)
             if (db.locacoes.some(l =>
                 l.locatario === locatario &&
                 l.placa === placa &&
@@ -2325,8 +2725,7 @@
                 valorAluguel,
                 proprietario: document.getElementById('locProprietario').value,
                 cpfPropr: document.getElementById('locCpfPropr').value,
-                pagCaucao: document.getElementById('locPagCaucao').value,
-                pgtoCaucao: pgtoCaucao // Adicionado novo campo
+                pagCaucao: document.getElementById('locPagCaucao').value
             };
             db.locacoes.push(locacao);
             atualizarTabelaLocacoes();
@@ -2344,14 +2743,7 @@
                     valor: valorAluguel,
                     tipo: 'entrada'
                 };
-                // Verificar duplicidade no fluxo de caixa
-                const duplicadoFluxo = db.fluxoCaixa.some(f =>
-                    f.data === hoje &&
-                    f.descricao === entrada.descricao &&
-                    f.valor === entrada.valor &&
-                    f.tipo === 'entrada'
-                );
-                if (!duplicadoFluxo) {
+                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === entrada.descricao && f.valor === entrada.valor && f.tipo === 'entrada')) {
                     db.fluxoCaixa.push(entrada);
                     atualizarTabelaFluxoCaixa();
                     atualizarResumoFinanceiro();
@@ -2366,7 +2758,6 @@
             alert('Locação salva com sucesso!');
         }
 
-        // PREENCHER CONTRATOS (mantido igual, sem validações adicionais)
         function preencherContratosComLocacao(locacao) {
             const cliente = db.clientes.find(c => c.nome === locacao.locatario);
             const veiculoObj = db.veiculos.find(v => v.placa === locacao.placa);
@@ -2426,7 +2817,6 @@
             salvarDadosContratos();
         }
 
-        // MANUTENÇÃO
         function salvarManutencao() {
             const veiculo = document.getElementById('manVeiculo').value;
             const placa = document.getElementById('manPlaca').value;
@@ -2440,13 +2830,7 @@
                 return;
             }
 
-            // Verificar duplicidade: mesma manutenção (veiculo + placa + tipo + data)
-            if (db.manutencao.some(m =>
-                m.veiculo === veiculo &&
-                m.placa === placa &&
-                m.tipo === tipo &&
-                m.data === data
-            )) {
+            if (db.manutencao.some(m => m.veiculo === veiculo && m.placa === placa && m.tipo === tipo && m.data === data)) {
                 alert('Já existe uma manutenção idêntica registrada!');
                 return;
             }
@@ -2458,13 +2842,8 @@
             salvarDB();
             alert('Manutenção salva!');
             limparCamposManutencao();
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formManutencao .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
-        // MECÂNICO
         function salvarMecanico() {
             const data = document.getElementById('mecData').value;
             const oficina = document.getElementById('mecOficina').value;
@@ -2480,13 +2859,7 @@
                 return;
             }
 
-            // Verificar duplicidade: mesma data + oficina + serviço + placa
-            if (db.mecanico.some(m =>
-                m.data === data &&
-                m.oficina === oficina &&
-                m.servico === servico &&
-                m.placa === placa
-            )) {
+            if (db.mecanico.some(m => m.data === data && m.oficina === oficina && m.servico === servico && m.placa === placa)) {
                 alert('Já existe um serviço mecânico idêntico registrado!');
                 return;
             }
@@ -2498,13 +2871,8 @@
             salvarDB();
             alert('Serviço salvo!');
             limparCamposMecanico();
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formMecanico .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
-        // USUÁRIOS
         function salvarUsuario() {
             const nome = document.getElementById('userNome').value.trim().toUpperCase();
             const senha = document.getElementById('userSenha').value;
@@ -2519,19 +2887,14 @@
                 alert('Já existe um usuário com esse nome!');
                 return;
             }
-            db.usuarios.push({ nome, senha, tipo, permissoes });
+            db.usuarios.push({ nome, senha, tipo, permissoes, selfie: null });
             atualizarTabelaUsuario();
             registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
             salvarDB();
             alert('Usuário salvo!');
             limparCamposUsuario();
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formUsuario .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
-        // BANCOS
         function salvarBanco() {
             const nome = document.getElementById('bancoNome').value;
             const agencia = document.getElementById('bancoAgencia').value;
@@ -2544,12 +2907,7 @@
                 return;
             }
 
-            // Verificar duplicidade: mesma combinação banco+agência+conta
-            if (db.bancos.some(b =>
-                b.nome.toLowerCase() === nome.toLowerCase() &&
-                b.agencia === agencia &&
-                b.conta === conta
-            )) {
+            if (db.bancos.some(b => b.nome.toLowerCase() === nome.toLowerCase() && b.agencia === agencia && b.conta === conta)) {
                 alert('Já existe um banco com essa agência e conta!');
                 return;
             }
@@ -2561,13 +2919,8 @@
             registrarAuditoria('Cadastro', 'Banco salvo');
             salvarDB();
             alert('Banco salvo!');
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formBanco .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
-        // FLUXO DE CAIXA
         function salvarFluxoCaixa() {
             const data = document.getElementById('fcData').value;
             const descricao = document.getElementById('fcDescricao').value;
@@ -2580,13 +2933,7 @@
                 return;
             }
 
-            // Verificar duplicidade: mesma data + descrição + valor + tipo
-            if (db.fluxoCaixa.some(f =>
-                f.data === data &&
-                f.descricao === descricao &&
-                f.valor === valor &&
-                f.tipo === tipo
-            )) {
+            if (db.fluxoCaixa.some(f => f.data === data && f.descricao === descricao && f.valor === valor && f.tipo === tipo)) {
                 alert('Já existe um lançamento idêntico no fluxo de caixa!');
                 return;
             }
@@ -2599,13 +2946,8 @@
             salvarDB();
             alert('Lançamento salvo!');
             limparCamposFluxoCaixa();
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formFluxoCaixa .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
-        // DOCUMENTOS
         function salvarDoc() {
             const nome = document.getElementById('docNome').value;
             const tipo = document.getElementById('docTipo').value;
@@ -2618,7 +2960,6 @@
                 return;
             }
 
-            // Verificar duplicidade: mesmo nome
             if (db.documentos.some(d => d.nome.toLowerCase() === nome.toLowerCase())) {
                 alert('Já existe um documento com esse nome!');
                 return;
@@ -2631,13 +2972,8 @@
             salvarDB();
             alert('Documento salvo!');
             limparCamposDoc();
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formDoc .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
-        // COMPRAS
         function salvarCompra() {
             const data = document.getElementById('compData').value;
             const produto = document.getElementById('compProduto').value;
@@ -2655,12 +2991,7 @@
                 return;
             }
 
-            // Verificar duplicidade: mesma data + produto + fornecedor
-            if (db.compras.some(c =>
-                c.data === data &&
-                c.produto.toLowerCase() === produto.toLowerCase() &&
-                c.fornecedor.toLowerCase() === fornecedor.toLowerCase()
-            )) {
+            if (db.compras.some(c => c.data === data && c.produto.toLowerCase() === produto.toLowerCase() && c.fornecedor.toLowerCase() === fornecedor.toLowerCase())) {
                 alert('Já existe uma compra idêntica registrada!');
                 return;
             }
@@ -2700,14 +3031,7 @@
                     valor: compra.valorTotal,
                     tipo: 'saida'
                 };
-                // Verificar duplicidade no fluxo
-                const duplicadoFluxo = db.fluxoCaixa.some(f =>
-                    f.data === saida.data &&
-                    f.descricao === saida.descricao &&
-                    f.valor === saida.valor &&
-                    f.tipo === 'saida'
-                );
-                if (!duplicadoFluxo) {
+                if (!db.fluxoCaixa.some(f => f.data === saida.data && f.descricao === saida.descricao && f.valor === saida.valor && f.tipo === 'saida')) {
                     db.fluxoCaixa.push(saida);
                     atualizarTabelaFluxoCaixa();
                     atualizarResumoFinanceiro();
@@ -2719,263 +3043,8 @@
             salvarDB();
         }
 
-        // Demais funções de edição/exclusão/limpeza permanecem inalteradas
-        // (não precisam de validação extra)
-
         // =============================================
-        // FUNÇÕES DOS CONTRATOS
-        // =============================================
-        function abrirModalContratos() {
-            carregarDadosContratos();
-            document.getElementById('contratoModal').classList.add('active');
-            switchContratoTab('contratoLocacao');
-        }
-
-        function fecharModalContratos() {
-            document.getElementById('contratoModal').classList.remove('active');
-            salvarDadosContratos();
-        }
-
-        function switchContratoTab(tabName) {
-            document.querySelectorAll('.contrato-sub-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.contrato-sub-content').forEach(c => c.classList.remove('active'));
-
-            if (tabName === 'contratoLocacao') {
-                document.querySelector('.contrato-sub-tab[onclick*="contratoLocacao"]').classList.add('active');
-                document.getElementById('contratoLocacao').classList.add('active');
-            } else if (tabName === 'termoResponsabilidade') {
-                document.querySelector('.contrato-sub-tab[onclick*="termoResponsabilidade"]').classList.add('active');
-                document.getElementById('termoResponsabilidade').classList.add('active');
-            } else if (tabName === 'notaPromissoria') {
-                document.querySelector('.contrato-sub-tab[onclick*="notaPromissoria"]').classList.add('active');
-                document.getElementById('notaPromissoria').classList.add('active');
-            }
-        }
-
-        function carregarDadosContratos() {
-            if (db.contratos && db.contratos.contratoLocacao) {
-                const cl = db.contratos.contratoLocacao;
-                Object.keys(cl).forEach(key => {
-                    const el = document.getElementById(key);
-                    if (el) el.value = cl[key];
-                });
-            }
-            if (db.contratos && db.contratos.termoResponsabilidade) {
-                const tr = db.contratos.termoResponsabilidade;
-                Object.keys(tr).forEach(key => {
-                    const el = document.getElementById(key);
-                    if (el) el.value = tr[key];
-                });
-            }
-            if (db.contratos && db.contratos.notaPromissoria) {
-                const np = db.contratos.notaPromissoria;
-                Object.keys(np).forEach(key => {
-                    const el = document.getElementById(key);
-                    if (el) el.value = np[key];
-                });
-            }
-        }
-
-        function salvarDadosContratos() {
-            const contratoLocacao = {};
-            document.querySelectorAll('#contratoLocacao input').forEach(input => {
-                contratoLocacao[input.id] = input.value;
-            });
-
-            const termoResponsabilidade = {};
-            document.querySelectorAll('#termoResponsabilidade input').forEach(input => {
-                termoResponsabilidade[input.id] = input.value;
-            });
-
-            const notaPromissoria = {};
-            document.querySelectorAll('#notaPromissoria input').forEach(input => {
-                notaPromissoria[input.id] = input.value;
-            });
-
-            db.contratos.contratoLocacao = contratoLocacao;
-            db.contratos.termoResponsabilidade = termoResponsabilidade;
-            db.contratos.notaPromissoria = notaPromissoria;
-            salvarDB();
-        }
-
-        function imprimirDocumento(tipo) {
-            salvarDadosContratos();
-
-            const printArea = document.getElementById('printArea');
-            printArea.innerHTML = '';
-
-            if (tipo === 'contratoLocacao') {
-                printArea.innerHTML = gerarHtmlContratoLocacao();
-            } else if (tipo === 'termoResponsabilidade') {
-                printArea.innerHTML = gerarHtmlTermoResponsabilidade();
-            } else if (tipo === 'notaPromissoria') {
-                printArea.innerHTML = gerarHtmlNotaPromissoria();
-            }
-
-            printArea.classList.add('print-visible');
-
-            setTimeout(function() {
-                window.print();
-                printArea.classList.remove('print-visible');
-                printArea.innerHTML = '';
-            }, 200);
-        }
-
-        function gerarHtmlContratoLocacao() {
-            const d = {};
-            document.querySelectorAll('#contratoLocacao input').forEach(input => {
-                d[input.id] = input.value;
-            });
-
-            return `
-            <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto;">
-                <h2 style="text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px;">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h2>
-                <p><strong>Contrato Número:</strong> ${d.ctNumero || '0001'}</p>
-                <p style="text-align: justify;">Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número 001220, e na melhor forma de direito, de um lado, <strong>${d.ctLocadora || 'PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME'}</strong>, com sede na <strong>${d.ctEnderecoLocadora || 'AV. Vila Ema 5445 Vila Ema São Paulo SP'}</strong>, inscrita no CNPJ sob o nº <strong>${d.ctCnpjLocadora || '74.410.606.0001-31'}</strong>, doravante denominada LOCADORA, e, de outro lado, <strong>${d.ctLocatario || 'PABLO MEDEIRO'}</strong>, residente e domiciliado à <strong>${d.ctEnderecoLocatario || 'Rua Joaquim Abreu Luiz 150 Parque São Lucas São Paulo SP'}</strong>, CEP <strong>${d.ctCepLocatario || '03263-020'}</strong>, portador do RG nº <strong>${d.ctRgLocatario || '54.806-749-1'}</strong> e inscrito no CPF sob o nº <strong>${d.ctCpfLocatario || '464.065.988-14'}</strong>, doravante denominado LOCATÁRIO, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.</p>
-                
-                <h3 style="margin-top: 20px;">CLÁUSULA PRIMEIRA - DO OBJETO</h3>
-                <p>1. O presente contrato tem por objeto a locação do veículo <strong>${d.ctVeiculoModelo || 'Nissan/Kicks Sense CVT'}</strong>, cor ${d.ctVeiculoCor || 'cinza'}, placas <strong>${d.ctVeiculoPlaca || 'QMK3B93'}</strong>, quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimídia, ano de fabricação <strong>${d.ctAnoFabr || '2020'}</strong> e ano modelo <strong>${d.ctAnoModel || '2020'}</strong>.</p>
-                
-                <h3>CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR</h3>
-                <p>2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.</p>
-                <p>3. Manter o seguro do veículo vigente.</p>
-                <p>4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.</p>
-                <p>5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.</p>
-                <p>6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.</p>
-                
-                <h3>CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO</h3>
-                <p>6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.</p>
-                <p>7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.</p>
-                <p>7.1 O locatário compromete-se a utilizar o veículo de forma adequada, em conformidade com as leis de trânsito e as normas de segurança pública, abstendo-se de exceder a lotação e o peso suportado pelo veículo e de praticar atos que possam causar danos ou prejuízos ao veículo ou a terceiros.</p>
-                <p>8. É vedado ao LOCATÁRIO: utilizar o veículo para fins comerciais de competição ou para qualquer outra finalidade não prevista neste contrato. É vedado conduzir o veículo sob a influência de álcool, drogas ou substâncias psicoativas que possam comprometer sua capacidade de condução. É vedado emprestar, sublocar, ceder ou transferir, de qualquer forma, o veículo a terceiros. O locatário se compromete a não realizar modificações, reparos ou adaptações no veículo sem autorização prévia e expressa do Locador.</p>
-                <p>9. O locatário será o único responsável por eventuais multas, taxas, impostos e outras despesas decorrentes do uso do veículo durante o período de locação.</p>
-                <p>9.1 Considerando o prazo estendido deste contrato de locação, e com o propósito de o veículo manter-se em condições de uso, o locatário assumirá a responsabilidade de realizar checklist semanal, verificando e informando à empresa sobre as condições dos seguintes itens: Nível de óleo do motor; Parte elétrica; Freios; Nível de água; Pneus. A omissão de informação ou a sua prestação inverídica sobre a situação do veículo poderá dar causa à rescisão contratual, e as avarias oportunamente identificadas, e seus respectivos consertos, correrão por conta do locatário.</p>
-                <p>10. O locatário se compromete a utilizar o veículo somente em território nacional e dentro do Estado da Federação em que foi locado, sendo expressamente proibido ultrapassar qualquer fronteira ou limite geográfico diverso deste aqui mencionado.</p>
-                <p>10.1 As partes ajustam que, havendo necessidade de deslocamento do veículo para além de cem quilômetros a partir desta cidade, o locatário deverá informar previamente o locador.</p>
-                <p>11. Em relação às multas de trânsito, o Locatário, sendo responsável pelo cometimento delas, obriga-se a fornecer, no prazo de 3 (três) dias após ser comunicado, uma cópia da CNH contendo sua assinatura, bem como de arcar com os custos operacionais e administrativos para transferência dos pontos.</p>
-                <p>12. A inobservância das Cláusulas 3.1 e 3.2 ensejará a imediata devolução do veículo locado, e sua retenção imotivada poderá configurar apropriação indébita. 12.1 É de inteira responsabilidade do Locatário os custos de pagamento das multas de trânsito e custos administrativos decorrentes das infrações durante o período em que estiver na posse do veículo, salvo se tais multas ou penalidades forem imputáveis à Locadora por irregularidade na documentação do veículo.</p>
-                <p>12.2 A taxa administrativa por multa será R$ 100,00, que deverá ser paga junto com o valor da multa apresentada.</p>
-                <p>13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.</p>
-                <p>14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.</p>
-                <p>15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.</p>
-                <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong>.</p>
-                
-                <h3>CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO</h3>
-                <p>17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante prévia comunicação.</p>
-                <p>18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a <strong>${d.ctLocalVistoria || 'AV. VILA EMA 5445 VILA EMA SÃO PAULO'}</strong>, por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.</p>
-                <p>19. O Locador se compromete a utilizar o veículo em conformidade com as regras aqui estabelecidas e em obediência às especificidades do veículo, ditadas pela montadora.</p>
-                <p>20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.</p>
-                <p>21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.</p>
-                <p>22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.</p>
-                
-                <h3>CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA</h3>
-                <p>23. O presente Contrato tem vigência de 180 (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de <strong>${d.ctMultaRescisao || 'R$ 2.500,00 (dois e quinhentos reais)'}</strong>.</p>
-                <p>23.1. Após os primeiros 90 dias de contrato o LOCATÁRIO poderá se achar necessário solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de <strong>${d.ctTaxaTroca || 'R$ 600,00 (seiscentos reais)'}</strong>.</p>
-                <p>24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.</p>
-                <p>25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.</p>
-                
-                <h3>CLÁUSULA SEXTA - DO PREÇO</h3>
-                <p>26. Preço da Locação: O valor ajustado entre as partes neste contrato é de <strong>${d.ctValorAluguel || 'R$ 1.200,00 (um mil e duzentos reais)'}</strong> semanais, bem como de que o limite de quilometragem estabelecido será de <strong>${d.ctLimiteKm || '1.750'}</strong> km por semana, e que por quilômetro excedente o locatário pagará o equivalente a <strong>${d.ctValorKmExcedente || 'R$ 0,90 centavos'}</strong>. As partes ajustam ainda que nesse contrato que a caução no valor de <strong>${d.ctValorCaucao || 'R$ 2.500,00'}</strong>, deverá ser dividido em <strong>${d.ctCaucaoParcelas || '10 semanas'}</strong> e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de <strong>${d.ctValorDevolvido || 'R$ 2.000,00'}</strong> não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória prévia garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.</p>
-                <p>27. Estão inclusos no preço: Manutenção preventiva (por desgaste), Documentação atualizada, Seguro, Troca de óleo, Pneus, Pastilha de freio.</p>
-                <p>28. Não estão inclusos nos preços: Motorista, Combustível, Troca de sonda lambda, Peças de suspensão do veículo, Lâmpadas, Bomba de combustível, Pré-filtro de combustível, Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.</p>
-                <p>29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.</p>
-                <p>30. O declara ter ciência de que os valores das multas penalidades variam de acordo com o município de sua ocorrência.</p>
-                
-                <h3>CLÁUSULA SÉTIMA – DO FATURAMENTO E PAGAMENTO</h3>
-                <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong> para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
-                <p>31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.</p>
-                <p>32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de <strong>${d.ctMultaNaoPagamento || 'R$ 2.500,00 (dois mil e quinhentos reais)'}</strong>.</p>
-                
-                <h3>CLÁUSULA OITAVA - DA RESCISÃO</h3>
-                <p>33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7(sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventual dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de <strong>${d.ctTaxaHigienizacao || 'R$220,00'}</strong> caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de <strong>${d.ctTaxaEntregaDiversa || 'R$ 500,00 (quinhentos reais)'}</strong>.</p>
-                <p>34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias de locação não pagos.</p>
-                <p>35. O não cumprimento de qualquer uma das cláusulas constantes neste contrato por parte do Locatário dará o direito à rescisão sem aviso prévio e aplicação de multa no valor de <strong>${d.ctMultaNaoPagamento || 'R$ 2.500,00 (dois mil e quinhentos reais)'}</strong>.</p>
-                <p>36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.</p>
-                <p>37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.</p>
-                <p>38. Motivos que podem levar à rescisão contratual sem a necessidade prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem prévia autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.</p>
-                
-                <h3>CLÁUSULA NONA - DO FORO</h3>
-                <p>39. Fica eleito o Foro da Comarca de Vila Prudente como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.</p>
-                
-                <p style="margin-top: 30px; text-align: justify;">E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.</p>
-                
-                <p style="margin-top: 30px;">São Paulo, ${d.ctDataContrato || '22 de julho de 2026'}</p>
-                
-                <div style="display: flex; justify-content: space-between; margin-top: 50px; gap: 30px;">
-                    <div style="text-align: center; flex: 1;">
-                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctLocadora || 'PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME'}</div>
-                        <div style="font-size: 11px;">CNPJ nº ${d.ctCnpjLocadora || '74.410.606.0001-31'} (Locador)</div>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctLocatario || 'PABLO MEDEIRO'}</div>
-                        <div style="font-size: 11px;">CPF nº ${d.ctCpfLocatario || '464.065.988-14'} (Locatário)</div>
-                    </div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; margin-top: 60px; gap: 30px;">
-                    <div style="text-align: center; flex: 1;">
-                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctTestemunha1 || 'Testemunha 1'}</div>
-                    </div>
-                    <div style="text-align: center; flex: 1;">
-                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctTestemunha2 || 'Testemunha 2'}</div>
-                    </div>
-                </div>
-            </div>
-            `;
-        }
-
-        function gerarHtmlTermoResponsabilidade() {
-            const d = {};
-            document.querySelectorAll('#termoResponsabilidade input').forEach(input => {
-                d[input.id] = input.value;
-            });
-
-            return `
-            <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
-                <h2 style="text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px;">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h2>
-                <p style="text-align: justify; text-indent: 40px;">Eu, <strong>${d.trNome || 'PABLO MEDEIRO'}</strong>, portador da cédula de identidade RG nº <strong>${d.trRg || '54.806-749-1'}</strong> e inscrito no CPF sob o nº <strong>${d.trCpf || '464.065.988-14'}</strong>, CNH número de registro: <strong>${d.trCnhRegistro || '06607239173'}</strong> validade <strong>${d.trCnhValidade || '07/05/2033'}</strong> que sou contratante do veículo de marca <strong>${d.trVeiculoMarca || 'NISSAN KICKS SV CVT'}</strong>, placas <strong>${d.trVeiculoPlaca || 'QMK3B93'}</strong> de propriedade da Sra. <strong>${d.trProprietaria || 'SIMONE GONÇALVES DA SILVA'}</strong>, devidamente inscrita no C.P.F N. <strong>${d.trCpfProprietaria || '329.678.268-04'}</strong>, assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de 90 dias a contar da assinatura do mesmo. Sem mais.</p>
-                <p style="margin-top: 30px;">São Paulo, ${d.trData || '23 de julho de 2026'}</p>
-                <p style="margin-top: 20px;">Atenciosamente:</p>
-                <div style="margin-top: 50px; text-align: center;">
-                    <div style="display: inline-block; border-top: 1px solid #333; padding-top: 8px; font-weight: bold; min-width: 250px;">${d.trNome || 'PABLO MEDEIRO'}</div>
-                    <div style="font-size: 11px;">CPF nº ${d.trCpf || '464.065.988-14'}</div>
-                    <div style="font-size: 11px;">RG nº ${d.trRg || '54.806-749-1'}</div>
-                    <div style="font-size: 11px;">CNH: ${d.trCnhRegistro || '06607239173'}</div>
-                </div>
-            </div>
-            `;
-        }
-
-        function gerarHtmlNotaPromissoria() {
-            const d = {};
-            document.querySelectorAll('#notaPromissoria input').forEach(input => {
-                d[input.id] = input.value;
-            });
-
-            return `
-            <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
-                <h2 style="text-align: center; font-size: 16px; margin-bottom: 30px;">NOTA PROMISSÓRIA</h2>
-                <p style="text-align: right;"><strong>Nº:</strong> ${d.npNumero || '0001'}</p>
-                <p><strong>Vencimento:</strong> ${d.npVencimento || '24 de julho de 2026'}</p>
-                <p><strong>Valor:</strong> ${d.npValor || 'R$ 2.500,00'}</p>
-                <p style="text-align: justify;">Aos ${d.npDataEmissao || '14 de julho de 2025'}, pagarei por esta única via de NOTA PROMISSÓRIA a <strong>${d.npBeneficiario || 'PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME'}</strong>, CNPJ nº <strong>${d.npCnpjBeneficiario || '74.410.606.0001-31'}</strong>, ou a sua ordem, a quantia de <strong>${d.npValorExtenso || 'dois mil e quinhentos reais'}</strong>, em moeda corrente nacional. Pagável em: ${d.npPagavelEm || 'São Paulo (SP)'}.</p>
-                <p style="margin-top: 20px;"><strong>EMITENTE:</strong></p>
-                <p>Nome: <strong>${d.npEmitenteNome || 'PABLO MEDEIRO'}</strong></p>
-                <p>CPF nº: <strong>${d.npEmitenteCpf || '464.065.988-14'}</strong></p>
-                <p>Documento de identificação: <strong>${d.npEmitenteDoc || 'Carteira Nacional de Habilitação (CNH) n. 06607239173, expedida por DETRAN SP'}</strong></p>
-                <p>Endereço: <strong>${d.npEmitenteEndereco || 'Rua Joaquim Abreu Luiz 150 PARQUE SÃO LUCAS'}</strong></p>
-                <p>Cidade/UF: <strong>${d.npEmitenteCidade || 'São Paulo SP'}</strong>, CEP <strong>${d.npEmitenteCep || '03263-020'}</strong></p>
-                <p style="margin-top: 20px;"><strong>Cartório:</strong> ${d.npCartorio || 'Cartório de Registro Civil de Sapopemba'}</p>
-                <p style="margin-top: 20px;">São Paulo, ${d.npDataAssinatura || '23 de julho de 2026'}</p>
-                <div style="margin-top: 60px; text-align: center;">
-                    <div style="display: inline-block; border-top: 1px solid #333; padding-top: 8px; font-weight: bold; min-width: 250px;">${d.npEmitenteNome || 'PABLO MEDEIRO'}</div>
-                </div>
-            </div>
-            `;
-        }
-
-        // =============================================
-        // DEMAIS FUNÇÕES (sem alterações de validação)
+        // FUNÇÕES DE TABELAS E ATUALIZAÇÕES
         // =============================================
         function atualizarTabelaVeiculos() {
             const tbody = document.querySelector('#tabelaVeiculos tbody');
@@ -2983,17 +3052,224 @@
             const veiculosFiltrados = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
             veiculosFiltrados.forEach((v, index) => {
                 const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${v.fabricante}</td><td>${v.placa}</td><td>${v.cor}</td>
-                    <td>${v.anoFabr}/${v.anoModel}</td><td>${v.aluguel}</td>
-                    <td>
-                        <button class="btn-warning" data-permissao="veiculos_editar" onclick="editarVeiculo(${index})">✏️</button>
-                        <button class="btn-danger" data-permissao="veiculos_excluir" onclick="excluirVeiculo(${index})">🗑️</button>
-                    </td>`;
+                row.innerHTML = `<td>${v.fabricante}</td><td>${v.placa}</td><td>${v.cor}</td><td>${v.anoFabr}/${v.anoModel}</td><td>${v.aluguel}</td>
+                    <td><button class="btn-warning" onclick="editarVeiculo(${index})">✏️</button><button class="btn-danger" onclick="excluirVeiculo(${index})">🗑️</button></td>`;
             });
             if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
+        function atualizarTabelaClientes() {
+            const tbody = document.querySelector('#tabelaClientes tbody');
+            tbody.innerHTML = '';
+            db.clientes.forEach((c, index) => {
+                const row = tbody.insertRow();
+                const selfieHtml = c.selfie ? `<img src="${c.selfie}" class="selfie-thumbnail" onclick="openImageModal('${c.selfie}')" alt="Selfie">` : '<span style="color: #999;">Sem selfie</span>';
+                row.innerHTML = `<td>${c.nome}</td><td>${c.cpf}</td><td>${c.telefone}</td><td>${c.cidade}</td><td>${selfieHtml}</td>
+                    <td><button class="btn-warning" onclick="editarCliente(${index})">✏️</button><button class="btn-danger" onclick="excluirCliente(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaUsuario() {
+            const tbody = document.querySelector('#tabelaUsuario tbody');
+            tbody.innerHTML = '';
+            db.usuarios.forEach((u, index) => {
+                const row = tbody.insertRow();
+                const selfieHtml = u.selfie ? `<img src="${u.selfie}" class="selfie-thumbnail" onclick="openImageModal('${u.selfie}')" alt="Selfie">` : '<span style="color: #999;">Sem selfie</span>';
+                row.innerHTML = `<td>${u.nome}</td><td>${u.tipo}</td><td>${selfieHtml}</td>
+                    <td><button class="btn-warning" onclick="editarUsuario(${index})">✏️</button><button class="btn-danger" onclick="excluirUsuario(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaLocacoes() {
+            const tbody = document.querySelector('#tabelaLocacoes tbody');
+            tbody.innerHTML = '';
+            db.locacoes.forEach((l, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${l.valorAluguel}</td>
+                    <td><button class="btn-warning" onclick="editarLocacao(${index})">✏️</button><button class="btn-danger" onclick="excluirLocacao(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaManutencao() {
+            const tbody = document.querySelector('#tabelaManutencao tbody');
+            tbody.innerHTML = '';
+            db.manutencao.forEach((m, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${m.veiculo}</td><td>${m.placa}</td><td>${m.tipo}</td><td>${formatarDataBR(m.data)}</td>
+                    <td><button class="btn-warning" onclick="editarManutencao(${index})">✏️</button><button class="btn-danger" onclick="excluirManutencao(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaMecanico() {
+            const tbody = document.querySelector('#tabelaMecanico tbody');
+            tbody.innerHTML = '';
+            db.mecanico.forEach((m, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${formatarDataBR(m.data)}</td><td>${m.oficina}</td><td>${m.servico}</td><td>${m.carro}</td><td>${m.valor}</td>
+                    <td><button class="btn-warning" onclick="editarMecanico(${index})">✏️</button><button class="btn-danger" onclick="excluirMecanico(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaAlugueis() {
+            const tbody = document.querySelector('#tabelaPagamentos tbody');
+            tbody.innerHTML = '';
+            db.alugueis.forEach((a, index) => {
+                const row = tbody.insertRow();
+                let statusClass = a.status === 'Pendente' ? 'status-pendente' : a.status === 'Pago' ? 'status-pago' : 'status-atrasado';
+                const hoje = new Date();
+                const vencimento = new Date(a.dataVencimento);
+                if (a.status === 'Pendente' && vencimento < hoje) statusClass = 'status-atrasado';
+                row.innerHTML = `<td>${a.locatario}</td><td>${formatarDataBR(a.dataContrato)}</td><td>${a.placa}</td><td>${a.valorAluguel}</td><td>${formatarDataBR(a.dataVencimento)}</td><td><span class="${statusClass}">${a.status}</span></td>
+                    <td><button class="btn-success" onclick="marcarComoPago(${index})">✓ Pago</button><button class="btn-danger" onclick="excluirAluguel(${index})">🗑️</button></td>`;
+            });
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function atualizarTabelaBancos() {
+            const tbody = document.querySelector('#tabelaBancos tbody');
+            tbody.innerHTML = '';
+            db.bancos.forEach((b, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${b.nome}</td><td>${b.agencia}</td><td>${b.conta}</td><td>${b.pix}</td><td>${b.titular}</td>
+                    <td><button class="btn-copy" onclick="copiarPix(${index})">📋 Copiar PIX</button><button class="btn-warning" onclick="editarBanco(${index})">✏️</button><button class="btn-danger" onclick="excluirBanco(${index})">🗑️</button></td>`;
+            });
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function atualizarTabelaFluxoCaixa() {
+            const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
+            tbody.innerHTML = '';
+            db.fluxoCaixa.forEach((f, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${f.descricao}</td><td>${f.categoria}</td><td>${f.valor}</td><td>${f.tipo}</td>
+                    <td><button class="btn-warning" onclick="editarFluxoCaixa(${index})">✏️</button><button class="btn-danger" onclick="excluirFluxoCaixa(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaDoc() {
+            const tbody = document.querySelector('#tabelaDoc tbody');
+            tbody.innerHTML = '';
+            db.documentos.forEach((d, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${d.nome}</td><td>${d.tipo}</td><td>${formatarDataBR(d.data)}</td><td>${d.referencia}</td>
+                    <td><button class="btn-warning" onclick="editarDoc(${index})">✏️</button><button class="btn-danger" onclick="excluirDoc(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaCompras() {
+            const tbody = document.querySelector('#tabelaCompras tbody');
+            tbody.innerHTML = '';
+            db.compras.forEach((c, index) => {
+                const row = tbody.insertRow();
+                const statusClass = c.status === 'pago' ? 'status-pago' : c.status === 'cancelado' ? 'status-atrasado' : 'status-pendente';
+                const statusLabel = c.status === 'pago' ? 'Pago' : c.status === 'cancelado' ? 'Cancelado' : 'Pendente';
+                row.innerHTML = `<td>${formatarDataBR(c.data)}</td><td>${c.produto}</td><td>${c.fornecedor}</td><td>${c.valorTotal}</td><td><span class="${statusClass}">${statusLabel}</span></td>
+                    <td><button class="btn-warning" onclick="carregarCompraParaEdicao(${index})">✏️</button><button class="btn-danger" onclick="excluirCompraDireto(${index})">🗑️</button></td>`;
+            });
+        }
+
+        function atualizarTabelaAuditoria() {
+            const tbody = document.querySelector('#tabelaAuditoria tbody');
+            tbody.innerHTML = '';
+            db.auditoria.forEach(a => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${a.data.toLocaleString('pt-BR')}</td><td>${a.usuario}</td><td>${a.acao}</td><td>${a.descricao}</td><td>${a.ip}</td>`;
+            });
+        }
+
+        function atualizarResumoFinanceiro() {
+            let entradas = 0, saidas = 0;
+            db.fluxoCaixa.forEach(f => {
+                const valor = parseFloat(f.valor.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
+                if (f.tipo === 'entrada') entradas += valor;
+                else saidas += valor;
+            });
+            document.getElementById('totalEntradas').textContent = 'R$ ' + entradas.toFixed(2).replace('.', ',');
+            document.getElementById('totalSaidas').textContent = 'R$ ' + saidas.toFixed(2).replace('.', ',');
+            document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
+        }
+
+        function criarAlugueisParaLocacao(locacao) {
+            const existe = db.alugueis.some(a => a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio);
+            if (!existe) {
+                const dataContrato = new Date(locacao.dataInicio);
+                const dataVenc = new Date(dataContrato);
+                dataVenc.setDate(dataVenc.getDate() + 7);
+                db.alugueis.push({
+                    locatario: locacao.locatario,
+                    dataContrato: locacao.dataInicio,
+                    placa: locacao.placa,
+                    valorAluguel: locacao.valorAluguel,
+                    dataVencimento: dataVenc.toISOString().split('T')[0],
+                    status: 'Pendente',
+                    parcela: 1,
+                    contratoId: locacao.dataInicio + locacao.placa
+                });
+            }
+        }
+
+        function criarUsuarioLocatario(locacao) {
+            const nomeLocatario = locacao.locatario.trim();
+            if (!nomeLocatario) return;
+            const primeiroNome = nomeLocatario.split(/\s+/)[0].toUpperCase();
+            const cliente = db.clientes.find(c => c.nome.toLowerCase() === nomeLocatario.toLowerCase());
+            if (!cliente) return;
+            const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
+            let senha = telefoneLimpo;
+            if (telefoneLimpo.length >= 10) senha = telefoneLimpo.substring(2);
+            if (!senha) senha = '';
+            if (db.usuarios.some(u => u.nome === primeiroNome)) return;
+            db.usuarios.push({
+                nome: primeiroNome,
+                senha: senha,
+                tipo: 'MOTORISTA',
+                permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
+                selfie: cliente.selfie || null
+            });
+            atualizarTabelaUsuario();
+            registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
+        }
+
+        function marcarComoPago(index) {
+            if (!confirm('Confirmar pagamento?')) return;
+            const aluguel = db.alugueis[index];
+            if (!aluguel) return;
+            aluguel.status = 'Pago';
+            const dataVencAtual = new Date(aluguel.dataVencimento);
+            const proximaDataVenc = new Date(dataVencAtual);
+            proximaDataVenc.setDate(proximaDataVenc.getDate() + 7);
+            const novoAluguel = {
+                locatario: aluguel.locatario,
+                dataContrato: aluguel.dataContrato,
+                placa: aluguel.placa,
+                valorAluguel: aluguel.valorAluguel,
+                dataVencimento: proximaDataVenc.toISOString().split('T')[0],
+                status: 'Pendente',
+                parcela: (aluguel.parcela || 1) + 1,
+                contratoId: aluguel.contratoId
+            };
+            if (!db.alugueis.some(a => a.locatario === novoAluguel.locatario && a.placa === novoAluguel.placa && a.dataVencimento === novoAluguel.dataVencimento)) {
+                db.alugueis.push(novoAluguel);
+            }
+            registrarAuditoria('Edição', `Aluguel pago: ${aluguel.locatario} - Parcela ${aluguel.parcela || 1}`);
+            salvarDB();
+            atualizarTabelaAlugueis();
+            alert('Pagamento confirmado! Próximo vencimento gerado para ' + formatarDataBR(novoAluguel.dataVencimento));
+        }
+
+        function excluirAluguel(index) {
+            if (confirm('Excluir este aluguel?')) {
+                const a = db.alugueis[index];
+                db.alugueis.splice(index, 1);
+                atualizarTabelaAlugueis();
+                registrarAuditoria('Exclusão', `Aluguel excluído: ${a.locatario}`);
+                salvarDB();
+            }
+        }
+
+        // =============================================
+        // FUNÇÕES DE EDIÇÃO/EXCLUSÃO
+        // =============================================
         function editarVeiculo(index) {
             const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
             const v = veiculosPermitidos[index];
@@ -3040,16 +3316,6 @@
             ['veicFabricante', 'veicCor', 'veicPlaca', 'veicMotor', 'veicCambio', 'veicAnoFabr', 'veicAnoModel', 'veicKm', 'veicRenavan', 'veicChassi', 'veicFipe', 'veicCaucao', 'veicAluguel', 'veicProprietario', 'veicCpfPropr'].forEach(id => document.getElementById(id).value = '');
         }
 
-        function atualizarTabelaClientes() {
-            const tbody = document.querySelector('#tabelaClientes tbody');
-            tbody.innerHTML = '';
-            db.clientes.forEach((c, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${c.nome}</td><td>${c.cpf}</td><td>${c.telefone}</td><td>${c.cidade}</td>
-                    <td><button class="btn-warning" onclick="editarCliente(${index})">✏️</button><button class="btn-danger" onclick="excluirCliente(${index})">🗑️</button></td>`;
-            });
-        }
-
         function editarCliente(index) {
             const c = db.clientes[index];
             document.getElementById('cliDataCadastro').value = c.dataCadastro;
@@ -3063,6 +3329,8 @@
             document.getElementById('cliCep').value = c.cep;
             document.getElementById('cliCidade').value = c.cidade;
             document.getElementById('cliEstado').value = c.estado;
+            selfieClienteTemp = c.selfie || null;
+            mostrarPreviewSelfieCliente();
             db.clientes.splice(index, 1);
             atualizarTabelaClientes();
             atualizarCombosLocacao();
@@ -3083,312 +3351,7 @@
 
         function limparCamposCliente() {
             ['cliDataCadastro', 'cliNome', 'cliCpf', 'cliRg', 'cliCnh', 'cliDataCnh', 'cliTelefone', 'cliEndereco', 'cliCep', 'cliCidade', 'cliEstado'].forEach(id => document.getElementById(id).value = '');
-        }
-
-        function criarAlugueisParaLocacao(locacao) {
-            const existe = db.alugueis.some(a =>
-                a.locatario === locacao.locatario &&
-                a.placa === locacao.placa &&
-                a.dataContrato === locacao.dataInicio
-            );
-
-            if (!existe) {
-                const dataContrato = new Date(locacao.dataInicio);
-                const dataVenc = new Date(dataContrato);
-                dataVenc.setDate(dataVenc.getDate() + 7);
-
-                const novoAluguel = {
-                    locatario: locacao.locatario,
-                    dataContrato: locacao.dataInicio,
-                    placa: locacao.placa,
-                    valorAluguel: locacao.valorAluguel,
-                    dataVencimento: dataVenc.toISOString().split('T')[0],
-                    status: 'Pendente',
-                    parcela: 1,
-                    contratoId: locacao.dataInicio + locacao.placa
-                };
-                db.alugueis.push(novoAluguel);
-            }
-        }
-
-        function criarUsuarioLocatario(locacao) {
-            const nomeLocatario = locacao.locatario.trim();
-            if (!nomeLocatario) return;
-
-            const primeiroNome = nomeLocatario.split(/\s+/)[0].toUpperCase();
-
-            const cliente = db.clientes.find(c => c.nome.toLowerCase() === nomeLocatario.toLowerCase());
-            if (!cliente) {
-                console.warn('Cliente não encontrado para criar usuário:', nomeLocatario);
-                return;
-            }
-
-            const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
-            let senha = telefoneLimpo;
-
-            if (telefoneLimpo.length >= 10) {
-                senha = telefoneLimpo.substring(2);
-            }
-            if (!senha) {
-                senha = '';
-            }
-
-            if (db.usuarios.some(u => u.nome === primeiroNome)) {
-                console.log('Usuário já existe:', primeiroNome);
-                return;
-            }
-
-            const novoUsuario = {
-                nome: primeiroNome,
-                senha: senha,
-                tipo: 'MOTORISTA',
-                permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA))
-            };
-
-            db.usuarios.push(novoUsuario);
-            atualizarTabelaUsuario();
-            registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
-        }
-
-        function atualizarTabelaLocacoes() {
-            const tbody = document.querySelector('#tabelaLocacoes tbody');
-            tbody.innerHTML = '';
-            db.locacoes.forEach((l, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${l.valorAluguel}</td>
-                    <td><button class="btn-warning" onclick="editarLocacao(${index})">✏️</button><button class="btn-danger" onclick="excluirLocacao(${index})">🗑️</button></td>`;
-            });
-        }
-
-        function editarLocacao(index) {
-            const l = db.locacoes[index];
-            document.getElementById('locLocatario').value = l.locatario;
-            document.getElementById('locVeiculo').value = l.veiculo;
-            document.getElementById('locDataInicio').value = l.dataInicio;
-            document.getElementById('locDataFim').value = l.dataFim;
-            document.getElementById('locFabModelo').value = l.fabModelo;
-            document.getElementById('locCor').value = l.cor;
-            document.getElementById('locPlaca').value = l.placa;
-            document.getElementById('locAnoFabr').value = l.anoFabr;
-            document.getElementById('locAnoModel').value = l.anoModel;
-            document.getElementById('locCaucao').value = l.caucao;
-            document.getElementById('locValorAluguel').value = l.valorAluguel;
-            document.getElementById('locProprietario').value = l.proprietario;
-            document.getElementById('locCpfPropr').value = l.cpfPropr;
-            document.getElementById('locPagCaucao').value = l.pagCaucao;
-            document.getElementById('locPgtoCaucao').value = l.pgtoCaucao || ''; // Preencher novo campo
-            db.locacoes.splice(index, 1);
-            atualizarTabelaLocacoes();
-            registrarAuditoria('Edição', `Locação editada: ${l.locatario}`);
-            salvarDB();
-        }
-
-        function excluirLocacao(index) {
-            if (confirm('Excluir locação?')) {
-                const l = db.locacoes[index];
-                db.locacoes.splice(index, 1);
-                atualizarTabelaLocacoes();
-                registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario}`);
-                salvarDB();
-            }
-        }
-
-        function limparCamposLocacao() {
-            document.getElementById('locLocatario').value = '';
-            document.getElementById('locVeiculo').value = '';
-            document.getElementById('locDataInicio').value = '';
-            document.getElementById('locDataFim').value = '';
-            document.getElementById('locFabModelo').value = '';
-            document.getElementById('locCor').value = '';
-            document.getElementById('locPlaca').value = '';
-            document.getElementById('locAnoFabr').value = '';
-            document.getElementById('locAnoModel').value = '';
-            document.getElementById('locCaucao').value = '';
-            document.getElementById('locValorAluguel').value = '';
-            document.getElementById('locProprietario').value = '';
-            document.getElementById('locCpfPropr').value = '';
-            document.getElementById('locPagCaucao').value = 'avista';
-            document.getElementById('locPgtoCaucao').value = ''; // Limpar novo campo
-        }
-
-        function atualizarTabelaAlugueis() {
-            const tbody = document.querySelector('#tabelaPagamentos tbody');
-            tbody.innerHTML = '';
-
-            db.locacoes.forEach(locacao => {
-                const existe = db.alugueis.some(a =>
-                    a.locatario === locacao.locatario &&
-                    a.placa === locacao.placa &&
-                    a.dataContrato === locacao.dataInicio
-                );
-                if (!existe) {
-                    criarAlugueisParaLocacao(locacao);
-                }
-            });
-
-            db.alugueis.forEach((a, index) => {
-                const row = tbody.insertRow();
-                let statusClass = a.status === 'Pendente' ? 'status-pendente' :
-                    a.status === 'Pago' ? 'status-pago' : 'status-atrasado';
-
-                const hoje = new Date();
-                const vencimento = new Date(a.dataVencimento);
-                if (a.status === 'Pendente' && vencimento < hoje) {
-                    statusClass = 'status-atrasado';
-                }
-
-                row.innerHTML = `
-                    <td>${a.locatario}</td>
-                    <td>${formatarDataBR(a.dataContrato)}</td>
-                    <td>${a.placa}</td>
-                    <td>${a.valorAluguel}</td>
-                    <td>${formatarDataBR(a.dataVencimento)}</td>
-                    <td><span class="${statusClass}">${a.status}</span></td>
-                    <td>
-                        <button class="btn-success" data-permissao="pagamentos_acoes" onclick="marcarComoPago(${index})">✓ Pago</button>
-                        <button class="btn-danger" data-permissao="pagamentos_acoes" onclick="excluirAluguel(${index})">🗑️</button>
-                    </td>
-                `;
-            });
-
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
-        }
-
-        function marcarComoPago(index) {
-            if (!confirm('Confirmar pagamento?')) return;
-
-            const aluguel = db.alugueis[index];
-            if (!aluguel) return;
-
-            aluguel.status = 'Pago';
-
-            const dataVencAtual = new Date(aluguel.dataVencimento);
-            const proximaDataVenc = new Date(dataVencAtual);
-            proximaDataVenc.setDate(proximaDataVenc.getDate() + 7);
-
-            const novoAluguel = {
-                locatario: aluguel.locatario,
-                dataContrato: aluguel.dataContrato,
-                placa: aluguel.placa,
-                valorAluguel: aluguel.valorAluguel,
-                dataVencimento: proximaDataVenc.toISOString().split('T')[0],
-                status: 'Pendente',
-                parcela: (aluguel.parcela || 1) + 1,
-                contratoId: aluguel.contratoId
-            };
-
-            const jaExiste = db.alugueis.some(a =>
-                a.locatario === novoAluguel.locatario &&
-                a.placa === novoAluguel.placa &&
-                a.dataVencimento === novoAluguel.dataVencimento
-            );
-
-            if (!jaExiste) {
-                db.alugueis.push(novoAluguel);
-            }
-
-            registrarAuditoria('Edição', `Aluguel pago: ${aluguel.locatario} - Parcela ${aluguel.parcela || 1}`);
-            salvarDB();
-            atualizarTabelaAlugueis();
-            alert('Pagamento confirmado! Próximo vencimento gerado para ' + formatarDataBR(novoAluguel.dataVencimento));
-        }
-
-        function excluirAluguel(index) {
-            if (confirm('Excluir este aluguel?')) {
-                const a = db.alugueis[index];
-                db.alugueis.splice(index, 1);
-                atualizarTabelaAlugueis();
-                registrarAuditoria('Exclusão', `Aluguel excluído: ${a.locatario}`);
-                salvarDB();
-            }
-        }
-
-        function atualizarTabelaManutencao() {
-            const tbody = document.querySelector('#tabelaManutencao tbody');
-            tbody.innerHTML = '';
-            db.manutencao.forEach((m, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${m.veiculo}</td><td>${m.placa}</td><td>${m.tipo}</td><td>${formatarDataBR(m.data)}</td>
-                    <td><button class="btn-warning" onclick="editarManutencao(${index})">✏️</button><button class="btn-danger" onclick="excluirManutencao(${index})">🗑️</button></td>`;
-            });
-        }
-
-        function editarManutencao(index) {
-            const m = db.manutencao[index];
-            document.getElementById('manVeiculo').value = m.veiculo;
-            document.getElementById('manPlaca').value = m.placa;
-            document.getElementById('manKm').value = m.km;
-            document.getElementById('manTipo').value = m.tipo;
-            document.getElementById('manData').value = m.data;
-            document.getElementById('manObs').value = m.obs;
-            db.manutencao.splice(index, 1);
-            atualizarTabelaManutencao();
-            registrarAuditoria('Edição', `Manutenção editada: ${m.veiculo}`);
-            salvarDB();
-        }
-
-        function excluirManutencao(index) {
-            if (confirm('Excluir manutenção?')) {
-                const m = db.manutencao[index];
-                db.manutencao.splice(index, 1);
-                atualizarTabelaManutencao();
-                registrarAuditoria('Exclusão', `Manutenção excluída: ${m.veiculo}`);
-                salvarDB();
-            }
-        }
-
-        function limparCamposManutencao() {
-            ['manVeiculo', 'manPlaca', 'manKm', 'manTipo', 'manData', 'manObs'].forEach(id => document.getElementById(id).value = '');
-        }
-
-        function atualizarTabelaMecanico() {
-            const tbody = document.querySelector('#tabelaMecanico tbody');
-            tbody.innerHTML = '';
-            db.mecanico.forEach((m, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${formatarDataBR(m.data)}</td><td>${m.oficina}</td><td>${m.servico}</td><td>${m.carro}</td><td>${m.valor}</td>
-                    <td><button class="btn-warning" onclick="editarMecanico(${index})">✏️</button><button class="btn-danger" onclick="excluirMecanico(${index})">🗑️</button></td>`;
-            });
-        }
-
-        function editarMecanico(index) {
-            const m = db.mecanico[index];
-            document.getElementById('mecData').value = m.data;
-            document.getElementById('mecOficina').value = m.oficina;
-            document.getElementById('mecServico').value = m.servico;
-            document.getElementById('mecResponsavel').value = m.responsavel;
-            document.getElementById('mecCarro').value = m.carro;
-            document.getElementById('mecPlaca').value = m.placa;
-            document.getElementById('mecValor').value = m.valor;
-            document.getElementById('mecObs').value = m.obs;
-            db.mecanico.splice(index, 1);
-            atualizarTabelaMecanico();
-            registrarAuditoria('Edição', `Serviço editado: ${m.servico}`);
-            salvarDB();
-        }
-
-        function excluirMecanico(index) {
-            if (confirm('Excluir serviço?')) {
-                const m = db.mecanico[index];
-                db.mecanico.splice(index, 1);
-                atualizarTabelaMecanico();
-                registrarAuditoria('Exclusão', `Serviço excluído: ${m.servico}`);
-                salvarDB();
-            }
-        }
-
-        function limparCamposMecanico() {
-            ['mecData', 'mecOficina', 'mecServico', 'mecResponsavel', 'mecCarro', 'mecPlaca', 'mecValor', 'mecObs'].forEach(id => document.getElementById(id).value = '');
-        }
-
-        function atualizarTabelaUsuario() {
-            const tbody = document.querySelector('#tabelaUsuario tbody');
-            tbody.innerHTML = '';
-            db.usuarios.forEach((u, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${u.nome}</td><td>${u.tipo}</td>
-                    <td><button class="btn-warning" onclick="editarUsuario(${index})">✏️</button><button class="btn-danger" onclick="excluirUsuario(${index})">🗑️</button></td>`;
-            });
+            limparSelfieCliente();
         }
 
         function editarUsuario(index) {
@@ -3434,19 +3397,111 @@
             preencherPermissoesPadrao();
         }
 
-        function atualizarTabelaBancos() {
-            const tbody = document.querySelector('#tabelaBancos tbody');
-            tbody.innerHTML = '';
-            db.bancos.forEach((b, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${b.nome}</td><td>${b.agencia}</td><td>${b.conta}</td><td>${b.pix}</td><td>${b.titular}</td>
-                    <td>
-                        <button class="btn-copy" data-permissao="banco_copiar" onclick="copiarPix(${index})">📋 Copiar PIX</button>
-                        <button class="btn-warning" data-permissao="banco_editar" onclick="editarBanco(${index})">✏️</button>
-                        <button class="btn-danger" data-permissao="banco_excluir" onclick="excluirBanco(${index})">🗑️</button>
-                    </td>`;
-            });
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        function editarLocacao(index) {
+            const l = db.locacoes[index];
+            document.getElementById('locLocatario').value = l.locatario;
+            document.getElementById('locVeiculo').value = l.veiculo;
+            document.getElementById('locDataInicio').value = l.dataInicio;
+            document.getElementById('locDataFim').value = l.dataFim;
+            document.getElementById('locFabModelo').value = l.fabModelo;
+            document.getElementById('locCor').value = l.cor;
+            document.getElementById('locPlaca').value = l.placa;
+            document.getElementById('locAnoFabr').value = l.anoFabr;
+            document.getElementById('locAnoModel').value = l.anoModel;
+            document.getElementById('locCaucao').value = l.caucao;
+            document.getElementById('locValorAluguel').value = l.valorAluguel;
+            document.getElementById('locProprietario').value = l.proprietario;
+            document.getElementById('locCpfPropr').value = l.cpfPropr;
+            document.getElementById('locPagCaucao').value = l.pagCaucao;
+            db.locacoes.splice(index, 1);
+            atualizarTabelaLocacoes();
+            registrarAuditoria('Edição', `Locação editada: ${l.locatario}`);
+            salvarDB();
+        }
+
+        function excluirLocacao(index) {
+            if (confirm('Excluir locação?')) {
+                const l = db.locacoes[index];
+                db.locacoes.splice(index, 1);
+                atualizarTabelaLocacoes();
+                registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario}`);
+                salvarDB();
+            }
+        }
+
+        function limparCamposLocacao() {
+            document.getElementById('locLocatario').value = '';
+            document.getElementById('locVeiculo').value = '';
+            document.getElementById('locDataInicio').value = '';
+            document.getElementById('locDataFim').value = '';
+            document.getElementById('locFabModelo').value = '';
+            document.getElementById('locCor').value = '';
+            document.getElementById('locPlaca').value = '';
+            document.getElementById('locAnoFabr').value = '';
+            document.getElementById('locAnoModel').value = '';
+            document.getElementById('locCaucao').value = '';
+            document.getElementById('locValorAluguel').value = '';
+            document.getElementById('locProprietario').value = '';
+            document.getElementById('locCpfPropr').value = '';
+            document.getElementById('locPagCaucao').value = 'avista';
+        }
+
+        function editarManutencao(index) {
+            const m = db.manutencao[index];
+            document.getElementById('manVeiculo').value = m.veiculo;
+            document.getElementById('manPlaca').value = m.placa;
+            document.getElementById('manKm').value = m.km;
+            document.getElementById('manTipo').value = m.tipo;
+            document.getElementById('manData').value = m.data;
+            document.getElementById('manObs').value = m.obs;
+            db.manutencao.splice(index, 1);
+            atualizarTabelaManutencao();
+            registrarAuditoria('Edição', `Manutenção editada: ${m.veiculo}`);
+            salvarDB();
+        }
+
+        function excluirManutencao(index) {
+            if (confirm('Excluir manutenção?')) {
+                const m = db.manutencao[index];
+                db.manutencao.splice(index, 1);
+                atualizarTabelaManutencao();
+                registrarAuditoria('Exclusão', `Manutenção excluída: ${m.veiculo}`);
+                salvarDB();
+            }
+        }
+
+        function limparCamposManutencao() {
+            ['manVeiculo', 'manPlaca', 'manKm', 'manTipo', 'manData', 'manObs'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function editarMecanico(index) {
+            const m = db.mecanico[index];
+            document.getElementById('mecData').value = m.data;
+            document.getElementById('mecOficina').value = m.oficina;
+            document.getElementById('mecServico').value = m.servico;
+            document.getElementById('mecResponsavel').value = m.responsavel;
+            document.getElementById('mecCarro').value = m.carro;
+            document.getElementById('mecPlaca').value = m.placa;
+            document.getElementById('mecValor').value = m.valor;
+            document.getElementById('mecObs').value = m.obs;
+            db.mecanico.splice(index, 1);
+            atualizarTabelaMecanico();
+            registrarAuditoria('Edição', `Serviço editado: ${m.servico}`);
+            salvarDB();
+        }
+
+        function excluirMecanico(index) {
+            if (confirm('Excluir serviço?')) {
+                const m = db.mecanico[index];
+                db.mecanico.splice(index, 1);
+                atualizarTabelaMecanico();
+                registrarAuditoria('Exclusão', `Serviço excluído: ${m.servico}`);
+                salvarDB();
+            }
+        }
+
+        function limparCamposMecanico() {
+            ['mecData', 'mecOficina', 'mecServico', 'mecResponsavel', 'mecCarro', 'mecPlaca', 'mecValor', 'mecObs'].forEach(id => document.getElementById(id).value = '');
         }
 
         function editarBanco(index) {
@@ -3475,16 +3530,6 @@
 
         function limparCamposBanco() {
             ['bancoNome', 'bancoAgencia', 'bancoConta', 'bancoPix', 'bancoTitular'].forEach(id => document.getElementById(id).value = '');
-        }
-
-        function atualizarTabelaFluxoCaixa() {
-            const tbody = document.querySelector('#tabelaFluxoCaixa tbody');
-            tbody.innerHTML = '';
-            db.fluxoCaixa.forEach((f, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${formatarDataBR(f.data)}</td><td>${f.descricao}</td><td>${f.categoria}</td><td>${f.valor}</td><td>${f.tipo}</td>
-                    <td><button class="btn-warning" onclick="editarFluxoCaixa(${index})">✏️</button><button class="btn-danger" onclick="excluirFluxoCaixa(${index})">🗑️</button></td>`;
-            });
         }
 
         function editarFluxoCaixa(index) {
@@ -3520,29 +3565,6 @@
             document.getElementById('fcTipo').value = 'entrada';
         }
 
-        function atualizarResumoFinanceiro() {
-            let entradas = 0,
-                saidas = 0;
-            db.fluxoCaixa.forEach(f => {
-                const valor = parseFloat(f.valor.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
-                if (f.tipo === 'entrada') entradas += valor;
-                else saidas += valor;
-            });
-            document.getElementById('totalEntradas').textContent = 'R$ ' + entradas.toFixed(2).replace('.', ',');
-            document.getElementById('totalSaidas').textContent = 'R$ ' + saidas.toFixed(2).replace('.', ',');
-            document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
-        }
-
-        function atualizarTabelaDoc() {
-            const tbody = document.querySelector('#tabelaDoc tbody');
-            tbody.innerHTML = '';
-            db.documentos.forEach((d, index) => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${d.nome}</td><td>${d.tipo}</td><td>${formatarDataBR(d.data)}</td><td>${d.referencia}</td>
-                    <td><button class="btn-warning" onclick="editarDoc(${index})">✏️</button><button class="btn-danger" onclick="excluirDoc(${index})">🗑️</button></td>`;
-            });
-        }
-
         function editarDoc(index) {
             const d = db.documentos[index];
             document.getElementById('docNome').value = d.nome;
@@ -3574,19 +3596,13 @@
 
         function editarCompra() {
             const index = compraEditandoIndex;
-            if (index === null) {
-                alert('Selecione uma compra na tabela para editar!');
-                return;
-            }
+            if (index === null) { alert('Selecione uma compra na tabela para editar!'); return; }
             salvarCompra();
         }
 
         function excluirCompra() {
             const index = compraEditandoIndex;
-            if (index === null) {
-                alert('Selecione uma compra na tabela para excluir!');
-                return;
-            }
+            if (index === null) { alert('Selecione uma compra na tabela para excluir!'); return; }
             if (confirm('Excluir esta compra?')) {
                 const compra = db.compras[index];
                 db.compras.splice(index, 1);
@@ -3614,29 +3630,6 @@
             compraEditandoIndex = null;
         }
 
-        function atualizarTabelaCompras() {
-            const tbody = document.querySelector('#tabelaCompras tbody');
-            tbody.innerHTML = '';
-            db.compras.forEach((c, index) => {
-                const row = tbody.insertRow();
-                const statusClass = c.status === 'pago' ? 'status-pago' :
-                    c.status === 'cancelado' ? 'status-atrasado' : 'status-pendente';
-                const statusLabel = c.status === 'pago' ? 'Pago' :
-                    c.status === 'cancelado' ? 'Cancelado' : 'Pendente';
-                row.innerHTML = `
-                    <td>${formatarDataBR(c.data)}</td>
-                    <td>${c.produto}</td>
-                    <td>${c.fornecedor}</td>
-                    <td>${c.valorTotal}</td>
-                    <td><span class="${statusClass}">${statusLabel}</span></td>
-                    <td>
-                        <button class="btn-warning" onclick="carregarCompraParaEdicao(${index})">✏️</button>
-                        <button class="btn-danger" onclick="excluirCompraDireto(${index})">🗑️</button>
-                    </td>
-                `;
-            });
-        }
-
         function carregarCompraParaEdicao(index) {
             const c = db.compras[index];
             document.getElementById('compData').value = c.data;
@@ -3651,13 +3644,7 @@
             document.getElementById('compCategoria').value = c.categoria || '';
             document.getElementById('compObs').value = c.obs || '';
             compraEditandoIndex = index;
-
             document.getElementById('formCompras').scrollIntoView({ behavior: 'smooth' });
-
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formCompras .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 100);
         }
 
         function excluirCompraDireto(index) {
@@ -3676,11 +3663,6 @@
             alert('Configurações salvas!');
             registrarAuditoria('Cadastro', 'Config salva');
             salvarDB();
-
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formConfig .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
         function restaurarPadroes() {
@@ -3713,15 +3695,6 @@
             };
             db.auditoria.push(registro);
             atualizarTabelaAuditoria();
-        }
-
-        function atualizarTabelaAuditoria() {
-            const tbody = document.querySelector('#tabelaAuditoria tbody');
-            tbody.innerHTML = '';
-            db.auditoria.forEach(a => {
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${a.data.toLocaleString('pt-BR')}</td><td>${a.usuario}</td><td>${a.acao}</td><td>${a.descricao}</td><td>${a.ip}</td>`;
-            });
         }
 
         function aplicarFiltroAuditoria() {
@@ -3940,10 +3913,227 @@
             });
         }
 
-        // Inicialização do sistema
-        document.addEventListener('DOMContentLoaded', function() {
-            inicializarSistema();
-        });
+        // =============================================
+        // FUNÇÕES DOS CONTRATOS
+        // =============================================
+        function abrirModalContratos() {
+            carregarDadosContratos();
+            document.getElementById('contratoModal').classList.add('active');
+            switchContratoTab('contratoLocacao');
+        }
+
+        function fecharModalContratos() {
+            document.getElementById('contratoModal').classList.remove('active');
+            salvarDadosContratos();
+        }
+
+        function switchContratoTab(tabName) {
+            document.querySelectorAll('.contrato-sub-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.contrato-sub-content').forEach(c => c.classList.remove('active'));
+            if (tabName === 'contratoLocacao') {
+                document.querySelector('.contrato-sub-tab[onclick*="contratoLocacao"]').classList.add('active');
+                document.getElementById('contratoLocacao').classList.add('active');
+            } else if (tabName === 'termoResponsabilidade') {
+                document.querySelector('.contrato-sub-tab[onclick*="termoResponsabilidade"]').classList.add('active');
+                document.getElementById('termoResponsabilidade').classList.add('active');
+            } else if (tabName === 'notaPromissoria') {
+                document.querySelector('.contrato-sub-tab[onclick*="notaPromissoria"]').classList.add('active');
+                document.getElementById('notaPromissoria').classList.add('active');
+            }
+        }
+
+        function carregarDadosContratos() {
+            if (db.contratos && db.contratos.contratoLocacao) {
+                const cl = db.contratos.contratoLocacao;
+                Object.keys(cl).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = cl[key];
+                });
+            }
+            if (db.contratos && db.contratos.termoResponsabilidade) {
+                const tr = db.contratos.termoResponsabilidade;
+                Object.keys(tr).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = tr[key];
+                });
+            }
+            if (db.contratos && db.contratos.notaPromissoria) {
+                const np = db.contratos.notaPromissoria;
+                Object.keys(np).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) el.value = np[key];
+                });
+            }
+        }
+
+        function salvarDadosContratos() {
+            const contratoLocacao = {};
+            document.querySelectorAll('#contratoLocacao input').forEach(input => {
+                contratoLocacao[input.id] = input.value;
+            });
+            const termoResponsabilidade = {};
+            document.querySelectorAll('#termoResponsabilidade input').forEach(input => {
+                termoResponsabilidade[input.id] = input.value;
+            });
+            const notaPromissoria = {};
+            document.querySelectorAll('#notaPromissoria input').forEach(input => {
+                notaPromissoria[input.id] = input.value;
+            });
+            db.contratos.contratoLocacao = contratoLocacao;
+            db.contratos.termoResponsabilidade = termoResponsabilidade;
+            db.contratos.notaPromissoria = notaPromissoria;
+            salvarDB();
+        }
+
+        function imprimirDocumento(tipo) {
+            salvarDadosContratos();
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = '';
+            if (tipo === 'contratoLocacao') {
+                printArea.innerHTML = gerarHtmlContratoLocacao();
+            } else if (tipo === 'termoResponsabilidade') {
+                printArea.innerHTML = gerarHtmlTermoResponsabilidade();
+            } else if (tipo === 'notaPromissoria') {
+                printArea.innerHTML = gerarHtmlNotaPromissoria();
+            }
+            printArea.classList.add('print-visible');
+            setTimeout(function() {
+                window.print();
+                printArea.classList.remove('print-visible');
+                printArea.innerHTML = '';
+            }, 200);
+        }
+
+        function gerarHtmlContratoLocacao() {
+            const d = {};
+            document.querySelectorAll('#contratoLocacao input').forEach(input => {
+                d[input.id] = input.value;
+            });
+            return `<div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto;">
+                <h2 style="text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px;">INSTRUMENTO PARTICULAR DE CONTRATO DE LOCAÇÃO DE VEÍCULOS</h2>
+                <p><strong>Contrato Número:</strong> ${d.ctNumero || '0001'}</p>
+                <p style="text-align: justify;">Pelo presente Instrumento Particular de Contrato de Locação de Veículos, número 001220, e na melhor forma de direito, de um lado, <strong>${d.ctLocadora || 'PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME'}</strong>, com sede na <strong>${d.ctEnderecoLocadora || 'AV. Vila Ema 5445 Vila Ema São Paulo SP'}</strong>, inscrita no CNPJ sob o nº <strong>${d.ctCnpjLocadora || '74.410.606.0001-31'}</strong>, doravante denominada LOCADORA, e, de outro lado, <strong>${d.ctLocatario || 'PABLO MEDEIRO'}</strong>, residente e domiciliado à <strong>${d.ctEnderecoLocatario || 'Rua Joaquim Abreu Luiz 150 Parque São Lucas São Paulo SP'}</strong>, CEP <strong>${d.ctCepLocatario || '03263-020'}</strong>, portador do RG nº <strong>${d.ctRgLocatario || '54.806-749-1'}</strong> e inscrito no CPF sob o nº <strong>${d.ctCpfLocatario || '464.065.988-14'}</strong>, doravante denominado LOCATÁRIO, têm, entre si, justo e contratado o presente, o qual se regerá pelas cláusulas e condições que a seguir se aduzem, com inteira submissão às disposições legais e regulamentares atinentes à espécie.</p>
+                <h3 style="margin-top: 20px;">CLÁUSULA PRIMEIRA - DO OBJETO</h3>
+                <p>1. O presente contrato tem por objeto a locação do veículo <strong>${d.ctVeiculoModelo || 'Nissan/Kicks Sense CVT'}</strong>, cor ${d.ctVeiculoCor || 'cinza'}, placas <strong>${d.ctVeiculoPlaca || 'QMK3B93'}</strong>, quatro portas, com ar-condicionado, direção hidráulica, trava elétrica, vidro elétrico e sistema de som com multimídia, ano de fabricação <strong>${d.ctAnoFabr || '2020'}</strong> e ano modelo <strong>${d.ctAnoModel || '2020'}</strong>.</p>
+                <h3>CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO LOCADOR</h3>
+                <p>2. É dever do locador manter em dia o pagamento dos impostos, tais como IPVA, DPVAT e licenciamento.</p>
+                <p>3. Manter o seguro do veículo vigente.</p>
+                <p>4. É dever do locador providenciar a manutenção do automóvel locado tão logo seja identificada falha dos sistemas ou pane em geral, admitindo que o custo da manutenção ou reparo seja suportado por ele, salvo em caso de este não ter dado causa à ocorrência.</p>
+                <p>5. As revisões preventivas do veículo serão custeadas pelo locador, que indicará ao locatário o local onde o veículo deverá ser conduzido.</p>
+                <p>6. As revisões periódicas obrigatórias que se fizerem necessárias serão procedidas em oficina credenciada ou indicada pelo locador. Contudo, não haverá desconto no valor do aluguel, exceto se o veículo necessitar permanecer na oficina por mais de vinte e quatro horas, hipótese em que serão descontadas as diárias correspondentes até a efetiva entrega do veículo.</p>
+                <h3>CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO LOCATÁRIO</h3>
+                <p>6.1 O locatário se compromete a utilizar o veículo de forma pessoal e exclusiva para o transporte em aplicativos de transporte remunerado privado individual de passageiros em conformidade com a Lei nº 12.587/2012, sendo expressamente proibido o empréstimo, compartilhamento, cessão ou sublocação a terceiros.</p>
+                <p>7. É de responsabilidade do locatário zelar pelo veículo, guardando-o e protegendo-o, utilizá-lo de maneira correta durante o período da locação.</p>
+                <p>7.1 O locatário compromete-se a utilizar o veículo de forma adequada, em conformidade com as leis de trânsito e as normas de segurança pública, abstendo-se de exceder a lotação e o peso suportado pelo veículo e de praticar atos que possam causar danos ou prejuízos ao veículo ou a terceiros.</p>
+                <p>8. É vedado ao LOCATÁRIO: utilizar o veículo para fins comerciais de competição ou para qualquer outra finalidade não prevista neste contrato. É vedado conduzir o veículo sob a influência de álcool, drogas ou substâncias psicoativas que possam comprometer sua capacidade de condução. É vedado emprestar, sublocar, ceder ou transferir, de qualquer forma, o veículo a terceiros. O locatário se compromete a não realizar modificações, reparos ou adaptações no veículo sem autorização prévia e expressa do Locador.</p>
+                <p>9. O locatário será o único responsável por eventuais multas, taxas, impostos e outras despesas decorrentes do uso do veículo durante o período de locação.</p>
+                <p>9.1 Considerando o prazo estendido deste contrato de locação, e com o propósito de o veículo manter-se em condições de uso, o locatário assumirá a responsabilidade de realizar checklist semanal, verificando e informando à empresa sobre as condições dos seguintes itens: Nível de óleo do motor; Parte elétrica; Freios; Nível de água; Pneus. A omissão de informação ou a sua prestação inverídica sobre a situação do veículo poderá dar causa à rescisão contratual, e as avarias oportunamente identificadas, e seus respectivos consertos, correrão por conta do locatário.</p>
+                <p>10. O locatário se compromete a utilizar o veículo somente em território nacional e dentro do Estado da Federação em que foi locado, sendo expressamente proibido ultrapassar qualquer fronteira ou limite geográfico diverso deste aqui mencionado.</p>
+                <p>10.1 As partes ajustam que, havendo necessidade de deslocamento do veículo para além de cem quilômetros a partir desta cidade, o locatário deverá informar previamente o locador.</p>
+                <p>11. Em relação às multas de trânsito, o Locatário, sendo responsável pelo cometimento delas, obriga-se a fornecer, no prazo de 3 (três) dias após ser comunicado, uma cópia da CNH contendo sua assinatura, bem como de arcar com os custos operacionais e administrativos para transferência dos pontos.</p>
+                <p>12. A inobservância das Cláusulas 3.1 e 3.2 ensejará a imediata devolução do veículo locado, e sua retenção imotivada poderá configurar apropriação indébita. 12.1 É de inteira responsabilidade do Locatário os custos de pagamento das multas de trânsito e custos administrativos decorrentes das infrações durante o período em que estiver na posse do veículo, salvo se tais multas ou penalidades forem imputáveis à Locadora por irregularidade na documentação do veículo.</p>
+                <p>12.2 A taxa administrativa por multa será R$ 100,00, que deverá ser paga junto com o valor da multa apresentada.</p>
+                <p>13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.</p>
+                <p>14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.</p>
+                <p>15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.</p>
+                <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong>.</p>
+                <h3>CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO</h3>
+                <p>17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante prévia comunicação.</p>
+                <p>18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a <strong>${d.ctLocalVistoria || 'AV. VILA EMA 5445 VILA EMA SÃO PAULO'}</strong>, por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.</p>
+                <p>19. O Locador se compromete a utilizar o veículo em conformidade com as regras aqui estabelecidas e em obediência às especificidades do veículo, ditadas pela montadora.</p>
+                <p>20. Havendo sinistro, independentemente de culpa exclusiva de terceiros, o Locatário se compromete a arcar com os custos do reparo conduzindo o veículo ao estado original.</p>
+                <p>21. Optando o Locatário por não acionar o seguro mediante o pagamento de franquia para reparar o veículo, o Locador apresentará a ele três orçamentos para que escolha a oficina e proceda ao pagamento.</p>
+                <p>22. Em caso de necessidade de remoção do veículo em decorrência de acidente, o locatário arcará com o pagamento de eventuais custas e estadias em pátio até sua liberação.</p>
+                <h3>CLÁUSULA QUINTA - DO PRAZO DE LOCAÇÃO E VIGÊNCIA</h3>
+                <p>23. O presente Contrato tem vigência de 180 (cento e oitenta) dias, com início na data de sua assinatura, podendo ser prorrogado automaticamente e sua rescisão antecipada ensejará a cobrança de multa de <strong>${d.ctMultaRescisao || 'R$ 2.500,00 (dois e quinhentos reais)'}</strong>.</p>
+                <p>23.1. Após os primeiros 90 dias de contrato o LOCATÁRIO poderá se achar necessário solicitar a troca de veículo para outra categoria (se houver veículo disponível) sem a necessidade de fazer o cancelamento do contrato e cumprir os próximos 90 dias, pagando apenas uma taxa de troca de veículo no valor de <strong>${d.ctTaxaTroca || 'R$ 600,00 (seiscentos reais)'}</strong>.</p>
+                <p>24. A seu critério, o Locador poderá rescindir o contrato devendo, no entanto, restituir o valor pago referente à semana vigente, bem como a caução no prazo estipulado neste contrato.</p>
+                <p>25. Após o vencimento do primeiro prazo, o contrato passará a ter duração de 30 (trinta) dias, podendo ser rescindido sem gerar ônus, desde que previamente comunicada a outra parte com antecedência de 30 (trinta) dias.</p>
+                <h3>CLÁUSULA SEXTA - DO PREÇO</h3>
+                <p>26. Preço da Locação: O valor ajustado entre as partes neste contrato é de <strong>${d.ctValorAluguel || 'R$ 1.200,00 (um mil e duzentos reais)'}</strong> semanais, bem como de que o limite de quilometragem estabelecido será de <strong>${d.ctLimiteKm || '1.750'}</strong> km por semana, e que por quilômetro excedente o locatário pagará o equivalente a <strong>${d.ctValorKmExcedente || 'R$ 0,90 centavos'}</strong>. As partes ajustam ainda que nesse contrato que a caução no valor de <strong>${d.ctValorCaucao || 'R$ 2.500,00'}</strong>, deverá ser dividido em <strong>${d.ctCaucaoParcelas || '10 semanas'}</strong> e a primeira parcela deverá ser paga na retirada do veículo e somente será devolvido 60 dias após o término do contrato o valor de <strong>${d.ctValorDevolvido || 'R$ 2.000,00'}</strong> não havendo multas e nenhuma avaria no veículo. O locatário outorga Nota Promissória prévia garantindo ao locador ressarcimento de eventuais gastos futuros, ocasião em que de comum acordo as partes inserirão o valor a ser confessado. Não havendo gastos a serem descontados, o título será restituído ao locatário em até sessenta dias após a entrega do veículo.</p>
+                <p>27. Estão inclusos no preço: Manutenção preventiva (por desgaste), Documentação atualizada, Seguro, Troca de óleo, Pneus, Pastilha de freio.</p>
+                <p>28. Não estão inclusos nos preços: Motorista, Combustível, Troca de sonda lambda, Peças de suspensão do veículo, Lâmpadas, Bomba de combustível, Pré-filtro de combustível, Taxa administrativa para cobrir despesas de transferência de pontos referentes a multas que o Locatário levar.</p>
+                <p>29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.</p>
+                <p>30. O declara ter ciência de que os valores das multas penalidades variam de acordo com o município de sua ocorrência.</p>
+                <h3>CLÁUSULA SÉTIMA – DO FATURAMENTO E PAGAMENTO</h3>
+                <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong> para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
+                <p>31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.</p>
+                <p>32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de <strong>${d.ctMultaNaoPagamento || 'R$ 2.500,00 (dois mil e quinhentos reais)'}</strong>.</p>
+                <h3>CLÁUSULA OITAVA - DA RESCISÃO</h3>
+                <p>33. Este Contrato poderá ser rescindido pelo LOCADOR a qualquer momento, mediante notificação escrita, desde que a comunicação seja feita com antecedência mínima de 7(sete) dias, eximindo a parte de multas pela rescisão, excetuando-se eventual dívidas inerentes a infrações, saldo de locação e avarias. No ato da rescisão, será cobrada taxa de <strong>${d.ctTaxaHigienizacao || 'R$220,00'}</strong> caso seja necessária a higienização do veículo. O locatário poderá entregar o veículo em local diverso do ajustado, porém será cobrada taxa no valor de <strong>${d.ctTaxaEntregaDiversa || 'R$ 500,00 (quinhentos reais)'}</strong>.</p>
+                <p>34. A inobservância da notificação prévia obriga a parte a pagar o valor referente aos dias de locação não pagos.</p>
+                <p>35. O não cumprimento de qualquer uma das cláusulas constantes neste contrato por parte do Locatário dará o direito à rescisão sem aviso prévio e aplicação de multa no valor de <strong>${d.ctMultaNaoPagamento || 'R$ 2.500,00 (dois mil e quinhentos reais)'}</strong>.</p>
+                <p>36. Este contrato permanecerá vigente até seu integral cumprimento com a prestação de contas.</p>
+                <p>37. O veículo possui cobertura para a atividade comercial de passageiros. Havendo necessidade de acionamento do seguro, o locatário arcará com os custos da franquia que corresponde a 10% (dez por cento) da tabela Fipe. Em caso de necessidade de acionamento da franquia para terceiros, será cobrado do locatário o equivalente a 2% da tabela Fipe do veículo.</p>
+                <p>38. Motivos que podem levar à rescisão contratual sem a necessidade prévio aviso: Inadimplência no pagamento semanal; Perda ou suspensão da habilitação (conforme legislação de trânsito vigente); emprestar ou dividir o veículo com outro motorista sem autorização da empresa; deixar o veículo pernoitar na rua, sem acomodá-lo em garagem; Promover alterações no veículo sem prévia autorização do locador; deixar de comparecer à vistoria previamente agendada; Não comparecer para manutenções programadas; Omitir o registro semanal de quilometragem até as 10:00; Informar endereço diverso do que reside.</p>
+                <h3>CLÁUSULA NONA - DO FORO</h3>
+                <p>39. Fica eleito o Foro da Comarca de Vila Prudente como o único competente para a solução de questões oriundas do presente Contrato, renunciando a outro por mais privilegiado que seja, arcando a parte vencida, em caso de demanda, com todas as despesas processuais e honorários advocatícios.</p>
+                <p style="margin-top: 30px; text-align: justify;">E, por estarem assim justas e contratadas, as partes assinam o presente Contrato em duas vias de igual teor, forma e idêntico valor jurídico, para um só efeito, na presença das testemunhas abaixo assinadas dando tudo por bom, firme e valioso.</p>
+                <p style="margin-top: 30px;">São Paulo, ${d.ctDataContrato || '22 de julho de 2026'}</p>
+                <div style="display: flex; justify-content: space-between; margin-top: 50px; gap: 30px;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctLocadora || 'PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME'}</div>
+                        <div style="font-size: 11px;">CNPJ nº ${d.ctCnpjLocadora || '74.410.606.0001-31'} (Locador)</div>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctLocatario || 'PABLO MEDEIRO'}</div>
+                        <div style="font-size: 11px;">CPF nº ${d.ctCpfLocatario || '464.065.988-14'} (Locatário)</div>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 60px; gap: 30px;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctTestemunha1 || 'Testemunha 1'}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="border-top: 1px solid #333; padding-top: 8px; font-weight: bold;">${d.ctTestemunha2 || 'Testemunha 2'}</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function gerarHtmlTermoResponsabilidade() {
+            const d = {};
+            document.querySelectorAll('#termoResponsabilidade input').forEach(input => {
+                d[input.id] = input.value;
+            });
+            return `<div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+                <h2 style="text-align: center; text-transform: uppercase; font-size: 16px; margin-bottom: 20px;">TERMO DE RESPONSABILIDADE E AUTORIZAÇÃO DE TRANSFERÊNCIA DE PONTUAÇÕES</h2>
+                <p style="text-align: justify; text-indent: 40px;">Eu, <strong>${d.trNome || 'PABLO MEDEIRO'}</strong>, portador da cédula de identidade RG nº <strong>${d.trRg || '54.806-749-1'}</strong> e inscrito no CPF sob o nº <strong>${d.trCpf || '464.065.988-14'}</strong>, CNH número de registro: <strong>${d.trCnhRegistro || '06607239173'}</strong> validade <strong>${d.trCnhValidade || '07/05/2033'}</strong> que sou contratante do veículo de marca <strong>${d.trVeiculoMarca || 'NISSAN KICKS SV CVT'}</strong>, placas <strong>${d.trVeiculoPlaca || 'QMK3B93'}</strong> de propriedade da Sra. <strong>${d.trProprietaria || 'SIMONE GONÇALVES DA SILVA'}</strong>, devidamente inscrita no C.P.F N. <strong>${d.trCpfProprietaria || '329.678.268-04'}</strong>, assumo qualquer responsabilidade civil, criminal e judicial, responsabilizo-me também pelas penalidades pecuniárias ou de pontuação caso venha cometer qualquer infração que viole o código de trânsito brasileiro, autorizando a transferência de pontos das mesmas com o veículo acima descrito e de 90 dias a contar da assinatura do mesmo. Sem mais.</p>
+                <p style="margin-top: 30px;">São Paulo, ${d.trData || '23 de julho de 2026'}</p>
+                <p style="margin-top: 20px;">Atenciosamente:</p>
+                <div style="margin-top: 50px; text-align: center;">
+                    <div style="display: inline-block; border-top: 1px solid #333; padding-top: 8px; font-weight: bold; min-width: 250px;">${d.trNome || 'PABLO MEDEIRO'}</div>
+                    <div style="font-size: 11px;">CPF nº ${d.trCpf || '464.065.988-14'}</div>
+                    <div style="font-size: 11px;">RG nº ${d.trRg || '54.806-749-1'}</div>
+                    <div style="font-size: 11px;">CNH: ${d.trCnhRegistro || '06607239173'}</div>
+                </div>
+            </div>`;
+        }
+
+        function gerarHtmlNotaPromissoria() {
+            const d = {};
+            document.querySelectorAll('#notaPromissoria input').forEach(input => {
+                d[input.id] = input.value;
+            });
+            return `<div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+                <h2 style="text-align: center; font-size: 16px; margin-bottom: 30px;">NOTA PROMISSÓRIA</h2>
+                <p style="text-align: right;"><strong>Nº:</strong> ${d.npNumero || '0001'}</p>
+                <p><strong>Vencimento:</strong> ${d.npVencimento || '24 de julho de 2026'}</p>
+                <p><strong>Valor:</strong> ${d.npValor || 'R$ 2.500,00'}</p>
+                <p style="text-align: justify;">Aos ${d.npDataEmissao || '14 de julho de 2025'}, pagarei por esta única via de NOTA PROMISSÓRIA a <strong>${d.npBeneficiario || 'PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME'}</strong>, CNPJ nº <strong>${d.npCnpjBeneficiario || '74.410.606.0001-31'}</strong>, ou a sua ordem, a quantia de <strong>${d.npValorExtenso || 'dois mil e quinhentos reais'}</strong>, em moeda corrente nacional. Pagável em: ${d.npPagavelEm || 'São Paulo (SP)'}.</p>
+                <p style="margin-top: 20px;"><strong>EMITENTE:</strong></p>
+                <p>Nome: <strong>${d.npEmitenteNome || 'PABLO MEDEIRO'}</strong></p>
+                <p>CPF nº: <strong>${d.npEmitenteCpf || '464.065.988-14'}</strong></p>
+                <p>Documento de identificação: <strong>${d.npEmitenteDoc || 'Carteira Nacional de Habilitação (CNH) n. 06607239173, expedida por DETRAN SP'}</strong></p>
+                <p>Endereço: <strong>${d.npEmitenteEndereco || 'Rua Joaquim Abreu Luiz 150 PARQUE SÃO LUCAS'}</strong></p>
+                <p>Cidade/UF: <strong>${d.npEmitenteCidade || 'São Paulo SP'}</strong>, CEP <strong>${d.npEmitenteCep || '03263-020'}</strong></p>
+                <p style="margin-top: 20px;"><strong>Cartório:</strong> ${d.npCartorio || 'Cartório de Registro Civil de Sapopemba'}</p>
+                <p style="margin-top: 20px;">São Paulo, ${d.npDataAssinatura || '23 de julho de 2026'}</p>
+                <div style="margin-top: 60px; text-align: center;">
+                    <div style="display: inline-block; border-top: 1px solid #333; padding-top: 8px; font-weight: bold; min-width: 250px;">${d.npEmitenteNome || 'PABLO MEDEIRO'}</div>
+                </div>
+            </div>`;
+        }
     </script>
 </body>
 </html>
