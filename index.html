@@ -984,6 +984,9 @@
             transform: scale(1.2);
         }
     </style>
+    <!-- Bibliotecas para processamento de PDF e OCR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -1012,11 +1015,11 @@
             <button class="tab" data-tab="usuario">👥 Usuário</button>
             <button class="tab" data-tab="garagem">🏠 Garagem</button>
             <button class="tab" data-tab="sos">🆘 SOS</button>
-            <button class="tab" data-tab="comprovantes">📄 Comprovantes</button>
+            <button class="tab" data-tab="comprovantes">📄 Documentos</button>
             <button class="tab" data-tab="pagamentos">💰 Sub Pagamentos</button>
             <button class="tab" data-tab="banco">🏦 Banco</button>
             <button class="tab" data-tab="fluxocaixa">💵 Fluxo de Caixa</button>
-            <button class="tab" data-tab="doc">📁 DOC</button>
+            <button class="tab" data-tab="doc">📁 Comprovante</button>
             <button class="tab" data-tab="compras">🛒 Compras</button>
             <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
             <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
@@ -1145,8 +1148,16 @@
             <h2>🔧 Manutenção</h2>
             <input type="text" class="filter-input" placeholder="🔍 Filtrar manutenções..." id="filterManutencao">
             <div class="form-grid" id="formManutencao">
-                <div class="form-group"><label>Veículo</label><input type="text" id="manVeiculo" class="campo-enter"></div>
-                <div class="form-group"><label>Placa</label><input type="text" id="manPlaca" class="campo-enter"></div>
+                <div class="form-group">
+                    <label>Veículo</label>
+                    <input type="text" id="manVeiculo" class="campo-enter" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Placa</label>
+                    <select id="manPlaca" class="campo-enter" onchange="selecionarPlacaManutencao()">
+                        <option value="">Selecione uma placa</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>KM</label><input type="text" id="manKm" class="campo-enter"></div>
                 <div class="form-group"><label>Tipo de Manutenção</label><input type="text" id="manTipo" class="campo-enter"></div>
                 <div class="form-group"><label>Data</label><input type="date" id="manData" class="campo-enter"></div>
@@ -1263,12 +1274,12 @@
             </div>
         </div>
 
-        <!-- ABA: COMPROVANTES -->
+        <!-- ABA: DOCUMENTOS (antes COMPROVANTES) -->
         <div class="tab-content" id="comprovantes">
-            <h2>📄 Comprovantes</h2>
+            <h2>📄 Documentos</h2>
             <div class="sub-tabs">
-                <button class="sub-tab active" onclick="switchSubTab('novo')">📤 Novo Comprovante</button>
-                <button class="sub-tab" onclick="switchSubTab('salvos')">📁 Comprovantes Salvos</button>
+                <button class="sub-tab active" onclick="switchSubTab('novo')">📤 Novo</button>
+                <button class="sub-tab" onclick="switchSubTab('salvos')">📁 DOC Salvos</button>
             </div>
             <div class="sub-tab-content active" id="subTabNovo">
                 <input type="file" id="compImagem" accept="image/*" style="display: none;" onchange="previewCompImagem()">
@@ -1277,14 +1288,14 @@
                     <div class="no-image" id="compNoImage">Nenhum comprovante selecionado</div>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="btn-buscar" data-permissao="comprovantes_buscar" onclick="document.getElementById('compImagem').click()">📂 Buscar Comprovante</button>
+                    <button class="btn-buscar" data-permissao="comprovantes_buscar" onclick="document.getElementById('compImagem').click()">📂 Buscar DOC</button>
                     <button class="btn-primary" data-permissao="comprovantes_salvar" onclick="salvarComprovante()">💾 Salvar</button>
                 </div>
             </div>
             <div class="sub-tab-content" id="subTabSalvos">
                 <div class="subfolder">
                     <div class="subfolder-header">
-                        <h4>📁 Subpasta: Comprovantes Salvos</h4>
+                        <h4>📁 Subpasta: DOC Salvos</h4>
                     </div>
                     <div class="saved-images" id="compSavedImages"></div>
                 </div>
@@ -1371,22 +1382,30 @@
             </div>
         </div>
 
-        <!-- ABA: DOC -->
+        <!-- ABA: COMPROVANTE (antes DOC) - COM PREENCHIMENTO AUTOMÁTICO -->
         <div class="tab-content" id="doc">
-            <h2>📁 Documentos</h2>
-            <input type="text" class="filter-input" placeholder="🔍 Filtrar documentos..." id="filterDoc">
+            <h2>📁 Comprovante</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc">
             <div class="form-grid" id="formDoc">
                 <div class="form-group"><label>Nome do Documento</label><input type="text" id="docNome" class="campo-enter"></div>
-                <div class="form-group"><label>Tipo de Documento</label><input type="text" id="docTipo" class="campo-enter"></div>
-                <div class="form-group"><label>Data do Documento</label><input type="date" id="docData" class="campo-enter"></div>
-                <div class="form-group"><label>Veículo/Cliente</label><input type="text" id="docReferencia" class="campo-enter"></div>
+                <div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="campo-enter" placeholder="Valor do comprovante"></div>
+                <div class="form-group"><label>VENCIMENTO</label><input type="date" id="docData" class="campo-enter"></div>
+                <div class="form-group"><label>Veículo/Cliente</label><input type="text" id="docReferencia" class="campo-enter" placeholder="Placa do veículo"></div>
                 <div class="form-group"><label>Observações</label><textarea id="docObs" rows="3" class="campo-enter"></textarea></div>
+                <div class="form-group">
+                    <label>Comprovante (PDF, JPG, PNG)</label>
+                    <input type="file" id="docUpload" accept=".pdf,.jpg,.jpeg,.png,image/*" style="display: none;" onchange="processarDocumentoComprovante(this.files[0])">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button type="button" class="btn-buscar" onclick="document.getElementById('docUpload').click()" style="padding: 10px 20px; font-size: 14px;">📂 Selecionar Comprovante</button>
+                        <div id="docPreviewContainer" style="display: flex; align-items: center;"></div>
+                    </div>
+                </div>
             </div>
             <button class="btn-primary" data-permissao="doc_salvar" onclick="salvarDoc()">💾 Salvar</button>
             <button class="btn-secondary" data-permissao="doc_upload" onclick="uploadDoc()">📤 Upload</button>
             <div class="table-container">
                 <table id="tabelaDoc">
-                    <thead><tr><th>Nome</th><th>Tipo</th><th>Data</th><th>Referência</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Nome</th><th>R$ LOCAÇÃO</th><th>VENCIMENTO</th><th>Veículo/Cliente</th><th>Ações</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1711,6 +1730,8 @@
         let selfieStream = null;
         let selfieDataUrl = null;
         let selfieClienteTemp = null;
+        let docUploadDataUrl = null;
+        let docUploadFileType = null;
 
         // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
@@ -1770,11 +1791,11 @@
             { id: 'usuario', label: '👥 Usuário' },
             { id: 'garagem', label: '🏠 Garagem' },
             { id: 'sos', label: '🆘 SOS' },
-            { id: 'comprovantes', label: '📄 Comprovantes' },
+            { id: 'comprovantes', label: '📄 Documentos' },
             { id: 'pagamentos', label: '💰 Sub Pagamentos' },
             { id: 'banco', label: '🏦 Banco' },
             { id: 'fluxocaixa', label: '💵 Fluxo de Caixa' },
-            { id: 'doc', label: '📁 DOC' },
+            { id: 'doc', label: '📁 Comprovante' },
             { id: 'compras', label: '🛒 Compras' },
             { id: 'configuracao', label: '⚙️ Configuração' },
             { id: 'auditoria', label: '🔍 Auditoria' }
@@ -1815,8 +1836,8 @@
                 { id: 'sos_baixar', label: '⬇️ Baixar Imagem' }
             ],
             comprovantes: [
-                { id: 'comprovantes_buscar', label: '📂 Buscar Comprovante' },
-                { id: 'comprovantes_salvar', label: '💾 Salvar Comprovante' }
+                { id: 'comprovantes_buscar', label: '📂 Buscar DOC' },
+                { id: 'comprovantes_salvar', label: '💾 Salvar' }
             ],
             pagamentos: [
                 { id: 'pagamentos_acoes', label: 'Ações de Pagamento (Pago/Excluir)' }
@@ -1886,7 +1907,7 @@
             document.getElementById('selfieConfirmBtn').style.display = 'none';
             document.getElementById('selfieCaptureBtn').style.display = 'inline-block';
             document.getElementById('selfiePreviewContainer').style.display = 'none';
-            
+
             document.getElementById('selfieModal').classList.add('active');
             
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -1923,7 +1944,6 @@
                 selfieStream.getTracks().forEach(track => track.stop());
                 selfieStream = null;
             }
-            
             document.getElementById('selfieModal').classList.remove('active');
             document.getElementById('selfieVideo').srcObject = null;
             selfieDataUrl = null;
@@ -2059,6 +2079,35 @@
             atualizarGaleriaComprovantes();
             carregarDadosContratos();
             limparSelfieCliente();
+            atualizarPlacasManutencao();
+            preencherPlacaUsuarioLogado();
+        }
+
+        // =============================================
+        // NOVA FUNÇÃO: ATUALIZAR PLACAS NA ABA MANUTENÇÃO
+        // =============================================
+        function atualizarPlacasManutencao() {
+            const select = document.getElementById('manPlaca');
+            if (!select) return;
+            select.innerHTML = '<option value="">Selecione uma placa</option>';
+            db.veiculos.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.placa;
+                option.textContent = v.placa + ' - ' + v.fabricante;
+                select.appendChild(option);
+            });
+        }
+
+        function selecionarPlacaManutencao() {
+            const placa = document.getElementById('manPlaca').value;
+            if (placa) {
+                const veiculo = db.veiculos.find(v => v.placa === placa);
+                if (veiculo) {
+                    document.getElementById('manVeiculo').value = veiculo.fabricante;
+                }
+            } else {
+                document.getElementById('manVeiculo').value = '';
+            }
         }
 
         function gerarPermissoesUI() {
@@ -2206,12 +2255,14 @@
             });
 
             atualizarTabelaVeiculos();
+            atualizarPlacasManutencao();
 
             const activeTab = document.querySelector('.tab.active');
             if (activeTab && activeTab.classList.contains('hidden-tab')) {
                 const firstAllowedTab = document.querySelector('.tab[data-tab]:not(.hidden-tab)');
                 if (firstAllowedTab) firstAllowedTab.click();
             }
+            preencherPlacaUsuarioLogado();
         }
 
         function temPermissaoVeiculo(placa) {
@@ -2311,6 +2362,11 @@
                 if (tabId === 'pagamentos') atualizarTabelaAlugueis();
                 if (tabId === 'locacoes') atualizarCombosLocacao();
                 if (tabId === 'compras') atualizarTabelaCompras();
+                if (tabId === 'manutencao') atualizarPlacasManutencao();
+                if (tabId === 'doc') {
+                    preencherPlacaUsuarioLogado();
+                    atualizarTabelaDoc();
+                }
 
                 setTimeout(function() {
                     const primeiroCampo = document.querySelector('.tab-content.active .campo-enter, .tab-content.active input:not([readonly]), .tab-content.active select, .tab-content.active textarea');
@@ -2524,7 +2580,6 @@
                 return;
             }
 
-            // Verificar CPF duplicado
             const cpfLimpo = cpf.replace(/\D/g, '');
             console.log('CPF limpo:', cpfLimpo);
             console.log('Clientes existentes:', db.clientes);
@@ -2540,7 +2595,6 @@
                 return;
             }
 
-            // Criar objeto cliente
             const cliente = {
                 dataCadastro: document.getElementById('cliDataCadastro').value,
                 nome: nome,
@@ -2558,27 +2612,21 @@
 
             console.log('Novo cliente:', cliente);
 
-            // Salvar cliente
             db.clientes.push(cliente);
             console.log('Cliente salvo. Total clientes:', db.clientes.length);
             
-            // Criar usuário automaticamente
             criarUsuarioDoCliente(cliente);
             
-            // Atualizar tabelas
             atualizarTabelaClientes();
             atualizarCombosLocacao();
             
-            // Registrar auditoria
             registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
             
-            // Salvar no localStorage
             salvarDB();
             console.log('Dados salvos no localStorage');
             
             alert('Cliente salvo com sucesso! Usuário criado automaticamente.');
             
-            // Limpar campos
             limparCamposCliente();
             limparSelfieCliente();
             
@@ -2609,7 +2657,6 @@
 
             console.log('Senha gerada:', senha);
 
-            // Verificar se usuário já existe
             const usuarioExistente = db.usuarios.find(u => u.nome === primeiroNome);
             if (usuarioExistente) {
                 console.log('Usuário já existe:', primeiroNome);
@@ -2686,6 +2733,7 @@
             salvarDB();
             alert('Veículo salvo!');
             limparCamposVeiculo();
+            atualizarPlacasManutencao();
         }
 
         function salvarLocacao() {
@@ -2842,6 +2890,7 @@
             salvarDB();
             alert('Manutenção salva!');
             limparCamposManutencao();
+            atualizarPlacasManutencao();
         }
 
         function salvarMecanico() {
@@ -2948,6 +2997,167 @@
             limparCamposFluxoCaixa();
         }
 
+        // =============================================
+        // FUNÇÕES PARA PROCESSAMENTO DE DOCUMENTOS
+        // =============================================
+        async function processarDocumentoComprovante(file) {
+            if (!file) return;
+
+            const extensao = file.name.split('.').pop().toLowerCase();
+            const tiposPermitidos = ['pdf', 'jpg', 'jpeg', 'png'];
+            if (!tiposPermitidos.includes(extensao)) {
+                alert('Formato não suportado! Aceitos: PDF, JPG, JPEG, PNG.');
+                document.getElementById('docUpload').value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                docUploadDataUrl = e.target.result;
+                docUploadFileType = extensao;
+                atualizarPreviewDoc();
+            };
+            reader.readAsDataURL(file);
+
+            let textoExtraido = '';
+            try {
+                if (extensao === 'pdf') {
+                    textoExtraido = await extrairTextoPDF(file);
+                } else {
+                    textoExtraido = await extrairTextoImagem(file);
+                }
+            } catch (erro) {
+                console.error('Erro ao extrair texto:', erro);
+                alert('Não foi possível extrair o texto do arquivo. Preencha os campos manualmente.');
+                return;
+            }
+
+            preencherCamposComprovante(textoExtraido);
+        }
+
+        async function extrairTextoPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let textoCompleto = '';
+            for (let pagina = 1; pagina <= pdf.numPages; pagina++) {
+                const page = await pdf.getPage(pagina);
+                const content = await page.getTextContent();
+                const strings = content.items.map(item => item.str);
+                textoCompleto += strings.join(' ') + '\n';
+            }
+            return textoCompleto;
+        }
+
+        async function extrairTextoImagem(file) {
+            const imageUrl = URL.createObjectURL(file);
+            const resultado = await Tesseract.recognize(imageUrl, 'por', {
+                logger: m => console.log(m)
+            });
+            URL.revokeObjectURL(imageUrl);
+            return resultado.data.text;
+        }
+
+        function preencherCamposComprovante(texto) {
+            if (!texto) return;
+
+            const textoMin = texto.toLowerCase();
+
+            // 1. Nome do pagador
+            let nome = '';
+            const padroesNome = [
+                /nome[:\s]+([^\n]+)/i,
+                /pagador[:\s]+([^\n]+)/i,
+                /de[:\s]+([^\n]+)/i,
+                /para[:\s]+([^\n]+)/i,
+                /favorecido[:\s]+([^\n]+)/i
+            ];
+            for (const regex of padroesNome) {
+                const match = texto.match(regex);
+                if (match && match[1]) {
+                    nome = match[1].trim();
+                    break;
+                }
+            }
+            if (nome) document.getElementById('docNome').value = nome;
+
+            // 2. Valor da transferência
+            let valor = '';
+            const padroesValor = [
+                /r\$\s?([\d.,]+)/i,
+                /valor[:\s]+r\$\s?([\d.,]+)/i,
+                /total[:\s]+r\$\s?([\d.,]+)/i,
+                /([\d]{1,3}(?:\.[\d]{3})*,\d{2})/
+            ];
+            for (const regex of padroesValor) {
+                const match = texto.match(regex);
+                if (match) {
+                    valor = match[1] || match[0];
+                    break;
+                }
+            }
+            if (valor) {
+                valor = valor.replace(/[^\d,.-]/g, '');
+                document.getElementById('docTipo').value = 'R$ ' + valor;
+            }
+
+            // 3. Data da transferência
+            let data = '';
+            const padroesData = [
+                /(\d{2}\/\d{2}\/\d{4})/,
+                /(\d{2}-\d{2}-\d{4})/,
+                /(\d{2}\.\d{2}\.\d{4})/
+            ];
+            for (const regex of padroesData) {
+                const match = texto.match(regex);
+                if (match) {
+                    data = match[1];
+                    break;
+                }
+            }
+            if (data) {
+                const partes = data.split(/[/.-]/);
+                if (partes.length === 3) {
+                    const dataISO = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                    document.getElementById('docData').value = dataISO;
+                }
+            }
+
+            // 4. Placa (já preenchida, não sobrescrever)
+        }
+
+        function preencherPlacaUsuarioLogado() {
+            if (!usuarioLogado) return;
+            const nomeUsuario = usuarioLogado.nome;
+            const locacoesUsuario = db.locacoes.filter(l => l.locatario === nomeUsuario);
+            if (locacoesUsuario.length > 0) {
+                locacoesUsuario.sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
+                const placa = locacoesUsuario[0].placa;
+                if (placa) {
+                    document.getElementById('docReferencia').value = placa;
+                }
+            }
+        }
+
+        function atualizarPreviewDoc() {
+            const container = document.getElementById('docPreviewContainer');
+            container.innerHTML = '';
+            if (!docUploadDataUrl || !docUploadFileType) return;
+
+            if (docUploadFileType === 'pdf') {
+                const span = document.createElement('span');
+                span.innerHTML = '📄 PDF selecionado';
+                span.style.fontSize = '14px';
+                span.style.color = '#333';
+                container.appendChild(span);
+            } else {
+                const img = document.createElement('img');
+                img.src = docUploadDataUrl;
+                img.className = 'selfie-thumbnail';
+                img.onclick = function() { openImageModal(docUploadDataUrl); };
+                container.appendChild(img);
+            }
+        }
+
         function salvarDoc() {
             const nome = document.getElementById('docNome').value;
             const tipo = document.getElementById('docTipo').value;
@@ -2965,7 +3175,15 @@
                 return;
             }
 
-            const d = { nome, tipo, data, referencia, obs };
+            const d = { 
+                nome: nome, 
+                tipo: tipo, 
+                data: data, 
+                referencia: referencia,
+                obs: obs,
+                imagem: docUploadDataUrl || null,
+                fileType: docUploadFileType || null
+            };
             db.documentos.push(d);
             atualizarTabelaDoc();
             registrarAuditoria('Cadastro', `Documento: ${d.nome}`);
@@ -2974,73 +3192,17 @@
             limparCamposDoc();
         }
 
-        function salvarCompra() {
-            const data = document.getElementById('compData').value;
-            const produto = document.getElementById('compProduto').value;
-            const fornecedor = document.getElementById('compFornecedor').value;
-            const quantidade = document.getElementById('compQuantidade').value;
-            const valorUnitario = document.getElementById('compValorUnitario').value;
-            const valorTotal = document.getElementById('compValorTotal').value;
-            const formaPagamento = document.getElementById('compFormaPagamento').value;
-            const status = document.getElementById('compStatus').value;
-            const categoria = document.getElementById('compCategoria').value;
-            const obs = document.getElementById('compObs').value;
-
-            if (campoVazio(data) || campoVazio(produto) || campoVazio(fornecedor) || campoVazio(quantidade) || campoVazio(valorUnitario) || campoVazio(valorTotal)) {
-                alert('Preencha todos os campos obrigatórios da compra!');
-                return;
-            }
-
-            if (db.compras.some(c => c.data === data && c.produto.toLowerCase() === produto.toLowerCase() && c.fornecedor.toLowerCase() === fornecedor.toLowerCase())) {
-                alert('Já existe uma compra idêntica registrada!');
-                return;
-            }
-
-            const compra = {
-                data,
-                produto,
-                fornecedor,
-                cnpjFornecedor: document.getElementById('compCnpjFornecedor').value,
-                quantidade,
-                valorUnitario,
-                valorTotal,
-                formaPagamento,
-                status,
-                categoria,
-                obs
-            };
-
-            if (compraEditandoIndex !== null) {
-                db.compras[compraEditandoIndex] = compra;
-                compraEditandoIndex = null;
-                registrarAuditoria('Edição', `Compra editada: ${compra.produto}`);
-                alert('Compra atualizada com sucesso!');
-            } else {
-                db.compras.push(compra);
-                registrarAuditoria('Cadastro', `Nova compra: ${compra.produto}`);
-                alert('Compra salva com sucesso!');
-            }
-
-            const valorTotalStr = compra.valorTotal.replace('R$ ', '').replace('.', '').replace(',', '.');
-            const valorTotalNum = parseFloat(valorTotalStr) || 0;
-            if (valorTotalNum > 0 && compra.status !== 'cancelado') {
-                const saida = {
-                    data: compra.data,
-                    descricao: `Compra - ${compra.produto}`,
-                    categoria: compra.categoria || 'Compras',
-                    valor: compra.valorTotal,
-                    tipo: 'saida'
-                };
-                if (!db.fluxoCaixa.some(f => f.data === saida.data && f.descricao === saida.descricao && f.valor === saida.valor && f.tipo === 'saida')) {
-                    db.fluxoCaixa.push(saida);
-                    atualizarTabelaFluxoCaixa();
-                    atualizarResumoFinanceiro();
-                }
-            }
-
-            atualizarTabelaCompras();
-            limparCamposCompra();
-            salvarDB();
+        function limparCamposDoc() {
+            document.getElementById('docNome').value = '';
+            document.getElementById('docTipo').value = '';
+            document.getElementById('docData').value = '';
+            document.getElementById('docReferencia').value = '';
+            document.getElementById('docObs').value = '';
+            docUploadDataUrl = null;
+            docUploadFileType = null;
+            document.getElementById('docUpload').value = '';
+            document.getElementById('docPreviewContainer').innerHTML = '';
+            preencherPlacaUsuarioLogado();
         }
 
         // =============================================
@@ -3295,6 +3457,7 @@
             atualizarCombosLocacao();
             registrarAuditoria('Edição', `Veículo editado: ${v.fabricante} - ${v.placa}`);
             salvarDB();
+            atualizarPlacasManutencao();
         }
 
         function excluirVeiculo(index) {
@@ -3309,6 +3472,7 @@
                 atualizarCombosLocacao();
                 registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
                 salvarDB();
+                atualizarPlacasManutencao();
             }
         }
 
@@ -3471,7 +3635,12 @@
         }
 
         function limparCamposManutencao() {
-            ['manVeiculo', 'manPlaca', 'manKm', 'manTipo', 'manData', 'manObs'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('manVeiculo').value = '';
+            document.getElementById('manPlaca').value = '';
+            document.getElementById('manKm').value = '';
+            document.getElementById('manTipo').value = '';
+            document.getElementById('manData').value = '';
+            document.getElementById('manObs').value = '';
         }
 
         function editarMecanico(index) {
@@ -3572,6 +3741,11 @@
             document.getElementById('docData').value = d.data;
             document.getElementById('docReferencia').value = d.referencia;
             document.getElementById('docObs').value = d.obs;
+            if (d.imagem) {
+                docUploadDataUrl = d.imagem;
+                docUploadFileType = d.fileType || 'jpg';
+                atualizarPreviewDoc();
+            }
             db.documentos.splice(index, 1);
             atualizarTabelaDoc();
             registrarAuditoria('Edição', `Doc editado: ${d.nome}`);
@@ -3588,11 +3762,11 @@
             }
         }
 
-        function limparCamposDoc() {
-            ['docNome', 'docTipo', 'docData', 'docReferencia', 'docObs'].forEach(id => document.getElementById(id).value = '');
+        function uploadDoc() { 
+            alert('Upload iniciado...'); 
+            registrarAuditoria('Cadastro', 'Upload doc'); 
+            salvarDB(); 
         }
-
-        function uploadDoc() { alert('Upload iniciado...'); registrarAuditoria('Cadastro', 'Upload doc'); salvarDB(); }
 
         function editarCompra() {
             const index = compraEditandoIndex;
