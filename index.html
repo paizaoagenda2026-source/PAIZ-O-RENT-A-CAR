@@ -806,7 +806,6 @@
             flex-wrap: wrap;
         }
 
-        /* Estilos para o modal de selfie */
         .selfie-modal {
             position: fixed;
             top: 0;
@@ -1010,6 +1009,7 @@
             <button class="tab active" data-tab="veiculos">🚗 Veículos</button>
             <button class="tab" data-tab="clientes">👤 Clientes</button>
             <button class="tab" data-tab="locacoes">📋 Locações</button>
+            <button class="tab" data-tab="locEncerrada">🏁 LOC. ENCERRADA</button>
             <button class="tab" data-tab="manutencao">🔧 Manutenção</button>
             <button class="tab" data-tab="mecanico">👨‍🔧 Mecânico</button>
             <button class="tab" data-tab="usuario">👥 Usuário</button>
@@ -1093,7 +1093,7 @@
 
         <!-- ABA: LOCAÇÕES -->
         <div class="tab-content" id="locacoes">
-            <h2>📋 Locações</h2>
+            <h2>📋 Locações Ativas</h2>
             <input type="text" class="filter-input" placeholder="🔍 Filtrar locações..." id="filterLocacoes">
             <div class="form-grid" id="formLocacoes">
                 <div class="form-group">
@@ -1138,6 +1138,28 @@
             <div class="table-container">
                 <table id="tabelaLocacoes">
                     <thead><tr><th>Locatário</th><th>Veículo</th><th>Placa</th><th>Início</th><th>Fim</th><th>Aluguel</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA: LOCAÇÕES ENCERRADAS (NOVA) -->
+        <div class="tab-content" id="locEncerrada">
+            <h2>🏁 Locações Encerradas</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar locações encerradas..." id="filterLocEncerrada">
+            <div class="table-container">
+                <table id="tabelaLocEncerrada">
+                    <thead>
+                        <tr>
+                            <th>Locatário</th>
+                            <th>Veículo</th>
+                            <th>Placa</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Encerrada em</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1402,6 +1424,7 @@
                 </div>
             </div>
             <button class="btn-primary" data-permissao="doc_salvar" onclick="salvarDoc()">💾 Salvar</button>
+            <button class="btn-warning" data-permissao="doc_limpar" onclick="limparCamposDoc()">🔄 Limpar</button>
             <button class="btn-secondary" data-permissao="doc_upload" onclick="uploadDoc()">📤 Upload</button>
             <div class="table-container">
                 <table id="tabelaDoc">
@@ -1677,6 +1700,7 @@
                 veiculos: [],
                 clientes: [],
                 locacoes: [],
+                locacoesEncerradas: [], // NOVO
                 manutencao: [],
                 mecanico: [],
                 usuarios: [],
@@ -1703,7 +1727,9 @@
             const dados = localStorage.getItem(STORAGE_KEY);
             if (dados) {
                 try {
-                    return JSON.parse(dados);
+                    const db = JSON.parse(dados);
+                    if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
+                    return db;
                 } catch (e) {
                     console.error('Erro ao carregar dados do localStorage:', e);
                     return criarDBPadrao();
@@ -1786,6 +1812,7 @@
             { id: 'veiculos', label: '🚗 Veículos' },
             { id: 'clientes', label: '👤 Clientes' },
             { id: 'locacoes', label: '📋 Locações' },
+            { id: 'locEncerrada', label: '🏁 LOC. ENCERRADA' }, // NOVO
             { id: 'manutencao', label: '🔧 Manutenção' },
             { id: 'mecanico', label: '👨‍🔧 Mecânico' },
             { id: 'usuario', label: '👥 Usuário' },
@@ -1813,6 +1840,10 @@
             locacoes: [
                 { id: 'locacoes_salvar', label: '💾 Salvar Locação' },
                 { id: 'locacoes_contrato', label: '📄 Contrato' }
+            ],
+            locEncerrada: [ // NOVO
+                { id: 'locEncerrada_reativar', label: '🔄 Reativar Locação' },
+                { id: 'locEncerrada_excluir', label: '🗑️ Excluir Permanentemente' }
             ],
             manutencao: [
                 { id: 'manutencao_salvar', label: '💾 Salvar Manutenção' }
@@ -1853,6 +1884,7 @@
             ],
             doc: [
                 { id: 'doc_salvar', label: '💾 Salvar Documento' },
+                { id: 'doc_limpar', label: '🔄 Limpar Documento' },
                 { id: 'doc_upload', label: '📤 Upload Documento' }
             ],
             compras: [
@@ -1878,17 +1910,17 @@
                 veiculos: {}
             },
             MOTORISTA: {
-                abas: { veiculos: false, clientes: false, locacoes: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false },
+                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false },
                 botoes: { garagem_buscar: true, garagem_salvar: true, sos_buscar: true, sos_salvar: true, sos_baixar: true, comprovantes_buscar: true, comprovantes_salvar: true, banco_copiar: true },
                 veiculos: {}
             },
             OFICINA: {
-                abas: { veiculos: true, clientes: false, locacoes: false, manutencao: true, mecanico: true, usuario: false, garagem: false, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
+                abas: { veiculos: true, clientes: false, locacoes: false, locEncerrada: false, manutencao: true, mecanico: true, usuario: false, garagem: false, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
                 botoes: { veiculos_salvar: true, veiculos_rastreador: false, veiculos_multas: false, manutencao_salvar: true, mecanico_salvar: true },
                 veiculos: {}
             },
             VISITANTE: {
-                abas: { veiculos: false, clientes: false, locacoes: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
+                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
                 botoes: { garagem_buscar: true, garagem_salvar: true },
                 veiculos: {}
             }
@@ -2059,6 +2091,10 @@
                 };
                 salvarDB();
             }
+            if (!db.locacoesEncerradas) {
+                db.locacoesEncerradas = [];
+                salvarDB();
+            }
             atualizarTabelaUsuario();
             gerarPermissoesUI();
             atualizarResumoFinanceiro();
@@ -2067,6 +2103,7 @@
             atualizarTabelaVeiculos();
             atualizarTabelaClientes();
             atualizarTabelaLocacoes();
+            atualizarTabelaLocEncerrada(); // NOVO
             atualizarTabelaManutencao();
             atualizarTabelaMecanico();
             atualizarTabelaAlugueis();
@@ -2367,6 +2404,7 @@
                     preencherPlacaUsuarioLogado();
                     atualizarTabelaDoc();
                 }
+                if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada(); // NOVO
 
                 setTimeout(function() {
                     const primeiroCampo = document.querySelector('.tab-content.active .campo-enter, .tab-content.active input:not([readonly]), .tab-content.active select, .tab-content.active textarea');
@@ -2448,6 +2486,8 @@
             const tableId = id.replace('filter', 'tabela');
             setupFilter(id, tableId);
         });
+        // NOVO FILTRO
+        setupFilter('filterLocEncerrada', 'tabelaLocEncerrada');
 
         // =============================================
         // FUNÇÕES DOS COMBOBOX DA ABA LOCAÇÕES
@@ -3248,8 +3288,84 @@
             db.locacoes.forEach((l, index) => {
                 const row = tbody.insertRow();
                 row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${l.valorAluguel}</td>
-                    <td><button class="btn-warning" onclick="editarLocacao(${index})">✏️</button><button class="btn-danger" onclick="excluirLocacao(${index})">🗑️</button></td>`;
+                    <td>
+                        <button class="btn-warning" onclick="editarLocacao(${index})">✏️</button>
+                        <button class="btn-danger" onclick="excluirLocacao(${index})">🗑️</button>
+                        <button class="btn-success" onclick="encerrarLocacao(${index})">🏁 Encerrar</button>
+                    </td>`;
             });
+        }
+
+        // NOVO: FUNÇÃO PARA ENCERRAR LOCAÇÃO
+        function encerrarLocacao(index) {
+            const locacao = db.locacoes[index];
+            if (!locacao) return;
+            if (!confirm(`Encerrar a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
+
+            // Adicionar data de encerramento e mover para encerradas
+            locacao.dataEncerramento = new Date().toISOString().split('T')[0];
+            db.locacoesEncerradas.push(locacao);
+            db.locacoes.splice(index, 1);
+
+            // Remover aluguéis futuros associados (opcional: manter histórico?) Vamos remover pendentes.
+            db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
+
+            atualizarTabelaLocacoes();
+            atualizarTabelaLocEncerrada();
+            atualizarTabelaAlugueis();
+            registrarAuditoria('Edição', `Locação encerrada: ${locacao.locatario} - ${locacao.placa}`);
+            salvarDB();
+            alert('Locação encerrada com sucesso!');
+        }
+
+        // NOVO: ATUALIZAR TABELA DE LOCAÇÕES ENCERRADAS
+        function atualizarTabelaLocEncerrada() {
+            const tbody = document.querySelector('#tabelaLocEncerrada tbody');
+            tbody.innerHTML = '';
+            db.locacoesEncerradas.forEach((l, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td>
+                    <td>
+                        <button class="btn-warning" data-permissao="locEncerrada_reativar" onclick="reativarLocacao(${index})">🔄 Reativar</button>
+                        <button class="btn-danger" data-permissao="locEncerrada_excluir" onclick="excluirLocEncerrada(${index})">🗑️ Excluir</button>
+                    </td>`;
+            });
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        // NOVO: REATIVAR LOCAÇÃO ENCERRADA
+        function reativarLocacao(index) {
+            const locacao = db.locacoesEncerradas[index];
+            if (!locacao) return;
+            if (!confirm(`Reativar a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
+
+            // Remover data de encerramento e mover de volta para ativas
+            delete locacao.dataEncerramento;
+            db.locacoes.push(locacao);
+            db.locacoesEncerradas.splice(index, 1);
+
+            // Recriar aluguéis se não existirem
+            criarAlugueisParaLocacao(locacao);
+
+            atualizarTabelaLocEncerrada();
+            atualizarTabelaLocacoes();
+            atualizarTabelaAlugueis();
+            registrarAuditoria('Edição', `Locação reativada: ${locacao.locatario} - ${locacao.placa}`);
+            salvarDB();
+            alert('Locação reativada com sucesso!');
+        }
+
+        // NOVO: EXCLUIR PERMANENTEMENTE LOCAÇÃO ENCERRADA
+        function excluirLocEncerrada(index) {
+            const locacao = db.locacoesEncerradas[index];
+            if (!locacao) return;
+            if (!confirm(`Excluir permanentemente a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
+
+            db.locacoesEncerradas.splice(index, 1);
+            atualizarTabelaLocEncerrada();
+            registrarAuditoria('Exclusão', `Locação encerrada excluída: ${locacao.locatario} - ${locacao.placa}`);
+            salvarDB();
+            alert('Locação excluída permanentemente.');
         }
 
         function atualizarTabelaManutencao() {
@@ -3587,7 +3703,10 @@
             if (confirm('Excluir locação?')) {
                 const l = db.locacoes[index];
                 db.locacoes.splice(index, 1);
+                // Remover aluguéis associados
+                db.alugueis = db.alugueis.filter(a => !(a.locatario === l.locatario && a.placa === l.placa && a.dataContrato === l.dataInicio));
                 atualizarTabelaLocacoes();
+                atualizarTabelaAlugueis();
                 registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario}`);
                 salvarDB();
             }
