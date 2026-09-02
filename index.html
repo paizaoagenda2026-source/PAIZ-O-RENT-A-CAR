@@ -982,6 +982,28 @@
         .selfie-thumbnail:hover {
             transform: scale(1.2);
         }
+
+        /* Estilos específicos para a aba Pendente */
+        .pendente-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .pendente-item input[type="text"],
+        .pendente-item input[type="date"] {
+            flex: 1;
+        }
+        .btn-pdf {
+            background: #6c757d;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-pdf:hover {
+            background: #5a6268;
+        }
     </style>
     <!-- Bibliotecas para processamento de PDF e OCR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -1023,6 +1045,8 @@
             <button class="tab" data-tab="compras">🛒 Compras</button>
             <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
             <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
+            <!-- NOVA ABA PENDENTE -->
+            <button class="tab" data-tab="pendente">⏳ Pendente</button>
             <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
             <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
         </div>
@@ -1077,7 +1101,7 @@
                 <div class="form-group"><label>Estado</label><input type="text" id="cliEstado" class="campo-enter"></div>
                 <div class="form-group"><label>Selfie do Cliente</label>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <button type="button" class="btn-buscar" data-permissao="clientes_salvar" onclick="abrirModalSelfie()" style="padding: 10px 20px; font-size: 14px;">📸 Tirar Selfie</button>
+                        <button type="button" class="btn-buscar" data-permissao="clientes_salvar" onclick="abrirModalSelfie('cliente')" style="padding: 10px 20px; font-size: 14px;">📸 Tirar Selfie</button>
                         <div id="selfiePreviewCliente" style="display: flex; align-items: center;"></div>
                     </div>
                 </div>
@@ -1232,6 +1256,13 @@
                         <option value="OFICINA">OFICINA</option>
                         <option value="VISITANTE">VISITANTE</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label>Selfie do Usuário</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button type="button" class="btn-buscar" onclick="abrirModalSelfie('usuario')" style="padding: 10px 20px; font-size: 14px;">📸 Tirar Selfie</button>
+                        <div id="selfiePreviewUsuario" style="display: flex; align-items: center;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1425,7 +1456,6 @@
             </div>
             <button class="btn-primary" data-permissao="doc_salvar" onclick="salvarDoc()">💾 Salvar</button>
             <button class="btn-warning" data-permissao="doc_limpar" onclick="limparCamposDoc()">🔄 Limpar</button>
-            <button class="btn-secondary" data-permissao="doc_upload" onclick="uploadDoc()">📤 Upload</button>
             <div class="table-container">
                 <table id="tabelaDoc">
                     <thead><tr><th>Nome</th><th>R$ LOCAÇÃO</th><th>VENCIMENTO</th><th>Veículo/Cliente</th><th>Ações</th></tr></thead>
@@ -1540,6 +1570,63 @@
                     <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>IP</th></tr></thead>
                     <tbody>
                     </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NOVA ABA: PENDENTE -->
+        <div class="tab-content" id="pendente">
+            <h2>⏳ Pendências</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar pendências..." id="filterPendentes">
+            <div class="form-grid" id="formPendente">
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="pendData" class="campo-enter">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="pendDescricao" class="campo-enter" placeholder="Descrição da pendência">
+                </div>
+                <div class="form-group">
+                    <label>Crédito (R$)</label>
+                    <input type="text" id="pendCredito" class="money campo-enter" placeholder="R$ 0,00">
+                </div>
+                <div class="form-group">
+                    <label>Débito (R$)</label>
+                    <input type="text" id="pendDebito" class="money campo-enter" placeholder="R$ 0,00">
+                </div>
+                <div class="form-group">
+                    <label>Vencimento</label>
+                    <input type="date" id="pendVencimento" class="campo-enter">
+                </div>
+                <div class="form-group">
+                    <label>Documento PDF</label>
+                    <input type="file" id="pendUpload" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="processarPendenciaPDF(this.files[0])">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" class="btn-buscar" onclick="document.getElementById('pendUpload').click()" style="padding: 10px 20px; font-size: 14px;">📂 Buscar PDF</button>
+                        <span id="pendDocPreview" style="font-size: 14px; color: #666;">Nenhum arquivo</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary" data-permissao="pendente_salvar" onclick="salvarPendencia()">💾 Salvar</button>
+                <button class="btn-warning" data-permissao="pendente_editar" onclick="editarPendencia()">✏️ Editar</button>
+                <button class="btn-danger" data-permissao="pendente_excluir" onclick="excluirPendencia()">🗑️ Excluir</button>
+            </div>
+            <div class="table-container">
+                <table id="tabelaPendentes">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Crédito</th>
+                            <th>Débito</th>
+                            <th>Vencimento</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
@@ -1700,7 +1787,7 @@
                 veiculos: [],
                 clientes: [],
                 locacoes: [],
-                locacoesEncerradas: [], // NOVO
+                locacoesEncerradas: [],
                 manutencao: [],
                 mecanico: [],
                 usuarios: [],
@@ -1710,6 +1797,7 @@
                 compras: [],
                 auditoria: [],
                 bancos: [],
+                pendentes: [],
                 contratos: {
                     contratoLocacao: {},
                     termoResponsabilidade: {},
@@ -1728,7 +1816,11 @@
             if (dados) {
                 try {
                     const db = JSON.parse(dados);
+                    if (!db.pendentes) db.pendentes = [];
                     if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
+                    db.pendentes.forEach(p => {
+                        if (!p.status) p.status = 'Pendente';
+                    });
                     return db;
                 } catch (e) {
                     console.error('Erro ao carregar dados do localStorage:', e);
@@ -1756,6 +1848,9 @@
         let selfieStream = null;
         let selfieDataUrl = null;
         let selfieClienteTemp = null;
+        let selfieUsuarioTemp = null;
+        let selfieDestino = 'cliente';
+        let usuarioEditandoIndex = null;
         let docUploadDataUrl = null;
         let docUploadFileType = null;
 
@@ -1812,7 +1907,7 @@
             { id: 'veiculos', label: '🚗 Veículos' },
             { id: 'clientes', label: '👤 Clientes' },
             { id: 'locacoes', label: '📋 Locações' },
-            { id: 'locEncerrada', label: '🏁 LOC. ENCERRADA' }, // NOVO
+            { id: 'locEncerrada', label: '🏁 LOC. ENCERRADA' },
             { id: 'manutencao', label: '🔧 Manutenção' },
             { id: 'mecanico', label: '👨‍🔧 Mecânico' },
             { id: 'usuario', label: '👥 Usuário' },
@@ -1825,7 +1920,8 @@
             { id: 'doc', label: '📁 Comprovante' },
             { id: 'compras', label: '🛒 Compras' },
             { id: 'configuracao', label: '⚙️ Configuração' },
-            { id: 'auditoria', label: '🔍 Auditoria' }
+            { id: 'auditoria', label: '🔍 Auditoria' },
+            { id: 'pendente', label: '⏳ Pendente' }
         ];
 
         const todosBotoes = {
@@ -1841,7 +1937,7 @@
                 { id: 'locacoes_salvar', label: '💾 Salvar Locação' },
                 { id: 'locacoes_contrato', label: '📄 Contrato' }
             ],
-            locEncerrada: [ // NOVO
+            locEncerrada: [
                 { id: 'locEncerrada_reativar', label: '🔄 Reativar Locação' },
                 { id: 'locEncerrada_excluir', label: '🗑️ Excluir Permanentemente' }
             ],
@@ -1884,8 +1980,7 @@
             ],
             doc: [
                 { id: 'doc_salvar', label: '💾 Salvar Documento' },
-                { id: 'doc_limpar', label: '🔄 Limpar Documento' },
-                { id: 'doc_upload', label: '📤 Upload Documento' }
+                { id: 'doc_limpar', label: '🔄 Limpar Documento' }
             ],
             compras: [
                 { id: 'compras_salvar', label: '💾 Salvar Compra' },
@@ -1900,6 +1995,11 @@
             auditoria: [
                 { id: 'auditoria_filtrar', label: '🔍 Aplicar Filtro' },
                 { id: 'auditoria_limpar', label: '🔄 Limpar Filtro' }
+            ],
+            pendente: [
+                { id: 'pendente_salvar', label: '💾 Salvar Pendência' },
+                { id: 'pendente_editar', label: '✏️ Editar Pendência' },
+                { id: 'pendente_excluir', label: '🗑️ Excluir Pendência' }
             ]
         };
 
@@ -1910,17 +2010,17 @@
                 veiculos: {}
             },
             MOTORISTA: {
-                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false },
+                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false, pendente: false },
                 botoes: { garagem_buscar: true, garagem_salvar: true, sos_buscar: true, sos_salvar: true, sos_baixar: true, comprovantes_buscar: true, comprovantes_salvar: true, banco_copiar: true },
                 veiculos: {}
             },
             OFICINA: {
-                abas: { veiculos: true, clientes: false, locacoes: false, locEncerrada: false, manutencao: true, mecanico: true, usuario: false, garagem: false, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
+                abas: { veiculos: true, clientes: false, locacoes: false, locEncerrada: false, manutencao: true, mecanico: true, usuario: false, garagem: false, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false, pendente: false },
                 botoes: { veiculos_salvar: true, veiculos_rastreador: false, veiculos_multas: false, manutencao_salvar: true, mecanico_salvar: true },
                 veiculos: {}
             },
             VISITANTE: {
-                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false },
+                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false, pendente: false },
                 botoes: { garagem_buscar: true, garagem_salvar: true },
                 veiculos: {}
             }
@@ -1928,11 +2028,15 @@
 
         let usuarioLogado = null;
         let compraEditandoIndex = null;
+        let pendenciaEditandoIndex = null;
+        let pendDocDataUrl = null;
+        let pendDocFileType = null;
 
         // =============================================
         // FUNÇÕES DE SELFIE
         // =============================================
-        function abrirModalSelfie() {
+        function abrirModalSelfie(destino = 'cliente') {
+            selfieDestino = destino;
             selfieDataUrl = null;
             
             document.getElementById('selfiePhotoPreview').style.display = 'none';
@@ -2039,9 +2143,15 @@
                 return;
             }
             
-            selfieClienteTemp = selfieDataUrl;
-            mostrarPreviewSelfieCliente();
-            alert('Selfie do cliente capturada com sucesso!');
+            if (selfieDestino === 'usuario') {
+                selfieUsuarioTemp = selfieDataUrl;
+                mostrarPreviewSelfieUsuario();
+                alert('Selfie do usuário capturada com sucesso!');
+            } else {
+                selfieClienteTemp = selfieDataUrl;
+                mostrarPreviewSelfieCliente();
+                alert('Selfie do cliente capturada com sucesso!');
+            }
             
             fecharModalSelfie();
         }
@@ -2063,6 +2173,26 @@
         function limparSelfieCliente() {
             selfieClienteTemp = null;
             document.getElementById('selfiePreviewCliente').innerHTML = '';
+        }
+
+        function mostrarPreviewSelfieUsuario() {
+            const container = document.getElementById('selfiePreviewUsuario');
+            container.innerHTML = '';
+            if (selfieUsuarioTemp) {
+                const img = document.createElement('img');
+                img.src = selfieUsuarioTemp;
+                img.className = 'selfie-thumbnail';
+                img.onclick = function() {
+                    openImageModal(selfieUsuarioTemp);
+                };
+                container.appendChild(img);
+            }
+        }
+
+        function limparSelfieUsuario() {
+            selfieUsuarioTemp = null;
+            const container = document.getElementById('selfiePreviewUsuario');
+            if (container) container.innerHTML = '';
         }
 
         // =============================================
@@ -2095,6 +2225,13 @@
                 db.locacoesEncerradas = [];
                 salvarDB();
             }
+            if (!db.pendentes) {
+                db.pendentes = [];
+                salvarDB();
+            }
+            db.pendentes.forEach(p => {
+                if (!p.status) p.status = 'Pendente';
+            });
             atualizarTabelaUsuario();
             gerarPermissoesUI();
             atualizarResumoFinanceiro();
@@ -2103,7 +2240,7 @@
             atualizarTabelaVeiculos();
             atualizarTabelaClientes();
             atualizarTabelaLocacoes();
-            atualizarTabelaLocEncerrada(); // NOVO
+            atualizarTabelaLocEncerrada();
             atualizarTabelaManutencao();
             atualizarTabelaMecanico();
             atualizarTabelaAlugueis();
@@ -2111,11 +2248,13 @@
             atualizarTabelaFluxoCaixa();
             atualizarTabelaDoc();
             atualizarTabelaAuditoria();
+            atualizarTabelaPendentes();
             atualizarGaleriaGaragem();
             atualizarGaleriaSOS();
             atualizarGaleriaComprovantes();
             carregarDadosContratos();
             limparSelfieCliente();
+            limparSelfieUsuario();
             atualizarPlacasManutencao();
             preencherPlacaUsuarioLogado();
         }
@@ -2404,7 +2543,8 @@
                     preencherPlacaUsuarioLogado();
                     atualizarTabelaDoc();
                 }
-                if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada(); // NOVO
+                if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada();
+                if (tabId === 'pendente') atualizarTabelaPendentes();
 
                 setTimeout(function() {
                     const primeiroCampo = document.querySelector('.tab-content.active .campo-enter, .tab-content.active input:not([readonly]), .tab-content.active select, .tab-content.active textarea');
@@ -2482,12 +2622,10 @@
                 });
             }
         }
-        ['filterVeiculos', 'filterClientes', 'filterLocacoes', 'filterManutencao', 'filterMecanico', 'filterUsuario', 'filterPagamentos', 'filterBancos', 'filterFluxoCaixa', 'filterDoc', 'filterCompras', 'filterAuditoria'].forEach(id => {
+        ['filterVeiculos', 'filterClientes', 'filterLocacoes', 'filterManutencao', 'filterMecanico', 'filterUsuario', 'filterPagamentos', 'filterBancos', 'filterFluxoCaixa', 'filterDoc', 'filterCompras', 'filterAuditoria', 'filterLocEncerrada', 'filterPendentes'].forEach(id => {
             const tableId = id.replace('filter', 'tabela');
             setupFilter(id, tableId);
         });
-        // NOVO FILTRO
-        setupFilter('filterLocEncerrada', 'tabelaLocEncerrada');
 
         // =============================================
         // FUNÇÕES DOS COMBOBOX DA ABA LOCAÇÕES
@@ -2603,8 +2741,6 @@
         // FUNÇÃO SALVAR CLIENTE - CORRIGIDA
         // =============================================
         function salvarCliente() {
-            console.log('Iniciando salvamento do cliente...');
-            
             const nome = document.getElementById('cliNome').value.trim();
             const cpf = document.getElementById('cliCpf').value.trim();
             const rg = document.getElementById('cliRg').value.trim();
@@ -2613,20 +2749,14 @@
             const cidade = document.getElementById('cliCidade').value.trim();
             const estado = document.getElementById('cliEstado').value.trim();
 
-            console.log('Dados do formulário:', { nome, cpf, rg, telefone, endereco, cidade, estado });
-
             if (!nome || !cpf || !rg || !telefone || !endereco || !cidade || !estado) {
                 alert('Preencha todos os campos obrigatórios do cliente!');
                 return;
             }
 
             const cpfLimpo = cpf.replace(/\D/g, '');
-            console.log('CPF limpo:', cpfLimpo);
-            console.log('Clientes existentes:', db.clientes);
-            
             const cpfDuplicado = db.clientes.some(c => {
                 const cpfExistente = (c.cpf || '').replace(/\D/g, '');
-                console.log('Comparando:', cpfExistente, 'com', cpfLimpo);
                 return cpfExistente === cpfLimpo;
             });
 
@@ -2650,10 +2780,7 @@
                 selfie: selfieClienteTemp || null
             };
 
-            console.log('Novo cliente:', cliente);
-
             db.clientes.push(cliente);
-            console.log('Cliente salvo. Total clientes:', db.clientes.length);
             
             criarUsuarioDoCliente(cliente);
             
@@ -2663,31 +2790,20 @@
             registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
             
             salvarDB();
-            console.log('Dados salvos no localStorage');
             
             alert('Cliente salvo com sucesso! Usuário criado automaticamente.');
             
             limparCamposCliente();
             limparSelfieCliente();
-            
-            setTimeout(function() {
-                const primeiroCampo = document.querySelector('#formClientes .campo-enter');
-                if (primeiroCampo) primeiroCampo.focus();
-            }, 50);
         }
 
         function criarUsuarioDoCliente(cliente) {
-            console.log('Criando usuário para cliente:', cliente.nome);
-            
             const nomeCliente = cliente.nome.trim();
             if (!nomeCliente) return;
 
             const primeiroNome = nomeCliente.split(/\s+/)[0].toUpperCase();
-            console.log('Primeiro nome:', primeiroNome);
-
             const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
             let senha = telefoneLimpo;
-
             if (telefoneLimpo.length >= 10) {
                 senha = telefoneLimpo.substring(2);
             }
@@ -2695,13 +2811,8 @@
                 senha = '';
             }
 
-            console.log('Senha gerada:', senha);
-
             const usuarioExistente = db.usuarios.find(u => u.nome === primeiroNome);
-            if (usuarioExistente) {
-                console.log('Usuário já existe:', primeiroNome);
-                return;
-            }
+            if (usuarioExistente) return;
 
             const novoUsuario = {
                 nome: primeiroNome,
@@ -2711,12 +2822,9 @@
                 selfie: cliente.selfie || null
             };
 
-            console.log('Novo usuário:', novoUsuario);
-
             db.usuarios.push(novoUsuario);
             atualizarTabelaUsuario();
             registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
-            console.log('Usuário criado com sucesso!');
         }
 
         // =============================================
@@ -2972,13 +3080,23 @@
                 alert('Preencha nome e senha do usuário!');
                 return;
             }
-            if (db.usuarios.some(u => u.nome === nome)) {
-                alert('Já existe um usuário com esse nome!');
-                return;
+            
+            if (usuarioEditandoIndex !== null) {
+                // Atualizar usuário existente
+                db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfie: selfieUsuarioTemp || null };
+                usuarioEditandoIndex = null;
+                registrarAuditoria('Edição', `Usuário atualizado: ${nome}`);
+            } else {
+                // Verificar duplicado
+                if (db.usuarios.some(u => u.nome === nome)) {
+                    alert('Já existe um usuário com esse nome!');
+                    return;
+                }
+                db.usuarios.push({ nome, senha, tipo, permissoes, selfie: selfieUsuarioTemp || null });
+                registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
             }
-            db.usuarios.push({ nome, senha, tipo, permissoes, selfie: null });
+            
             atualizarTabelaUsuario();
-            registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
             salvarDB();
             alert('Usuário salvo!');
             limparCamposUsuario();
@@ -3102,7 +3220,6 @@
 
             const textoMin = texto.toLowerCase();
 
-            // 1. Nome do pagador
             let nome = '';
             const padroesNome = [
                 /nome[:\s]+([^\n]+)/i,
@@ -3120,7 +3237,6 @@
             }
             if (nome) document.getElementById('docNome').value = nome;
 
-            // 2. Valor da transferência
             let valor = '';
             const padroesValor = [
                 /r\$\s?([\d.,]+)/i,
@@ -3140,7 +3256,6 @@
                 document.getElementById('docTipo').value = 'R$ ' + valor;
             }
 
-            // 3. Data da transferência
             let data = '';
             const padroesData = [
                 /(\d{2}\/\d{2}\/\d{4})/,
@@ -3161,8 +3276,6 @@
                     document.getElementById('docData').value = dataISO;
                 }
             }
-
-            // 4. Placa (já preenchida, não sobrescrever)
         }
 
         function preencherPlacaUsuarioLogado() {
@@ -3296,18 +3409,15 @@
             });
         }
 
-        // NOVO: FUNÇÃO PARA ENCERRAR LOCAÇÃO
         function encerrarLocacao(index) {
             const locacao = db.locacoes[index];
             if (!locacao) return;
             if (!confirm(`Encerrar a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
 
-            // Adicionar data de encerramento e mover para encerradas
             locacao.dataEncerramento = new Date().toISOString().split('T')[0];
             db.locacoesEncerradas.push(locacao);
             db.locacoes.splice(index, 1);
 
-            // Remover aluguéis futuros associados (opcional: manter histórico?) Vamos remover pendentes.
             db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
 
             atualizarTabelaLocacoes();
@@ -3318,7 +3428,6 @@
             alert('Locação encerrada com sucesso!');
         }
 
-        // NOVO: ATUALIZAR TABELA DE LOCAÇÕES ENCERRADAS
         function atualizarTabelaLocEncerrada() {
             const tbody = document.querySelector('#tabelaLocEncerrada tbody');
             tbody.innerHTML = '';
@@ -3333,18 +3442,15 @@
             if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
-        // NOVO: REATIVAR LOCAÇÃO ENCERRADA
         function reativarLocacao(index) {
             const locacao = db.locacoesEncerradas[index];
             if (!locacao) return;
             if (!confirm(`Reativar a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
 
-            // Remover data de encerramento e mover de volta para ativas
             delete locacao.dataEncerramento;
             db.locacoes.push(locacao);
             db.locacoesEncerradas.splice(index, 1);
 
-            // Recriar aluguéis se não existirem
             criarAlugueisParaLocacao(locacao);
 
             atualizarTabelaLocEncerrada();
@@ -3355,7 +3461,6 @@
             alert('Locação reativada com sucesso!');
         }
 
-        // NOVO: EXCLUIR PERMANENTEMENTE LOCAÇÃO ENCERRADA
         function excluirLocEncerrada(index) {
             const locacao = db.locacoesEncerradas[index];
             if (!locacao) return;
@@ -3640,6 +3745,9 @@
             document.getElementById('userNome').value = u.nome;
             document.getElementById('userSenha').value = u.senha;
             document.getElementById('userTipo').value = u.tipo;
+            selfieUsuarioTemp = u.selfie || null;
+            mostrarPreviewSelfieUsuario();
+            
             todasAbas.forEach(aba => {
                 const check = document.getElementById(`perm_aba_${aba.id}`);
                 if (check) check.checked = u.permissoes.abas[aba.id] || false;
@@ -3652,7 +3760,8 @@
                 const check = document.getElementById(`perm_veiculo_${v.placa}`);
                 if (check) check.checked = u.permissoes.veiculos[v.placa] || false;
             });
-            db.usuarios.splice(index, 1);
+            
+            usuarioEditandoIndex = index;
             atualizarTabelaUsuario();
             registrarAuditoria('Edição', `Usuário editado: ${u.nome}`);
             salvarDB();
@@ -3675,6 +3784,8 @@
             document.getElementById('userSenha').value = '';
             document.getElementById('userTipo').value = 'ADM';
             preencherPermissoesPadrao();
+            limparSelfieUsuario();
+            usuarioEditandoIndex = null;
         }
 
         function editarLocacao(index) {
@@ -3703,7 +3814,6 @@
             if (confirm('Excluir locação?')) {
                 const l = db.locacoes[index];
                 db.locacoes.splice(index, 1);
-                // Remover aluguéis associados
                 db.alugueis = db.alugueis.filter(a => !(a.locatario === l.locatario && a.placa === l.placa && a.dataContrato === l.dataInicio));
                 atualizarTabelaLocacoes();
                 atualizarTabelaAlugueis();
@@ -4427,6 +4537,255 @@
                 </div>
             </div>`;
         }
+
+        // =============================================
+        // FUNÇÕES DA NOVA ABA PENDENTE
+        // =============================================
+        function salvarPendencia() {
+            const data = document.getElementById('pendData').value;
+            const descricao = document.getElementById('pendDescricao').value.trim();
+            const credito = document.getElementById('pendCredito').value;
+            const debito = document.getElementById('pendDebito').value;
+            const vencimento = document.getElementById('pendVencimento').value;
+
+            if (!data || !descricao || !vencimento) {
+                alert('Preencha Data, Descrição e Vencimento!');
+                return;
+            }
+            if (!credito && !debito) {
+                alert('Preencha pelo menos um valor (Crédito ou Débito)!');
+                return;
+            }
+
+            const pendencia = {
+                data,
+                descricao,
+                credito: credito || 'R$ 0,00',
+                debito: debito || 'R$ 0,00',
+                vencimento,
+                docDataUrl: pendDocDataUrl || null,
+                docFileType: pendDocFileType || null,
+                status: 'Pendente'
+            };
+
+            if (pendenciaEditandoIndex !== null) {
+                db.pendentes[pendenciaEditandoIndex] = pendencia;
+                pendenciaEditandoIndex = null;
+                registrarAuditoria('Edição', `Pendência editada: ${pendencia.descricao}`);
+            } else {
+                if (db.pendentes.some(p => p.data === data && p.descricao === descricao && p.vencimento === vencimento)) {
+                    alert('Já existe uma pendência com esses dados!');
+                    return;
+                }
+                db.pendentes.push(pendencia);
+                registrarAuditoria('Cadastro', `Pendência salva: ${pendencia.descricao}`);
+            }
+
+            atualizarTabelaPendentes();
+            salvarDB();
+            limparCamposPendencia();
+            alert('Pendência salva com sucesso!');
+        }
+
+        function editarPendencia() {
+            const index = pendenciaEditandoIndex;
+            if (index === null) {
+                alert('Selecione uma pendência na tabela para editar!');
+                return;
+            }
+            const p = db.pendentes[index];
+            document.getElementById('pendData').value = p.data;
+            document.getElementById('pendDescricao').value = p.descricao;
+            document.getElementById('pendCredito').value = p.credito;
+            document.getElementById('pendDebito').value = p.debito;
+            document.getElementById('pendVencimento').value = p.vencimento;
+            pendDocDataUrl = p.docDataUrl;
+            pendDocFileType = p.docFileType;
+            document.getElementById('pendDocPreview').textContent = p.docDataUrl ? (p.docFileType === 'pdf' ? '📄 PDF carregado' : '📄 Imagem carregada') : 'Nenhum arquivo';
+            document.getElementById('formPendente').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function excluirPendencia() {
+            const index = pendenciaEditandoIndex;
+            if (index === null) {
+                alert('Selecione uma pendência na tabela para excluir!');
+                return;
+            }
+            if (confirm(`Excluir a pendência "${db.pendentes[index].descricao}"?`)) {
+                const p = db.pendentes[index];
+                db.pendentes.splice(index, 1);
+                pendenciaEditandoIndex = null;
+                atualizarTabelaPendentes();
+                limparCamposPendencia();
+                registrarAuditoria('Exclusão', `Pendência excluída: ${p.descricao}`);
+                salvarDB();
+                alert('Pendência excluída!');
+            }
+        }
+
+        function limparCamposPendencia() {
+            document.getElementById('pendData').value = '';
+            document.getElementById('pendDescricao').value = '';
+            document.getElementById('pendCredito').value = '';
+            document.getElementById('pendDebito').value = '';
+            document.getElementById('pendVencimento').value = '';
+            document.getElementById('pendUpload').value = '';
+            document.getElementById('pendDocPreview').textContent = 'Nenhum arquivo';
+            pendDocDataUrl = null;
+            pendDocFileType = null;
+            pendenciaEditandoIndex = null;
+        }
+
+        async function processarPendenciaPDF(file) {
+            if (!file) return;
+            const extensao = file.name.split('.').pop().toLowerCase();
+            const tiposPermitidos = ['pdf', 'jpg', 'jpeg', 'png'];
+            if (!tiposPermitidos.includes(extensao)) {
+                alert('Formato não suportado! Aceitos: PDF, JPG, JPEG, PNG.');
+                document.getElementById('pendUpload').value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pendDocDataUrl = e.target.result;
+                pendDocFileType = extensao;
+                document.getElementById('pendDocPreview').textContent = extensao === 'pdf' ? '📄 PDF carregado' : '📄 Imagem carregada';
+            };
+            reader.readAsDataURL(file);
+
+            let textoExtraido = '';
+            try {
+                if (extensao === 'pdf') {
+                    textoExtraido = await extrairTextoPDF(file);
+                } else {
+                    textoExtraido = await extrairTextoImagem(file);
+                }
+                preencherCamposPendencia(textoExtraido);
+            } catch (erro) {
+                console.error('Erro ao extrair texto:', erro);
+                alert('Não foi possível extrair o texto do arquivo. Preencha os campos manualmente.');
+            }
+        }
+
+        function preencherCamposPendencia(texto) {
+            if (!texto) return;
+            const dataMatch = texto.match(/(\d{2}\/\d{2}\/\d{4})|(\d{4}-\d{2}-\d{2})/);
+            if (dataMatch) {
+                const dataStr = dataMatch[0];
+                if (dataStr.includes('/')) {
+                    const partes = dataStr.split('/');
+                    document.getElementById('pendData').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                } else {
+                    document.getElementById('pendData').value = dataStr;
+                }
+            }
+            const linhas = texto.split('\n').filter(l => l.trim().length > 5);
+            if (linhas.length > 0 && !document.getElementById('pendDescricao').value) {
+                document.getElementById('pendDescricao').value = linhas[0].trim();
+            }
+            const valorMatch = texto.match(/R\$\s?([\d.,]+)/i);
+            if (valorMatch) {
+                let valor = valorMatch[1].replace(/\./g, '').replace(',', '.');
+                if (!isNaN(parseFloat(valor))) {
+                    if (!document.getElementById('pendCredito').value && !document.getElementById('pendDebito').value) {
+                        document.getElementById('pendDebito').value = 'R$ ' + valor;
+                    }
+                }
+            }
+        }
+
+        function marcarPendenciaComoPago(index) {
+            if (!confirm('Confirmar pagamento da pendência? Isso irá lançar no Fluxo de Caixa e gerar a próxima cobrança em 30 dias.')) return;
+            const pend = db.pendentes[index];
+            if (!pend || pend.status === 'Pago') return;
+
+            const hoje = new Date().toISOString().split('T')[0];
+            if (pend.credito && pend.credito !== 'R$ 0,00') {
+                const valorCredito = pend.credito;
+                const fluxoCredito = {
+                    data: hoje,
+                    descricao: `Pendência paga: ${pend.descricao}`,
+                    categoria: 'Pendências',
+                    valor: valorCredito,
+                    tipo: 'entrada'
+                };
+                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === fluxoCredito.descricao && f.valor === fluxoCredito.valor && f.tipo === 'entrada')) {
+                    db.fluxoCaixa.push(fluxoCredito);
+                }
+            }
+            if (pend.debito && pend.debito !== 'R$ 0,00') {
+                const valorDebito = pend.debito;
+                const fluxoDebito = {
+                    data: hoje,
+                    descricao: `Pendência paga: ${pend.descricao}`,
+                    categoria: 'Pendências',
+                    valor: valorDebito,
+                    tipo: 'saida'
+                };
+                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === fluxoDebito.descricao && f.valor === fluxoDebito.valor && f.tipo === 'saida')) {
+                    db.fluxoCaixa.push(fluxoDebito);
+                }
+            }
+
+            pend.status = 'Pago';
+
+            const novaDataVenc = new Date(pend.vencimento);
+            novaDataVenc.setDate(novaDataVenc.getDate() + 30);
+            const novaPendencia = {
+                data: hoje,
+                descricao: pend.descricao,
+                credito: pend.credito,
+                debito: pend.debito,
+                vencimento: novaDataVenc.toISOString().split('T')[0],
+                status: 'Pendente',
+                docDataUrl: null,
+                docFileType: null
+            };
+            db.pendentes.push(novaPendencia);
+
+            atualizarTabelaPendentes();
+            atualizarTabelaFluxoCaixa();
+            atualizarResumoFinanceiro();
+            registrarAuditoria('Edição', `Pendência marcada como paga: ${pend.descricao}. Nova cobrança gerada para ${formatarDataBR(novaPendencia.vencimento)}`);
+            salvarDB();
+            alert('Pagamento registrado! Próxima pendência criada para ' + formatarDataBR(novaPendencia.vencimento));
+        }
+
+        function atualizarTabelaPendentes() {
+            const tbody = document.querySelector('#tabelaPendentes tbody');
+            tbody.innerHTML = '';
+            db.pendentes.forEach((p, index) => {
+                const row = tbody.insertRow();
+                const statusClass = p.status === 'Pago' ? 'status-pago' : 'status-pendente';
+                const statusText = p.status === 'Pago' ? 'Pago' : 'Pendente';
+                const btnAcao = p.status === 'Pendente' ? 
+                    `<button class="btn-success" onclick="marcarPendenciaComoPago(${index})" style="font-size: 12px; padding: 5px 10px;">✓ Pago</button>` : 
+                    '<span style="color: #28a745; font-weight: bold;">✓</span>';
+                
+                row.innerHTML = `<td>${formatarDataBR(p.data)}</td><td>${p.descricao}</td><td>${p.credito}</td><td>${p.debito}</td><td>${formatarDataBR(p.vencimento)}</td>
+                    <td><span class="${statusClass}">${statusText}</span></td>
+                    <td>
+                        ${btnAcao}
+                        <button class="btn-warning" onclick="selecionarPendencia(${index})">✏️</button>
+                    </td>`;
+                row.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) selecionarPendencia(index);
+                });
+            });
+            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function selecionarPendencia(index) {
+            pendenciaEditandoIndex = index;
+            document.querySelectorAll('#tabelaPendentes tbody tr').forEach((tr, i) => {
+                tr.style.backgroundColor = i === index ? '#e0f0ff' : '';
+            });
+            editarPendencia();
+        }
+
+        // =============================================
+        // INICIALIZAÇÃO DO SISTEMA
+        // =============================================
     </script>
 </body>
 </html>
