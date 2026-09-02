@@ -1449,7 +1449,7 @@
                     <label>Comprovante (PDF, JPG, PNG)</label>
                     <input type="file" id="docUpload" accept=".pdf,.jpg,.jpeg,.png,image/*" style="display: none;" onchange="processarDocumentoComprovante(this.files[0])">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <button type="button" class="btn-buscar" onclick="document.getElementById('docUpload').click()" style="padding: 10px 20px; font-size: 14px;">📂 Selecionar Comprovante</button>
+                        <button type="button" class="btn-buscar" data-permissao="doc_selecionar" onclick="document.getElementById('docUpload').click()" style="padding: 10px 20px; font-size: 14px;">📂 Selecionar Comprovante</button>
                         <div id="docPreviewContainer" style="display: flex; align-items: center;"></div>
                     </div>
                 </div>
@@ -1980,7 +1980,8 @@
             ],
             doc: [
                 { id: 'doc_salvar', label: '💾 Salvar Documento' },
-                { id: 'doc_limpar', label: '🔄 Limpar Documento' }
+                { id: 'doc_limpar', label: '🔄 Limpar Documento' },
+                { id: 'doc_selecionar', label: '📂 Selecionar Comprovante' } // NOVO ITEM ADICIONADO
             ],
             compras: [
                 { id: 'compras_salvar', label: '💾 Salvar Compra' },
