@@ -422,7 +422,7 @@
             width: auto;
             height: auto;
             max-width: 200px;
-            max-height: 300px;
+            max-height: 320px;
             border: 2px solid #ddd;
             border-radius: 8px;
             overflow: hidden;
@@ -431,6 +431,8 @@
             transition: all 0.3s;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: inline-block;
+            display: flex;
+            flex-direction: column;
         }
 
         .saved-image-item:hover {
@@ -439,12 +441,30 @@
             border-color: var(--primary);
         }
 
+        .saved-image-item.piscando {
+            animation: piscar-borda 1s infinite alternate;
+        }
+
+        @keyframes piscar-borda {
+            0% {
+                box-shadow: 0 0 0 6px #ffa500;
+                border-color: #ffa500;
+            }
+            50% {
+                box-shadow: 0 0 0 6px #0000ff;
+                border-color: #0000ff;
+            }
+            100% {
+                box-shadow: 0 0 0 6px #ffa500;
+                border-color: #ffa500;
+            }
+        }
+
         .saved-image-item img {
-            width: auto;
+            width: 100%;
             height: auto;
-            max-width: 100%;
-            max-height: 300px;
-            object-fit: contain;
+            max-height: 250px;
+            object-fit: cover;
             display: block;
         }
 
@@ -469,6 +489,35 @@
 
         .saved-image-item .delete-btn:hover {
             background: rgba(220, 53, 69, 1);
+        }
+
+        .status-btn {
+            display: block;
+            width: 100%;
+            margin-top: 5px;
+            padding: 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .status-btn.disponivel {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-btn.piscando {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .status-btn.alugado {
+            background-color: #dc3545;
+            color: white;
         }
 
         .image-preview-card {
@@ -983,7 +1032,6 @@
             transform: scale(1.2);
         }
 
-        /* Estilos específicos para a aba Pendente */
         .pendente-item {
             display: flex;
             gap: 10px;
@@ -1006,8 +1054,10 @@
         }
     </style>
     <!-- Bibliotecas para processamento de PDF e OCR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js">
+    </script>
 </head>
 <body>
 
@@ -1047,6 +1097,8 @@
             <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
             <!-- NOVA ABA PENDENTE -->
             <button class="tab" data-tab="pendente">⏳ Pendente</button>
+            <!-- NOVA ABA HISTÓRICO -->
+            <button class="tab" data-tab="historico">📜 HISTÓRICO</button>
             <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
             <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
         </div>
@@ -1144,8 +1196,9 @@
                 </div>
                 <div class="form-group"><label>Ano Fabr</label><input type="text" id="locAnoFabr" readonly></div>
                 <div class="form-group"><label>Ano Model</label><input type="text" id="locAnoModel" readonly></div>
-                <div class="form-group"><label>R$ Caução</label><input type="text" id="locCaucao" class="money" readonly></div>
-                <div class="form-group"><label>Valor Aluguel</label><input type="text" id="locValorAluguel" class="money" readonly></div>
+                <div class="form-group"><label>R$ Caução</label><input type="text" id="locCaucao" class="money campo-enter"></div>
+                <div class="form-group"><label>Valor Aluguel</label><input type="text" id="locValorAluguel" class="money campo-enter"></div>
+                <div class="form-group"><label>ALUGUEL MENSAL</label><input type="text" id="locAluguelMensal" class="money campo-enter"></div>
                 <div class="form-group"><label>Proprietário</label><input type="text" id="locProprietario" readonly></div>
                 <div class="form-group"><label>CPF Propr</label><input type="text" id="locCpfPropr" readonly></div>
                 <div class="form-group">
@@ -1156,6 +1209,7 @@
                         <option value="entrada">Entrada + Parcelas</option>
                     </select>
                 </div>
+                <div class="form-group"><label>R$ CAUÇÃO PAGO</label><input type="text" id="locCaucaoPago" class="money campo-enter"></div>
             </div>
             <button class="btn-primary" data-permissao="locacoes_salvar" onclick="salvarLocacao()">💾 Salvar</button>
             <button class="btn-secondary" data-permissao="locacoes_contrato" onclick="abrirModalContratos()">📄 Contrato</button>
@@ -1231,6 +1285,13 @@
                 <div class="form-group"><label>Placa</label><input type="text" id="mecPlaca" class="campo-enter"></div>
                 <div class="form-group"><label>Valor</label><input type="text" id="mecValor" class="money campo-enter"></div>
                 <div class="form-group"><label>OBS</label><textarea id="mecObs" rows="3" class="campo-enter"></textarea></div>
+                <div class="form-group"><label>PDF/Imagem do Orçamento</label>
+                    <input type="file" id="mecUpload" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewMecPdf()">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" class="btn-buscar" onclick="document.getElementById('mecUpload').click()" style="padding: 10px 20px; font-size: 14px;">📂 Buscar Orçamento</button>
+                        <span id="mecPdfPreview" style="font-size: 14px; color: #666;">Nenhum arquivo</span>
+                    </div>
+                </div>
             </div>
             <button class="btn-primary" data-permissao="mecanico_salvar" onclick="salvarMecanico()">💾 Salvar</button>
             <div class="table-container">
@@ -1473,6 +1534,7 @@
                 <div class="form-group"><label>Produto/Serviço</label><input type="text" id="compProduto" class="campo-enter"></div>
                 <div class="form-group"><label>Fornecedor</label><input type="text" id="compFornecedor" class="campo-enter"></div>
                 <div class="form-group"><label>CNPJ/CPF Fornecedor</label><input type="text" id="compCnpjFornecedor" class="campo-enter"></div>
+                <div class="form-group"><label>Placa do Veículo (Referência)</label><input type="text" id="compPlaca" class="campo-enter" placeholder="Ex: ABC1D23"></div>
                 <div class="form-group"><label>Quantidade</label><input type="number" id="compQuantidade" class="campo-enter"></div>
                 <div class="form-group"><label>Valor Unitário</label><input type="text" id="compValorUnitario" class="money campo-enter"></div>
                 <div class="form-group"><label>Valor Total</label><input type="text" id="compValorTotal" class="money" readonly></div>
@@ -1496,6 +1558,13 @@
                 </div>
                 <div class="form-group"><label>Categoria</label><input type="text" id="compCategoria" class="campo-enter"></div>
                 <div class="form-group"><label>Observações</label><textarea id="compObs" rows="3" class="campo-enter"></textarea></div>
+                <div class="form-group"><label>PDF/Imagem da NF</label>
+                    <input type="file" id="compUpload" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewCompPdf()">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" class="btn-buscar" onclick="document.getElementById('compUpload').click()" style="padding: 10px 20px; font-size: 14px;">📂 Buscar NF</button>
+                        <span id="compPdfPreview" style="font-size: 14px; color: #666;">Nenhum arquivo</span>
+                    </div>
+                </div>
             </div>
             <button class="btn-primary" data-permissao="compras_salvar" onclick="salvarCompra()">💾 Salvar</button>
             <button class="btn-warning" data-permissao="compras_editar" onclick="editarCompra()">✏️ Editar</button>
@@ -1503,7 +1572,7 @@
             <button class="btn-danger" data-permissao="compras_excluir" onclick="excluirCompra()">🗑️ Excluir</button>
             <div class="table-container">
                 <table id="tabelaCompras">
-                    <thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Valor Total</th><th>Status</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Data</th><th>Produto</th><th>Fornecedor</th><th>Placa</th><th>Valor Total</th><th>Status</th><th>Ações</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1624,6 +1693,28 @@
                             <th>Vencimento</th>
                             <th>Status</th>
                             <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NOVA ABA: HISTÓRICO -->
+        <div class="tab-content" id="historico">
+            <h2>📜 Histórico de Lançamentos (Compras & Mecânico)</h2>
+            <input type="text" class="filter-input" placeholder="🔍 Pesquisar por texto ou placa..." id="filterHistorico">
+            <div class="table-container">
+                <table id="tabelaHistorico">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Placa</th>
+                            <th>Valor</th>
+                            <th>Fornecedor</th>
+                            <th>Oficina</th>
+                            <th>Arquivo (NF/Orçamento)</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -1773,9 +1864,9 @@
 
     <script>
         // =============================================
-        // LIMPAR DADOS ANTIGOS DO LOCALSTORAGE
+        // LIMPAR DADOS ANTIGOS DO LOCALSTORAGE (desnecessário, mas mantido)
         // =============================================
-        localStorage.removeItem('paizao_rentacar_db');
+        // localStorage.removeItem('paizao_rentacar_db');
         
         // =============================================
         // SISTEMA DE PERSISTÊNCIA LOCAL (localStorage)
@@ -1798,6 +1889,7 @@
                 auditoria: [],
                 bancos: [],
                 pendentes: [],
+                historico: [],
                 contratos: {
                     contratoLocacao: {},
                     termoResponsabilidade: {},
@@ -1818,6 +1910,7 @@
                     const db = JSON.parse(dados);
                     if (!db.pendentes) db.pendentes = [];
                     if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
+                    if (!db.historico) db.historico = [];
                     db.pendentes.forEach(p => {
                         if (!p.status) p.status = 'Pendente';
                     });
@@ -1853,6 +1946,14 @@
         let usuarioEditandoIndex = null;
         let docUploadDataUrl = null;
         let docUploadFileType = null;
+        let compPdfDataUrl = null;
+        let compPdfFileType = null;
+        let mecPdfDataUrl = null;
+        let mecPdfFileType = null;
+        let compraEditandoIndex = null;
+        let pendenciaEditandoIndex = null;
+        let pendDocDataUrl = null;
+        let pendDocFileType = null;
 
         // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
@@ -1862,9 +1963,11 @@
                 campo.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        const form = this.closest('.form-grid') || this.closest('form') || this.closest('.tab-content');
+                        const form = this.closest('.form-grid') || this.closest('form') || this.closest(
+                            '.tab-content');
                         if (!form) return;
-                        const campos = form.querySelectorAll('input:not([type="hidden"]):not([readonly]), select, textarea, button');
+                        const campos = form.querySelectorAll(
+                            'input:not([type="hidden"]):not([readonly]), select, textarea, button');
                         const index = Array.from(campos).indexOf(this);
                         if (index !== -1 && index < campos.length - 1) {
                             const proximo = campos[index + 1];
@@ -1887,9 +1990,14 @@
             document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
 
-            // Inicializar sistema
+            // Inicializar sistema - chamada imediata para garantir que o usuário padrão exista
             inicializarSistema();
         });
+
+        // Inicialização imediata caso o DOM já esteja carregado
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            inicializarSistema();
+        }
 
         function calcularValorTotal() {
             const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
@@ -1921,7 +2029,8 @@
             { id: 'compras', label: '🛒 Compras' },
             { id: 'configuracao', label: '⚙️ Configuração' },
             { id: 'auditoria', label: '🔍 Auditoria' },
-            { id: 'pendente', label: '⏳ Pendente' }
+            { id: 'pendente', label: '⏳ Pendente' },
+            { id: 'historico', label: '📜 HISTÓRICO' }
         ];
 
         const todosBotoes = {
@@ -1981,7 +2090,7 @@
             doc: [
                 { id: 'doc_salvar', label: '💾 Salvar Documento' },
                 { id: 'doc_limpar', label: '🔄 Limpar Documento' },
-                { id: 'doc_selecionar', label: '📂 Selecionar Comprovante' } // NOVO ITEM ADICIONADO
+                { id: 'doc_selecionar', label: '📂 Selecionar Comprovante' }
             ],
             compras: [
                 { id: 'compras_salvar', label: '💾 Salvar Compra' },
@@ -2011,27 +2120,23 @@
                 veiculos: {}
             },
             MOTORISTA: {
-                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false, pendente: false },
+                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false, pendente: false, historico: false },
                 botoes: { garagem_buscar: true, garagem_salvar: true, sos_buscar: true, sos_salvar: true, sos_baixar: true, comprovantes_buscar: true, comprovantes_salvar: true, banco_copiar: true },
                 veiculos: {}
             },
             OFICINA: {
-                abas: { veiculos: true, clientes: false, locacoes: false, locEncerrada: false, manutencao: true, mecanico: true, usuario: false, garagem: false, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false, pendente: false },
+                abas: { veiculos: true, clientes: false, locacoes: false, locEncerrada: false, manutencao: true, mecanico: true, usuario: false, garagem: false, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false, pendente: false, historico: false },
                 botoes: { veiculos_salvar: true, veiculos_rastreador: false, veiculos_multas: false, manutencao_salvar: true, mecanico_salvar: true },
                 veiculos: {}
             },
             VISITANTE: {
-                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false, pendente: false },
+                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: false, comprovantes: false, pagamentos: false, banco: false, fluxocaixa: false, doc: false, compras: false, configuracao: false, auditoria: false, pendente: false, historico: false },
                 botoes: { garagem_buscar: true, garagem_salvar: true },
                 veiculos: {}
             }
         };
 
         let usuarioLogado = null;
-        let compraEditandoIndex = null;
-        let pendenciaEditandoIndex = null;
-        let pendDocDataUrl = null;
-        let pendDocFileType = null;
 
         // =============================================
         // FUNÇÕES DE SELFIE
@@ -2204,6 +2309,7 @@
         }
 
         function inicializarSistema() {
+            // Garantir que o usuário administrador padrão exista sempre
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
                     nome: 'SERGIO',
@@ -2230,6 +2336,10 @@
                 db.pendentes = [];
                 salvarDB();
             }
+            if (!db.historico) {
+                db.historico = [];
+                salvarDB();
+            }
             db.pendentes.forEach(p => {
                 if (!p.status) p.status = 'Pendente';
             });
@@ -2250,6 +2360,7 @@
             atualizarTabelaDoc();
             atualizarTabelaAuditoria();
             atualizarTabelaPendentes();
+            atualizarTabelaHistorico();
             atualizarGaleriaGaragem();
             atualizarGaleriaSOS();
             atualizarGaleriaComprovantes();
@@ -2485,10 +2596,24 @@
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim().toUpperCase();
             const pass = document.getElementById('loginPassword').value;
+            
+            // Verificação de emergência: garantir que o admin padrão exista
+            if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
+                db.usuarios.push({
+                    nome: 'SERGIO',
+                    senha: '080888',
+                    tipo: 'ADM',
+                    permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
+                    selfie: null
+                });
+                salvarDB();
+            }
+            
             if (campoVazio(user) || campoVazio(pass)) {
                 alert('Preencha usuário e senha!');
                 return;
             }
+            
             const usuarioEncontrado = db.usuarios.find(u => u.nome === user && u.senha === pass);
             if (usuarioEncontrado) {
                 document.getElementById('loginContainer').style.display = 'none';
@@ -2521,10 +2646,12 @@
         }
 
         document.getElementById('loginUser').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('loginPassword').focus(); }
+            if (e.key === 'Enter') { e.preventDefault();
+                document.getElementById('loginPassword').focus(); }
         });
         document.getElementById('loginPassword').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('loginButton').click(); }
+            if (e.key === 'Enter') { e.preventDefault();
+                document.getElementById('loginButton').click(); }
         });
 
         document.querySelectorAll('.tab').forEach(tab => {
@@ -2546,9 +2673,12 @@
                 }
                 if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada();
                 if (tabId === 'pendente') atualizarTabelaPendentes();
+                if (tabId === 'historico') atualizarTabelaHistorico();
 
                 setTimeout(function() {
-                    const primeiroCampo = document.querySelector('.tab-content.active .campo-enter, .tab-content.active input:not([readonly]), .tab-content.active select, .tab-content.active textarea');
+                    const primeiroCampo = document.querySelector(
+                        '.tab-content.active .campo-enter, .tab-content.active input:not([readonly]), .tab-content.active select, .tab-content.active textarea'
+                        );
                     if (primeiroCampo) primeiroCampo.focus();
                 }, 50);
             });
@@ -2623,7 +2753,10 @@
                 });
             }
         }
-        ['filterVeiculos', 'filterClientes', 'filterLocacoes', 'filterManutencao', 'filterMecanico', 'filterUsuario', 'filterPagamentos', 'filterBancos', 'filterFluxoCaixa', 'filterDoc', 'filterCompras', 'filterAuditoria', 'filterLocEncerrada', 'filterPendentes'].forEach(id => {
+        ['filterVeiculos', 'filterClientes', 'filterLocacoes', 'filterManutencao', 'filterMecanico', 'filterUsuario',
+            'filterPagamentos', 'filterBancos', 'filterFluxoCaixa', 'filterDoc', 'filterCompras', 'filterAuditoria',
+            'filterLocEncerrada', 'filterPendentes', 'filterHistorico'
+        ].forEach(id => {
             const tableId = id.replace('filter', 'tabela');
             setupFilter(id, tableId);
         });
@@ -2843,7 +2976,9 @@
             const proprietario = document.getElementById('veicProprietario').value;
             const cpfPropr = document.getElementById('veicCpfPropr').value;
 
-            if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) || campoVazio(anoModel) || campoVazio(aluguel) || campoVazio(caucao) || campoVazio(proprietario) || campoVazio(cpfPropr)) {
+            if (campoVazio(fabricante) || campoVazio(cor) || campoVazio(placa) || campoVazio(anoFabr) || campoVazio(
+                    anoModel) || campoVazio(aluguel) || campoVazio(caucao) || campoVazio(proprietario) || campoVazio(
+                    cpfPropr)) {
                 alert('Preencha todos os campos obrigatórios do veículo!');
                 return;
             }
@@ -2885,6 +3020,9 @@
             atualizarPlacasManutencao();
         }
 
+        // =============================================
+        // FUNÇÃO SALVAR LOCAÇÃO - CORRIGIDA (gera apenas o primeiro aluguel)
+        // =============================================
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
             const veiculo = document.getElementById('locVeiculo').value;
@@ -2893,17 +3031,20 @@
             const dataFim = document.getElementById('locDataFim').value;
             const caucao = document.getElementById('locCaucao').value;
             const valorAluguel = document.getElementById('locValorAluguel').value;
+            const aluguelMensal = document.getElementById('locAluguelMensal').value;
+            const caucaoPago = document.getElementById('locCaucaoPago').value;
 
-            if (campoVazio(locatario) || campoVazio(veiculo) || campoVazio(placa) || campoVazio(dataInicio) || campoVazio(dataFim) || campoVazio(caucao) || campoVazio(valorAluguel)) {
+            if (campoVazio(locatario) || campoVazio(veiculo) || campoVazio(placa) || campoVazio(dataInicio) || campoVazio(
+                    dataFim) || campoVazio(caucao) || campoVazio(valorAluguel)) {
                 alert('Preencha todos os campos obrigatórios da locação!');
                 return;
             }
 
             if (db.locacoes.some(l =>
-                l.locatario === locatario &&
-                l.placa === placa &&
-                l.dataInicio === dataInicio
-            )) {
+                    l.locatario === locatario &&
+                    l.placa === placa &&
+                    l.dataInicio === dataInicio
+                )) {
                 alert('Já existe uma locação para este veículo, locatário e data de início!');
                 return;
             }
@@ -2920,32 +3061,15 @@
                 anoModel: document.getElementById('locAnoModel').value,
                 caucao,
                 valorAluguel,
+                aluguelMensal: aluguelMensal,
+                caucaoPago: caucaoPago,
                 proprietario: document.getElementById('locProprietario').value,
                 cpfPropr: document.getElementById('locCpfPropr').value,
                 pagCaucao: document.getElementById('locPagCaucao').value
             };
             db.locacoes.push(locacao);
             atualizarTabelaLocacoes();
-            criarUsuarioLocatario(locacao);
             criarAlugueisParaLocacao(locacao);
-
-            const valorStr = valorAluguel.replace('R$ ', '').replace('.', '').replace(',', '.');
-            const valorNum = parseFloat(valorStr) || 0;
-            if (valorNum > 0) {
-                const hoje = new Date().toISOString().split('T')[0];
-                const entrada = {
-                    data: hoje,
-                    descricao: `Locação - ${locatario} - ${placa}`,
-                    categoria: 'Locação de Veículos',
-                    valor: valorAluguel,
-                    tipo: 'entrada'
-                };
-                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === entrada.descricao && f.valor === entrada.valor && f.tipo === 'entrada')) {
-                    db.fluxoCaixa.push(entrada);
-                    atualizarTabelaFluxoCaixa();
-                    atualizarResumoFinanceiro();
-                }
-            }
 
             preencherContratosComLocacao(locacao);
             limparCamposLocacao();
@@ -2953,6 +3077,187 @@
             registrarAuditoria('Cadastro', `Locação: ${locatario} - ${placa}`);
             salvarDB();
             alert('Locação salva com sucesso!');
+        }
+
+        // =============================================
+        // NOVA FUNÇÃO: CRIA APENAS O PRIMEIRO ALUGUEL (com regras de caução)
+        // =============================================
+        function criarAlugueisParaLocacao(locacao) {
+            // Limpa aluguéis existentes para esta locação
+            db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
+
+            const dataInicio = new Date(locacao.dataInicio);
+            const dataFim = new Date(locacao.dataFim);
+
+            // Extrair valores numéricos
+            const valorAluguelStr = (locacao.valorAluguel || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
+            const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorMensalNum = parseFloat(valorMensalStr) || 0;
+            
+            // Determinar o valor base e o tipo
+            let valorBase = 0;
+            let tipo = '';
+            let intervaloDias = 0;
+            if (valorAluguelNum > 0) {
+                valorBase = valorAluguelNum;
+                tipo = 'semanal';
+                intervaloDias = 7;
+            } else if (valorMensalNum > 0) {
+                valorBase = valorMensalNum;
+                tipo = 'mensal';
+                intervaloDias = 30;
+            } else {
+                return; // sem aluguel definido
+            }
+
+            // Extrair caução
+            const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const caucaoNum = parseFloat(caucaoStr) || 0;
+            
+            // Extrair caução paga (entrada)
+            const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
+            
+            // Determinar o tipo de pagamento da caução
+            const pagCaucao = locacao.pagCaucao; // 'avista', 'parcelado', 'entrada'
+
+            // Calcular valor do primeiro aluguel
+            let valorAluguelFinal = valorBase;
+            if (caucaoNum > 0) {
+                if (pagCaucao === 'avista') {
+                    valorAluguelFinal += caucaoNum;
+                } else if (pagCaucao === 'parcelado') {
+                    valorAluguelFinal += (caucaoNum / 10);
+                } else if (pagCaucao === 'entrada') {
+                    valorAluguelFinal += caucaoPagoNum;
+                }
+            }
+            
+            // Formatar valor
+            const valorFormatado = 'R$ ' + valorAluguelFinal.toFixed(2).replace('.', ',');
+            
+            // Data de vencimento do primeiro
+            const vencISO = dataInicio.toISOString().split('T')[0];
+            
+            db.alugueis.push({
+                locatario: locacao.locatario,
+                dataContrato: locacao.dataInicio,
+                placa: locacao.placa,
+                valorAluguel: valorFormatado,
+                dataVencimento: vencISO,
+                status: 'Pendente',
+                tipo: tipo,
+                numeroParcela: 1
+            });
+        }
+
+        // =============================================
+        // FUNÇÃO MARCAR COMO PAGO (gera o próximo vencimento apenas quando pago)
+        // =============================================
+        function marcarComoPago(index) {
+            const aluguel = db.alugueis[index];
+            if (!aluguel || aluguel.status === 'Pago') return;
+            
+            aluguel.status = 'Pago';
+            
+            // LANÇA NO FLUXO DE CAIXA O VALOR PAGO
+            const hoje = new Date().toISOString().split('T')[0];
+            const descricao = `Pagamento Aluguel - ${aluguel.locatario} - ${aluguel.placa} - Venc. ${formatarDataBR(aluguel.dataVencimento)}`;
+            const valorStr = aluguel.valorAluguel.replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorNum = parseFloat(valorStr) || 0;
+            if (valorNum > 0) {
+                const existeLancamento = db.fluxoCaixa.some(f => f.data === hoje && f.descricao === descricao && f.valor === aluguel.valorAluguel && f.tipo === 'entrada');
+                if (!existeLancamento) {
+                    db.fluxoCaixa.push({
+                        data: hoje,
+                        descricao: descricao,
+                        categoria: 'Locação de Veículos',
+                        valor: aluguel.valorAluguel,
+                        tipo: 'entrada'
+                    });
+                }
+            }
+
+            // Determina intervalo
+            const intervalo = aluguel.tipo === 'mensal' ? 30 : 7;
+            const novaDataVencimento = new Date(aluguel.dataVencimento);
+            novaDataVencimento.setDate(novaDataVencimento.getDate() + intervalo);
+            
+            // Procurar a locação ativa correspondente
+            const locacao = db.locacoes.find(l =>
+                l.locatario === aluguel.locatario &&
+                l.placa === aluguel.placa &&
+                l.dataInicio === aluguel.dataContrato
+            );
+            
+            if (locacao) {
+                const dataFim = new Date(locacao.dataFim);
+                // Verificar se já existe um aluguel com essa data de vencimento e mesmo locatário/placa
+                const proximoExistente = db.alugueis.find(a =>
+                    a.locatario === aluguel.locatario &&
+                    a.placa === aluguel.placa &&
+                    a.dataVencimento === novaDataVencimento.toISOString().split('T')[0]
+                );
+                if (!proximoExistente && novaDataVencimento <= dataFim) {
+                    // Calcular o valor do próximo aluguel conforme a regra de caução
+                    let valorBaseNum = 0;
+                    if (aluguel.tipo === 'semanal') {
+                        const valorBaseStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
+                        valorBaseNum = parseFloat(valorBaseStr) || 0;
+                    } else {
+                        const valorBaseStr = (locacao.aluguelMensal || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
+                        valorBaseNum = parseFloat(valorBaseStr) || 0;
+                    }
+                    
+                    const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+                    const caucaoNum = parseFloat(caucaoStr) || 0;
+                    const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+                    const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
+                    const pagCaucao = locacao.pagCaucao;
+                    
+                    // número da próxima parcela
+                    const proximaParcela = (aluguel.numeroParcela || 1) + 1;
+                    
+                    let valorAluguelFinal = valorBaseNum;
+                    if (caucaoNum > 0 && proximaParcela <= 10) {
+                        if (pagCaucao === 'avista') {
+                            // No caso 'avista', a caução já foi embutida no 1º aluguel, então os próximos não têm acréscimo
+                            // Apenas para manter consistência, não adiciona nada.
+                            // (Regra: 1º = aluguel + caução, demais = apenas aluguel)
+                        } else if (pagCaucao === 'parcelado') {
+                            valorAluguelFinal += (caucaoNum / 10);
+                        } else if (pagCaucao === 'entrada') {
+                            if (proximaParcela === 2) {
+                                // O 2º aluguel já deve ser o primeiro a receber o saldo da caução restante
+                                const saldo = caucaoNum - caucaoPagoNum;
+                                valorAluguelFinal += (saldo / 9);
+                            } else if (proximaParcela >= 3 && proximaParcela <= 10) {
+                                const saldo = caucaoNum - caucaoPagoNum;
+                                valorAluguelFinal += (saldo / 9);
+                            }
+                        }
+                    }
+                    
+                    const valorFormatado = 'R$ ' + valorAluguelFinal.toFixed(2).replace('.', ',');
+                    
+                    db.alugueis.push({
+                        locatario: aluguel.locatario,
+                        dataContrato: aluguel.dataContrato,
+                        placa: aluguel.placa,
+                        valorAluguel: valorFormatado,
+                        dataVencimento: novaDataVencimento.toISOString().split('T')[0],
+                        status: 'Pendente',
+                        tipo: aluguel.tipo,
+                        numeroParcela: proximaParcela
+                    });
+                }
+            }
+            
+            atualizarTabelaAlugueis();
+            atualizarTabelaFluxoCaixa();
+            atualizarResumoFinanceiro();
+            salvarDB();
         }
 
         function preencherContratosComLocacao(locacao) {
@@ -2965,7 +3270,17 @@
             document.getElementById('ctVeiculoCor').value = locacao.cor;
             document.getElementById('ctAnoFabr').value = locacao.anoFabr;
             document.getElementById('ctAnoModel').value = locacao.anoModel;
-            document.getElementById('ctValorAluguel').value = locacao.valorAluguel;
+            
+            // Verifica qual valor está preenchido para preencher o contrato
+            const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorMensalNum = parseFloat(valorMensalStr) || 0;
+            
+            if (valorMensalNum > 0) {
+                document.getElementById('ctValorAluguel').value = locacao.aluguelMensal;
+            } else {
+                document.getElementById('ctValorAluguel').value = locacao.valorAluguel;
+            }
+
             document.getElementById('ctValorCaucao').value = locacao.caucao;
             document.getElementById('ctDataContrato').value = formatarDataBR(locacao.dataInicio);
 
@@ -3008,7 +3323,8 @@
                 document.getElementById('npEmitenteCpf').value = cliente.cpf;
                 document.getElementById('npEmitenteEndereco').value = cliente.endereco;
                 document.getElementById('npEmitenteCep').value = cliente.cep;
-                document.getElementById('npEmitenteDoc').value = `Carteira Nacional de Habilitação (CNH) n. ${cliente.cnh || '...'}, expedida por DETRAN SP`;
+                document.getElementById('npEmitenteDoc').value =
+                    `Carteira Nacional de Habilitação (CNH) n. ${cliente.cnh || '...'}, expedida por DETRAN SP`;
             }
 
             salvarDadosContratos();
@@ -3042,6 +3358,9 @@
             atualizarPlacasManutencao();
         }
 
+        // =============================================
+        // FUNÇÃO SALVAR MECÂNICO (COM HISTÓRICO)
+        // =============================================
         function salvarMecanico() {
             const data = document.getElementById('mecData').value;
             const oficina = document.getElementById('mecOficina').value;
@@ -3052,19 +3371,36 @@
             const valor = document.getElementById('mecValor').value;
             const obs = document.getElementById('mecObs').value;
 
-            if (campoVazio(data) || campoVazio(oficina) || campoVazio(servico) || campoVazio(responsavel) || campoVazio(carro) || campoVazio(placa) || campoVazio(valor)) {
+            if (campoVazio(data) || campoVazio(oficina) || campoVazio(servico) || campoVazio(responsavel) || campoVazio(
+                    carro) || campoVazio(placa) || campoVazio(valor)) {
                 alert('Preencha todos os campos obrigatórios do serviço mecânico!');
                 return;
             }
 
-            if (db.mecanico.some(m => m.data === data && m.oficina === oficina && m.servico === servico && m.placa === placa)) {
+            if (db.mecanico.some(m => m.data === data && m.oficina === oficina && m.servico === servico && m.placa ===
+                    placa)) {
                 alert('Já existe um serviço mecânico idêntico registrado!');
                 return;
             }
 
             const m = { data, oficina, servico, responsavel, carro, placa, valor, obs };
             db.mecanico.push(m);
+            
+            // ADICIONAR AO HISTÓRICO
+            const novoItemHistorico = {
+                data: data,
+                descricao: servico,
+                placa: placa,
+                valor: valor,
+                fornecedor: '',
+                oficina: oficina,
+                arquivo: mecPdfDataUrl || null,
+                arquivoTipo: mecPdfFileType || null
+            };
+            db.historico.push(novoItemHistorico);
+            
             atualizarTabelaMecanico();
+            atualizarTabelaHistorico();
             registrarAuditoria('Cadastro', `Serviço mecânico: ${m.servico}`);
             salvarDB();
             alert('Serviço salvo!');
@@ -3115,7 +3451,8 @@
                 return;
             }
 
-            if (db.bancos.some(b => b.nome.toLowerCase() === nome.toLowerCase() && b.agencia === agencia && b.conta === conta)) {
+            if (db.bancos.some(b => b.nome.toLowerCase() === nome.toLowerCase() && b.agencia === agencia && b.conta ===
+                    conta)) {
                 alert('Já existe um banco com essa agência e conta!');
                 return;
             }
@@ -3141,7 +3478,8 @@
                 return;
             }
 
-            if (db.fluxoCaixa.some(f => f.data === data && f.descricao === descricao && f.valor === valor && f.tipo === tipo)) {
+            if (db.fluxoCaixa.some(f => f.data === data && f.descricao === descricao && f.valor === valor && f.tipo ===
+                    tipo)) {
                 alert('Já existe um lançamento idêntico no fluxo de caixa!');
                 return;
             }
@@ -3379,7 +3717,8 @@
             tbody.innerHTML = '';
             db.clientes.forEach((c, index) => {
                 const row = tbody.insertRow();
-                const selfieHtml = c.selfie ? `<img src="${c.selfie}" class="selfie-thumbnail" onclick="openImageModal('${c.selfie}')" alt="Selfie">` : '<span style="color: #999;">Sem selfie</span>';
+                const selfieHtml = c.selfie ? `<img src="${c.selfie}" class="selfie-thumbnail" onclick="openImageModal('${c.selfie}')" alt="Selfie">` :
+                    '<span style="color: #999;">Sem selfie</span>';
                 row.innerHTML = `<td>${c.nome}</td><td>${c.cpf}</td><td>${c.telefone}</td><td>${c.cidade}</td><td>${selfieHtml}</td>
                     <td><button class="btn-warning" onclick="editarCliente(${index})">✏️</button><button class="btn-danger" onclick="excluirCliente(${index})">🗑️</button></td>`;
             });
@@ -3390,7 +3729,8 @@
             tbody.innerHTML = '';
             db.usuarios.forEach((u, index) => {
                 const row = tbody.insertRow();
-                const selfieHtml = u.selfie ? `<img src="${u.selfie}" class="selfie-thumbnail" onclick="openImageModal('${u.selfie}')" alt="Selfie">` : '<span style="color: #999;">Sem selfie</span>';
+                const selfieHtml = u.selfie ? `<img src="${u.selfie}" class="selfie-thumbnail" onclick="openImageModal('${u.selfie}')" alt="Selfie">` :
+                    '<span style="color: #999;">Sem selfie</span>';
                 row.innerHTML = `<td>${u.nome}</td><td>${u.tipo}</td><td>${selfieHtml}</td>
                     <td><button class="btn-warning" onclick="editarUsuario(${index})">✏️</button><button class="btn-danger" onclick="excluirUsuario(${index})">🗑️</button></td>`;
             });
@@ -3419,7 +3759,8 @@
             db.locacoesEncerradas.push(locacao);
             db.locacoes.splice(index, 1);
 
-            db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
+            db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a
+                .dataContrato === locacao.dataInicio));
 
             atualizarTabelaLocacoes();
             atualizarTabelaLocEncerrada();
@@ -3499,7 +3840,8 @@
             tbody.innerHTML = '';
             db.alugueis.forEach((a, index) => {
                 const row = tbody.insertRow();
-                let statusClass = a.status === 'Pendente' ? 'status-pendente' : a.status === 'Pago' ? 'status-pago' : 'status-atrasado';
+                let statusClass = a.status === 'Pendente' ? 'status-pendente' : a.status === 'Pago' ? 'status-pago' :
+                    'status-atrasado';
                 const hoje = new Date();
                 const vencimento = new Date(a.dataVencimento);
                 if (a.status === 'Pendente' && vencimento < hoje) statusClass = 'status-atrasado';
@@ -3507,6 +3849,14 @@
                     <td><button class="btn-success" onclick="marcarComoPago(${index})">✓ Pago</button><button class="btn-danger" onclick="excluirAluguel(${index})">🗑️</button></td>`;
             });
             if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function excluirAluguel(index) {
+            if (confirm('Excluir este aluguel?')) {
+                db.alugueis.splice(index, 1);
+                atualizarTabelaAlugueis();
+                salvarDB();
+            }
         }
 
         function atualizarTabelaBancos() {
@@ -3545,9 +3895,10 @@
             tbody.innerHTML = '';
             db.compras.forEach((c, index) => {
                 const row = tbody.insertRow();
-                const statusClass = c.status === 'pago' ? 'status-pago' : c.status === 'cancelado' ? 'status-atrasado' : 'status-pendente';
+                const statusClass = c.status === 'pago' ? 'status-pago' : c.status === 'cancelado' ? 'status-atrasado' :
+                    'status-pendente';
                 const statusLabel = c.status === 'pago' ? 'Pago' : c.status === 'cancelado' ? 'Cancelado' : 'Pendente';
-                row.innerHTML = `<td>${formatarDataBR(c.data)}</td><td>${c.produto}</td><td>${c.fornecedor}</td><td>${c.valorTotal}</td><td><span class="${statusClass}">${statusLabel}</span></td>
+                row.innerHTML = `<td>${formatarDataBR(c.data)}</td><td>${c.produto}</td><td>${c.fornecedor}</td><td>${c.placa || ''}</td><td>${c.valorTotal}</td><td><span class="${statusClass}">${statusLabel}</span></td>
                     <td><button class="btn-warning" onclick="carregarCompraParaEdicao(${index})">✏️</button><button class="btn-danger" onclick="excluirCompraDireto(${index})">🗑️</button></td>`;
             });
         }
@@ -3561,94 +3912,78 @@
             });
         }
 
-        function atualizarResumoFinanceiro() {
-            let entradas = 0, saidas = 0;
-            db.fluxoCaixa.forEach(f => {
-                const valor = parseFloat(f.valor.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
-                if (f.tipo === 'entrada') entradas += valor;
-                else saidas += valor;
+        // =============================================
+        // FUNÇÃO PARA ATUALIZAR A TABELA DE HISTÓRICO
+        // =============================================
+        function atualizarTabelaHistorico() {
+            const tbody = document.querySelector('#tabelaHistorico tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            db.historico.forEach((item, index) => {
+                const row = tbody.insertRow();
+                
+                let arquivoHtml = '<span style="color: #999;">Sem arquivo</span>';
+                if (item.arquivo) {
+                    if (item.arquivoTipo === 'pdf') {
+                        arquivoHtml = `<button class="btn-buscar" onclick="abrirDocumentoHistorico('${item.arquivo}')" style="padding: 5px 10px; font-size: 12px;">📄 Ver PDF</button>`;
+                    } else {
+                        arquivoHtml = `<button class="btn-buscar" onclick="openImageModal('${item.arquivo}')" style="padding: 5px 10px; font-size: 12px;">🖼️ Ver Imagem</button>`;
+                    }
+                }
+                
+                row.innerHTML = `<td>${formatarDataBR(item.data)}</td>
+                                 <td>${item.descricao}</td>
+                                 <td>${item.placa || '-'}</td>
+                                 <td>${item.valor || 'R$ 0,00'}</td>
+                                 <td>${item.fornecedor || '-'}</td>
+                                 <td>${item.oficina || '-'}</td>
+                                 <td>${arquivoHtml}</td>`;
             });
-            document.getElementById('totalEntradas').textContent = 'R$ ' + entradas.toFixed(2).replace('.', ',');
-            document.getElementById('totalSaidas').textContent = 'R$ ' + saidas.toFixed(2).replace('.', ',');
-            document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
         }
 
-        function criarAlugueisParaLocacao(locacao) {
-            const existe = db.alugueis.some(a => a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio);
-            if (!existe) {
-                const dataContrato = new Date(locacao.dataInicio);
-                const dataVenc = new Date(dataContrato);
-                dataVenc.setDate(dataVenc.getDate() + 7);
-                db.alugueis.push({
-                    locatario: locacao.locatario,
-                    dataContrato: locacao.dataInicio,
-                    placa: locacao.placa,
-                    valorAluguel: locacao.valorAluguel,
-                    dataVencimento: dataVenc.toISOString().split('T')[0],
-                    status: 'Pendente',
-                    parcela: 1,
-                    contratoId: locacao.dataInicio + locacao.placa
-                });
-            }
+        function abrirDocumentoHistorico(dataUrl) {
+            window.open(dataUrl, '_blank');
         }
 
-        function criarUsuarioLocatario(locacao) {
-            const nomeLocatario = locacao.locatario.trim();
-            if (!nomeLocatario) return;
-            const primeiroNome = nomeLocatario.split(/\s+/)[0].toUpperCase();
-            const cliente = db.clientes.find(c => c.nome.toLowerCase() === nomeLocatario.toLowerCase());
-            if (!cliente) return;
-            const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
-            let senha = telefoneLimpo;
-            if (telefoneLimpo.length >= 10) senha = telefoneLimpo.substring(2);
-            if (!senha) senha = '';
-            if (db.usuarios.some(u => u.nome === primeiroNome)) return;
-            db.usuarios.push({
-                nome: primeiroNome,
-                senha: senha,
-                tipo: 'MOTORISTA',
-                permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
-                selfie: cliente.selfie || null
-            });
-            atualizarTabelaUsuario();
-            registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
-        }
-
-        function marcarComoPago(index) {
-            if (!confirm('Confirmar pagamento?')) return;
-            const aluguel = db.alugueis[index];
-            if (!aluguel) return;
-            aluguel.status = 'Pago';
-            const dataVencAtual = new Date(aluguel.dataVencimento);
-            const proximaDataVenc = new Date(dataVencAtual);
-            proximaDataVenc.setDate(proximaDataVenc.getDate() + 7);
-            const novoAluguel = {
-                locatario: aluguel.locatario,
-                dataContrato: aluguel.dataContrato,
-                placa: aluguel.placa,
-                valorAluguel: aluguel.valorAluguel,
-                dataVencimento: proximaDataVenc.toISOString().split('T')[0],
-                status: 'Pendente',
-                parcela: (aluguel.parcela || 1) + 1,
-                contratoId: aluguel.contratoId
+        function previewCompPdf() {
+            const file = document.getElementById('compUpload').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                compPdfDataUrl = e.target.result;
+                compPdfFileType = file.name.split('.').pop().toLowerCase();
+                document.getElementById('compPdfPreview').textContent = compPdfFileType === 'pdf' ? '📄 PDF carregado' :
+                    '🖼️ Imagem carregada';
             };
-            if (!db.alugueis.some(a => a.locatario === novoAluguel.locatario && a.placa === novoAluguel.placa && a.dataVencimento === novoAluguel.dataVencimento)) {
-                db.alugueis.push(novoAluguel);
-            }
-            registrarAuditoria('Edição', `Aluguel pago: ${aluguel.locatario} - Parcela ${aluguel.parcela || 1}`);
-            salvarDB();
-            atualizarTabelaAlugueis();
-            alert('Pagamento confirmado! Próximo vencimento gerado para ' + formatarDataBR(novoAluguel.dataVencimento));
+            reader.readAsDataURL(file);
         }
 
-        function excluirAluguel(index) {
-            if (confirm('Excluir este aluguel?')) {
-                const a = db.alugueis[index];
-                db.alugueis.splice(index, 1);
-                atualizarTabelaAlugueis();
-                registrarAuditoria('Exclusão', `Aluguel excluído: ${a.locatario}`);
-                salvarDB();
-            }
+        function previewMecPdf() {
+            const file = document.getElementById('mecUpload').files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                mecPdfDataUrl = e.target.result;
+                mecPdfFileType = file.name.split('.').pop().toLowerCase();
+                document.getElementById('mecPdfPreview').textContent = mecPdfFileType === 'pdf' ? '📄 PDF carregado' :
+                    '🖼️ Imagem carregada';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function limparCamposMecanico() {
+            document.getElementById('mecData').value = '';
+            document.getElementById('mecOficina').value = '';
+            document.getElementById('mecServico').value = '';
+            document.getElementById('mecResponsavel').value = '';
+            document.getElementById('mecCarro').value = '';
+            document.getElementById('mecPlaca').value = '';
+            document.getElementById('mecValor').value = '';
+            document.getElementById('mecObs').value = '';
+            document.getElementById('mecUpload').value = '';
+            document.getElementById('mecPdfPreview').textContent = 'Nenhum arquivo';
+            mecPdfDataUrl = null;
+            mecPdfFileType = null;
         }
 
         // =============================================
@@ -3699,7 +4034,9 @@
         }
 
         function limparCamposVeiculo() {
-            ['veicFabricante', 'veicCor', 'veicPlaca', 'veicMotor', 'veicCambio', 'veicAnoFabr', 'veicAnoModel', 'veicKm', 'veicRenavan', 'veicChassi', 'veicFipe', 'veicCaucao', 'veicAluguel', 'veicProprietario', 'veicCpfPropr'].forEach(id => document.getElementById(id).value = '');
+            ['veicFabricante', 'veicCor', 'veicPlaca', 'veicMotor', 'veicCambio', 'veicAnoFabr', 'veicAnoModel', 'veicKm',
+                'veicRenavan', 'veicChassi', 'veicFipe', 'veicCaucao', 'veicAluguel', 'veicProprietario', 'veicCpfPropr'
+            ].forEach(id => document.getElementById(id).value = '');
         }
 
         function editarCliente(index) {
@@ -3736,7 +4073,9 @@
         }
 
         function limparCamposCliente() {
-            ['cliDataCadastro', 'cliNome', 'cliCpf', 'cliRg', 'cliCnh', 'cliDataCnh', 'cliTelefone', 'cliEndereco', 'cliCep', 'cliCidade', 'cliEstado'].forEach(id => document.getElementById(id).value = '');
+            ['cliDataCadastro', 'cliNome', 'cliCpf', 'cliRg', 'cliCnh', 'cliDataCnh', 'cliTelefone', 'cliEndereco',
+                'cliCep', 'cliCidade', 'cliEstado'
+            ].forEach(id => document.getElementById(id).value = '');
             limparSelfieCliente();
         }
 
@@ -3802,9 +4141,11 @@
             document.getElementById('locAnoModel').value = l.anoModel;
             document.getElementById('locCaucao').value = l.caucao;
             document.getElementById('locValorAluguel').value = l.valorAluguel;
+            document.getElementById('locAluguelMensal').value = l.aluguelMensal || '';
             document.getElementById('locProprietario').value = l.proprietario;
             document.getElementById('locCpfPropr').value = l.cpfPropr;
             document.getElementById('locPagCaucao').value = l.pagCaucao;
+            document.getElementById('locCaucaoPago').value = l.caucaoPago || '';
             db.locacoes.splice(index, 1);
             atualizarTabelaLocacoes();
             registrarAuditoria('Edição', `Locação editada: ${l.locatario}`);
@@ -3815,7 +4156,8 @@
             if (confirm('Excluir locação?')) {
                 const l = db.locacoes[index];
                 db.locacoes.splice(index, 1);
-                db.alugueis = db.alugueis.filter(a => !(a.locatario === l.locatario && a.placa === l.placa && a.dataContrato === l.dataInicio));
+                db.alugueis = db.alugueis.filter(a => !(a.locatario === l.locatario && a.placa === l.placa && a
+                    .dataContrato === l.dataInicio));
                 atualizarTabelaLocacoes();
                 atualizarTabelaAlugueis();
                 registrarAuditoria('Exclusão', `Locação excluída: ${l.locatario}`);
@@ -3835,9 +4177,11 @@
             document.getElementById('locAnoModel').value = '';
             document.getElementById('locCaucao').value = '';
             document.getElementById('locValorAluguel').value = '';
+            document.getElementById('locAluguelMensal').value = '';
             document.getElementById('locProprietario').value = '';
             document.getElementById('locCpfPropr').value = '';
             document.getElementById('locPagCaucao').value = 'avista';
+            document.getElementById('locCaucaoPago').value = '';
         }
 
         function editarManutencao(index) {
@@ -3899,10 +4243,6 @@
             }
         }
 
-        function limparCamposMecanico() {
-            ['mecData', 'mecOficina', 'mecServico', 'mecResponsavel', 'mecCarro', 'mecPlaca', 'mecValor', 'mecObs'].forEach(id => document.getElementById(id).value = '');
-        }
-
         function editarBanco(index) {
             if (index === undefined) { alert('Selecione um banco!'); return; }
             const b = db.bancos[index];
@@ -3928,7 +4268,8 @@
         }
 
         function limparCamposBanco() {
-            ['bancoNome', 'bancoAgencia', 'bancoConta', 'bancoPix', 'bancoTitular'].forEach(id => document.getElementById(id).value = '');
+            ['bancoNome', 'bancoAgencia', 'bancoConta', 'bancoPix', 'bancoTitular'].forEach(id => document.getElementById(
+                id).value = '');
         }
 
         function editarFluxoCaixa(index) {
@@ -3992,46 +4333,58 @@
             }
         }
 
-        function uploadDoc() { 
-            alert('Upload iniciado...'); 
-            registrarAuditoria('Cadastro', 'Upload doc'); 
-            salvarDB(); 
-        }
+        // =============================================
+        // FUNÇÕES DE COMPRAS (COM HISTÓRICO)
+        // =============================================
+        function salvarCompra() {
+            const data = document.getElementById('compData').value;
+            const produto = document.getElementById('compProduto').value;
+            const fornecedor = document.getElementById('compFornecedor').value;
+            const cnpjFornecedor = document.getElementById('compCnpjFornecedor').value;
+            const placa = document.getElementById('compPlaca').value;
+            const quantidade = document.getElementById('compQuantidade').value;
+            const valorUnitario = document.getElementById('compValorUnitario').value;
+            const valorTotal = document.getElementById('compValorTotal').value;
+            const formaPagamento = document.getElementById('compFormaPagamento').value;
+            const status = document.getElementById('compStatus').value;
+            const categoria = document.getElementById('compCategoria').value;
+            const obs = document.getElementById('compObs').value;
 
-        function editarCompra() {
-            const index = compraEditandoIndex;
-            if (index === null) { alert('Selecione uma compra na tabela para editar!'); return; }
-            salvarCompra();
-        }
-
-        function excluirCompra() {
-            const index = compraEditandoIndex;
-            if (index === null) { alert('Selecione uma compra na tabela para excluir!'); return; }
-            if (confirm('Excluir esta compra?')) {
-                const compra = db.compras[index];
-                db.compras.splice(index, 1);
-                compraEditandoIndex = null;
-                atualizarTabelaCompras();
-                limparCamposCompra();
-                registrarAuditoria('Exclusão', `Compra excluída: ${compra.produto}`);
-                salvarDB();
-                alert('Compra excluída!');
+            if (campoVazio(data) || campoVazio(produto) || campoVazio(fornecedor) || campoVazio(valorTotal)) {
+                alert('Preencha os campos obrigatórios da compra!');
+                return;
             }
-        }
 
-        function limparCamposCompra() {
-            document.getElementById('compData').value = '';
-            document.getElementById('compProduto').value = '';
-            document.getElementById('compFornecedor').value = '';
-            document.getElementById('compCnpjFornecedor').value = '';
-            document.getElementById('compQuantidade').value = '';
-            document.getElementById('compValorUnitario').value = '';
-            document.getElementById('compValorTotal').value = '';
-            document.getElementById('compFormaPagamento').value = 'dinheiro';
-            document.getElementById('compStatus').value = 'pendente';
-            document.getElementById('compCategoria').value = '';
-            document.getElementById('compObs').value = '';
-            compraEditandoIndex = null;
+            if (db.compras.some(c => c.data === data && c.produto === produto && c.fornecedor === fornecedor)) {
+                alert('Já existe uma compra idêntica registrada!');
+                return;
+            }
+
+            const compra = {
+                data, produto, fornecedor, cnpjFornecedor, placa,
+                quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs
+            };
+            db.compras.push(compra);
+            
+            // ADICIONAR AO HISTÓRICO
+            const novoItemHistorico = {
+                data: data,
+                descricao: produto,
+                placa: placa,
+                valor: valorTotal,
+                fornecedor: fornecedor,
+                oficina: '',
+                arquivo: compPdfDataUrl || null,
+                arquivoTipo: compPdfFileType || null
+            };
+            db.historico.push(novoItemHistorico);
+            
+            atualizarTabelaCompras();
+            atualizarTabelaHistorico();
+            registrarAuditoria('Cadastro', `Compra: ${produto}`);
+            salvarDB();
+            alert('Compra salva!');
+            limparCamposCompra();
         }
 
         function carregarCompraParaEdicao(index) {
@@ -4040,6 +4393,7 @@
             document.getElementById('compProduto').value = c.produto;
             document.getElementById('compFornecedor').value = c.fornecedor;
             document.getElementById('compCnpjFornecedor').value = c.cnpjFornecedor || '';
+            document.getElementById('compPlaca').value = c.placa || '';
             document.getElementById('compQuantidade').value = c.quantidade;
             document.getElementById('compValorUnitario').value = c.valorUnitario;
             document.getElementById('compValorTotal').value = c.valorTotal;
@@ -4057,6 +4411,47 @@
                 db.compras.splice(index, 1);
                 if (compraEditandoIndex === index) compraEditandoIndex = null;
                 atualizarTabelaCompras();
+                registrarAuditoria('Exclusão', `Compra excluída: ${compra.produto}`);
+                salvarDB();
+                alert('Compra excluída!');
+            }
+        }
+
+        function limparCamposCompra() {
+            document.getElementById('compData').value = '';
+            document.getElementById('compProduto').value = '';
+            document.getElementById('compFornecedor').value = '';
+            document.getElementById('compCnpjFornecedor').value = '';
+            document.getElementById('compPlaca').value = '';
+            document.getElementById('compQuantidade').value = '';
+            document.getElementById('compValorUnitario').value = '';
+            document.getElementById('compValorTotal').value = '';
+            document.getElementById('compFormaPagamento').value = 'dinheiro';
+            document.getElementById('compStatus').value = 'pendente';
+            document.getElementById('compCategoria').value = '';
+            document.getElementById('compObs').value = '';
+            document.getElementById('compUpload').value = '';
+            document.getElementById('compPdfPreview').textContent = 'Nenhum arquivo';
+            compPdfDataUrl = null;
+            compPdfFileType = null;
+            compraEditandoIndex = null;
+        }
+
+        function editarCompra() {
+            const index = compraEditandoIndex;
+            if (index === null) { alert('Selecione uma compra na tabela para editar!'); return; }
+            salvarCompra();
+        }
+
+        function excluirCompra() {
+            const index = compraEditandoIndex;
+            if (index === null) { alert('Selecione uma compra na tabela para excluir!'); return; }
+            if (confirm('Excluir esta compra?')) {
+                const compra = db.compras[index];
+                db.compras.splice(index, 1);
+                compraEditandoIndex = null;
+                atualizarTabelaCompras();
+                limparCamposCompra();
                 registrarAuditoria('Exclusão', `Compra excluída: ${compra.produto}`);
                 salvarDB();
                 alert('Compra excluída!');
@@ -4162,12 +4557,19 @@
             }
         }
 
+        // =============================================
+        // FUNÇÕES DA GALERIA GARAGEM - CORRIGIDO PARA SEMPRE MOSTRAR BOTÃO
+        // =============================================
         function salvarGaragem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = e => {
-                    db.imagens.garagem.fotos.push({ nome: file.name, data: e.target.result });
+                    db.imagens.garagem.fotos.push({ 
+                        nome: file.name, 
+                        data: e.target.result,
+                        estado: 'disponivel' // Garante que o estado inicial seja disponivel
+                    });
                     atualizarGaleriaGaragem();
                     salvarDB();
                     alert('Imagem salva!');
@@ -4184,12 +4586,80 @@
         function atualizarGaleriaGaragem() {
             const container = document.getElementById('garagemSavedImages');
             container.innerHTML = '';
+            
+            // Se não houver fotos, retorna
+            if (!db.imagens.garagem.fotos || db.imagens.garagem.fotos.length === 0) return;
+            
             db.imagens.garagem.fotos.forEach((foto, i) => {
+                // Garantir que a foto tenha estado definido
+                if (!foto.estado) {
+                    foto.estado = 'disponivel';
+                }
+                
                 const div = document.createElement('div');
                 div.className = 'saved-image-item';
-                div.innerHTML = `<img src="${foto.data}" onclick="openImageModal('${foto.data}')"><button class="delete-btn" onclick="excluirImagemGaragem(${i})">×</button>`;
+                div.dataset.estado = foto.estado;
+                div.id = 'img-garagem-' + i;
+                
+                // Sempre incluir o botão de status
+                div.innerHTML = `
+                    <img src="${foto.data}" onclick="openImageModal('${foto.data}')">
+                    <button class="delete-btn" onclick="excluirImagemGaragem(${i})">×</button>
+                    <button class="status-btn" onclick="toggleStatusImagemGaragem(${i})"></button>
+                `;
+                
+                const statusBtn = div.querySelector('.status-btn');
+                if (foto.estado === 'piscando') {
+                    div.classList.add('piscando');
+                    statusBtn.classList.add('piscando');
+                    statusBtn.textContent = 'DISPONÍVEL';
+                } else if (foto.estado === 'alugado') {
+                    div.classList.remove('piscando');
+                    statusBtn.classList.add('alugado');
+                    statusBtn.textContent = 'ALUGADO';
+                } else {
+                    div.classList.remove('piscando');
+                    statusBtn.classList.add('disponivel');
+                    statusBtn.textContent = 'DISPONÍVEL';
+                }
+                
                 container.appendChild(div);
             });
+        }
+
+        function toggleStatusImagemGaragem(index) {
+            const div = document.getElementById('img-garagem-' + index);
+            if (!div) return;
+            const statusBtn = div.querySelector('.status-btn');
+            const estadoAtual = div.dataset.estado;
+
+            if (estadoAtual === 'disponivel') {
+                // Primeiro clique: começa a piscar (marca como não alugado mas com atenção)
+                div.dataset.estado = 'piscando';
+                div.classList.add('piscando');
+                statusBtn.classList.remove('disponivel');
+                statusBtn.classList.add('piscando');
+                statusBtn.textContent = 'DISPONÍVEL';
+                db.imagens.garagem.fotos[index].estado = 'piscando';
+            } else if (estadoAtual === 'piscando') {
+                // Segundo clique: muda para ALUGADO
+                div.dataset.estado = 'alugado';
+                div.classList.remove('piscando');
+                statusBtn.classList.remove('piscando');
+                statusBtn.classList.add('alugado');
+                statusBtn.textContent = 'ALUGADO';
+                db.imagens.garagem.fotos[index].estado = 'alugado';
+            } else if (estadoAtual === 'alugado') {
+                // Terceiro clique: volta para DISPONÍVEL
+                div.dataset.estado = 'disponivel';
+                div.classList.remove('piscando');
+                statusBtn.classList.remove('alugado');
+                statusBtn.classList.add('disponivel');
+                statusBtn.textContent = 'DISPONÍVEL';
+                db.imagens.garagem.fotos[index].estado = 'disponivel';
+            }
+
+            salvarDB();
         }
 
         function excluirImagemGaragem(i) {
@@ -4200,6 +4670,9 @@
             }
         }
 
+        // =============================================
+        // FUNÇÕES DA GALERIA SOS (sem alteração)
+        // =============================================
         function salvarSOS() {
             const file = document.getElementById('sosImagem').files[0];
             if (file) {
@@ -4602,7 +5075,8 @@
             document.getElementById('pendVencimento').value = p.vencimento;
             pendDocDataUrl = p.docDataUrl;
             pendDocFileType = p.docFileType;
-            document.getElementById('pendDocPreview').textContent = p.docDataUrl ? (p.docFileType === 'pdf' ? '📄 PDF carregado' : '📄 Imagem carregada') : 'Nenhum arquivo';
+            document.getElementById('pendDocPreview').textContent = p.docDataUrl ? (p.docFileType === 'pdf' ? '📄 PDF carregado' :
+                '📄 Imagem carregada') : 'Nenhum arquivo';
             document.getElementById('formPendente').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -4650,7 +5124,8 @@
             reader.onload = function(e) {
                 pendDocDataUrl = e.target.result;
                 pendDocFileType = extensao;
-                document.getElementById('pendDocPreview').textContent = extensao === 'pdf' ? '📄 PDF carregado' : '📄 Imagem carregada';
+                document.getElementById('pendDocPreview').textContent = extensao === 'pdf' ? '📄 PDF carregado' :
+                    '📄 Imagem carregada';
             };
             reader.readAsDataURL(file);
 
@@ -4710,7 +5185,8 @@
                     valor: valorCredito,
                     tipo: 'entrada'
                 };
-                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === fluxoCredito.descricao && f.valor === fluxoCredito.valor && f.tipo === 'entrada')) {
+                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === fluxoCredito.descricao && f.valor ===
+                        fluxoCredito.valor && f.tipo === 'entrada')) {
                     db.fluxoCaixa.push(fluxoCredito);
                 }
             }
@@ -4723,7 +5199,8 @@
                     valor: valorDebito,
                     tipo: 'saida'
                 };
-                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === fluxoDebito.descricao && f.valor === fluxoDebito.valor && f.tipo === 'saida')) {
+                if (!db.fluxoCaixa.some(f => f.data === hoje && f.descricao === fluxoDebito.descricao && f.valor ===
+                        fluxoDebito.valor && f.tipo === 'saida')) {
                     db.fluxoCaixa.push(fluxoDebito);
                 }
             }
