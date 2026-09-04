@@ -1952,7 +1952,12 @@
             appId: "1:205438942907:web:c713bce1526227ad9fb39e",
             measurementId: "G-TSE6CCJ3FW"
         };
-        firebase.initializeApp(firebaseConfig);
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) {
+            console.error('Erro ao inicializar Firebase:', e);
+            alert('Erro crítico ao inicializar Firebase. Verifique a configuração.');
+        }
         const firestore = firebase.firestore();
 
         // =============================================
@@ -2047,8 +2052,15 @@
             // Enviar para Firestore
             try {
                 await firestore.collection('paizao_rentacar').doc('db').set(db);
+                // Se chegou aqui, salvou com sucesso
+                console.log('Dados salvos no Firestore com sucesso.');
             } catch (e) {
                 console.error('Erro ao salvar no Firestore:', e);
+                // Mostrar alerta apenas uma vez por sessão
+                if (!salvarDB.alertShown) {
+                    salvarDB.alertShown = true;
+                    alert('Não foi possível salvar no Firebase! Verifique a conexão e as regras do Firestore. Os dados estão salvos localmente.');
+                }
             }
         }
 
@@ -2108,20 +2120,19 @@
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
 
             // Inicializar sistema - chamada imediata para garantir que o usuário padrão exista
-            inicializarSistema();
+            // REMOVIDO - será chamado pelo init() no final
         });
 
         // Inicialização imediata caso o DOM já esteja carregado
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            inicializarSistema();
+            init();
+        } else {
+            document.addEventListener('DOMContentLoaded', init);
         }
 
-        function calcularValorTotal() {
-            const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
-            const valorUnitarioStr = document.getElementById('compValorUnitario').value;
-            const valorUnitario = parseFloat(valorUnitarioStr.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
-            const total = qtd * valorUnitario;
-            document.getElementById('compValorTotal').value = 'R$ ' + total.toFixed(2).replace('.', ',');
+        // Função init chamada uma única vez
+        async function init() {
+            await inicializarSistema();
         }
 
         // =============================================
@@ -2488,6 +2499,9 @@
             atualizarPlacasManutencao();
             atualizarPlacasMecanico();
             preencherPlacaUsuarioLogado();
+            
+            // Salvar imediatamente para criar a coleção no Firestore
+            await salvarDB();
         }
 
         // =============================================
@@ -5540,12 +5554,8 @@
         // =============================================
         // INICIALIZAÇÃO
         // =============================================
-        // A inicialização agora é assíncrona e precisa carregar o db do Firestore antes de rodar as funções.
-        // Vamos usar uma função async init() que chama inicializarSistema() e depois registra os eventos.
         async function init() {
             await inicializarSistema();
-            // Configurar eventos que dependem do db carregado (ex: login form)
-            // Já estão configurados acima, mas precisamos garantir que db não seja null.
         }
 
         // Chamada inicial
