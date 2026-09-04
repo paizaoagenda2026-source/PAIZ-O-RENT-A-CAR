@@ -1111,10 +1111,11 @@
             overflow-y: auto;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -1937,12 +1938,29 @@
 
     <script>
         // =============================================
+        // CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
+        // =============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyUNwWrbhXzEFpXA9jjQiLaWPYJxLrVm8",
+            authDomain: "lobao-1fb50.firebaseapp.com",
+            databaseURL: "https://lobao-1fb50-default-rtdb.firebaseio.com",
+            projectId: "lobao-1fb50",
+            storageBucket: "lobao-1fb50.firebasestorage.app",
+            messagingSenderId: "205438942907",
+            appId: "1:205438942907:web:c713bce1526227ad9fb39e",
+            measurementId: "G-TSE6CCJ3FW"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // =============================================
         // LIMPAR DADOS ANTIGOS DO LOCALSTORAGE (desnecessário, mas mantido)
         // =============================================
         // localStorage.removeItem('paizao_rentacar_db');
-        
+
         // =============================================
-        // SISTEMA DE PERSISTÊNCIA LOCAL (localStorage)
+        // SISTEMA DE PERSISTÊNCIA LOCAL (localStorage) e FIREBASE
         // =============================================
         const STORAGE_KEY = 'paizao_rentacar_db_v2';
 
@@ -2004,6 +2022,8 @@
                 console.error('Erro ao salvar dados no localStorage:', e);
                 alert('Erro ao salvar dados localmente. Verifique o espaço disponível.');
             }
+            // Enviar para o Firebase Realtime Database (não bloqueia a interface)
+            database.ref('paizao').set(db).catch(err => console.error('Erro ao salvar no Firebase:', err));
         }
 
         let db = carregarDB();
@@ -2063,21 +2083,54 @@
             document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
 
-            // Inicializar sistema - chamada imediata para garantir que o usuário padrão exista
-            inicializarSistema();
+            // Inicializar sistema (agora assíncrono)
+            iniciarAplicacao();
         });
 
         // Inicialização imediata caso o DOM já esteja carregado
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            inicializarSistema();
+            iniciarAplicacao();
         }
 
-        function calcularValorTotal() {
-            const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
-            const valorUnitarioStr = document.getElementById('compValorUnitario').value;
-            const valorUnitario = parseFloat(valorUnitarioStr.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
-            const total = qtd * valorUnitario;
-            document.getElementById('compValorTotal').value = 'R$ ' + total.toFixed(2).replace('.', ',');
+        // =============================================
+        // FUNÇÃO DE INICIALIZAÇÃO ASSÍNCRONA (com Firebase)
+        // =============================================
+        async function iniciarAplicacao() {
+            // 1. Carregar dados do Firebase
+            try {
+                const snapshot = await database.ref('paizao').once('value');
+                if (snapshot.exists()) {
+                    const dataFirebase = snapshot.val();
+                    if (dataFirebase && typeof dataFirebase === 'object') {
+                        // Mesclar com o padrão para garantir que todas as chaves existam
+                        const dbPadrao = criarDBPadrao();
+                        db = {
+                            ...dbPadrao,
+                            ...dataFirebase
+                        };
+                        // Preencher campos que podem ter sido adicionados posteriormente
+                        if (!db.pendentes) db.pendentes = [];
+                        if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
+                        if (!db.historico) db.historico = [];
+                        if (!db.contratos) db.contratos = criarDBPadrao().contratos;
+                        if (!db.imagens) db.imagens = criarDBPadrao().imagens;
+                        // Garantir que arrays existam
+                        ['veiculos', 'clientes', 'locacoes', 'manutencao', 'mecanico', 'usuarios', 'alugueis', 'fluxoCaixa', 'documentos', 'compras', 'auditoria', 'bancos'].forEach(key => {
+                            if (!Array.isArray(db[key])) db[key] = [];
+                        });
+                        db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
+                    }
+                } else {
+                    // Não há dados no Firebase, então envia os dados locais (se existirem)
+                    await database.ref('paizao').set(db);
+                }
+            } catch (e) {
+                console.error('Erro ao carregar do Firebase:', e);
+                // Usa os dados carregados do localStorage (já estão em db)
+            }
+
+            // 2. Agora executa a inicialização original do sistema
+            inicializarSistema();
         }
 
         // =============================================
@@ -2217,29 +2270,29 @@
         function abrirModalSelfie(destino = 'cliente') {
             selfieDestino = destino;
             selfieDataUrl = null;
-            
+
             document.getElementById('selfiePhotoPreview').style.display = 'none';
             document.getElementById('selfieConfirmBtn').style.display = 'none';
             document.getElementById('selfieCaptureBtn').style.display = 'inline-block';
             document.getElementById('selfiePreviewContainer').style.display = 'none';
 
             document.getElementById('selfieModal').classList.add('active');
-            
+
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ 
-                    video: { 
+                navigator.mediaDevices.getUserMedia({
+                    video: {
                         facingMode: 'user',
                         width: { ideal: 640 },
                         height: { ideal: 480 }
-                    }, 
-                    audio: false 
+                    },
+                    audio: false
                 })
                 .then(function(stream) {
                     selfieStream = stream;
                     const video = document.getElementById('selfieVideo');
                     video.srcObject = stream;
                     video.play();
-                    
+
                     document.getElementById('selfiePreviewContainer').style.display = 'block';
                     atualizarPreviewSelfie();
                 })
@@ -2268,7 +2321,7 @@
             const video = document.getElementById('selfieVideo');
             const canvas = document.getElementById('selfieCanvas');
             const previewImg = document.getElementById('selfiePreviewImg');
-            
+
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
@@ -2276,9 +2329,9 @@
                 ctx.translate(canvas.width, 0);
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
+
                 previewImg.src = canvas.toDataURL('image/png');
-                
+
                 setTimeout(atualizarPreviewSelfie, 100);
             } else {
                 setTimeout(atualizarPreviewSelfie, 100);
@@ -2288,23 +2341,23 @@
         function capturarSelfie() {
             const video = document.getElementById('selfieVideo');
             const canvas = document.getElementById('selfieCanvas');
-            
+
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 const ctx = canvas.getContext('2d');
-                
+
                 ctx.translate(canvas.width, 0);
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
+
                 selfieDataUrl = canvas.toDataURL('image/png');
-                
+
                 document.getElementById('selfiePhotoResult').src = selfieDataUrl;
                 document.getElementById('selfiePhotoPreview').style.display = 'block';
                 document.getElementById('selfieCaptureBtn').style.display = 'none';
                 document.getElementById('selfieConfirmBtn').style.display = 'inline-block';
-                
+
                 if (selfieStream) {
                     selfieStream.getTracks().forEach(track => track.stop());
                     selfieStream = null;
@@ -2321,7 +2374,7 @@
                 alert('Nenhuma selfie foi capturada!');
                 return;
             }
-            
+
             if (selfieDestino === 'usuario') {
                 selfieUsuarioTemp = selfieDataUrl;
                 mostrarPreviewSelfieUsuario();
@@ -2768,7 +2821,7 @@
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim().toUpperCase();
             const pass = document.getElementById('loginPassword').value;
-            
+
             // Verificação de emergência: garantir que o admin padrão exista
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
@@ -2780,12 +2833,12 @@
                 });
                 salvarDB();
             }
-            
+
             if (campoVazio(user) || campoVazio(pass)) {
                 alert('Preencha usuário e senha!');
                 return;
             }
-            
+
             const usuarioEncontrado = db.usuarios.find(u => u.nome === user && u.senha === pass);
             if (usuarioEncontrado) {
                 document.getElementById('loginContainer').style.display = 'none';
@@ -3088,18 +3141,18 @@
             };
 
             db.clientes.push(cliente);
-            
+
             criarUsuarioDoCliente(cliente);
-            
+
             atualizarTabelaClientes();
             atualizarCombosLocacao();
-            
+
             registrarAuditoria('Cadastro', `Novo cliente: ${cliente.nome}`);
-            
+
             salvarDB();
-            
+
             alert('Cliente salvo com sucesso! Usuário criado automaticamente.');
-            
+
             limparCamposCliente();
             limparSelfieCliente();
         }
@@ -3268,7 +3321,7 @@
             const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
             const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorMensalNum = parseFloat(valorMensalStr) || 0;
-            
+
             // Determinar o valor base e o tipo
             let valorBase = 0;
             let tipo = '';
@@ -3288,11 +3341,11 @@
             // Extrair caução
             const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const caucaoNum = parseFloat(caucaoStr) || 0;
-            
+
             // Extrair caução paga (entrada)
             const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
-            
+
             // Determinar o tipo de pagamento da caução
             const pagCaucao = locacao.pagCaucao; // 'avista', 'parcelado', 'entrada'
 
@@ -3316,13 +3369,13 @@
                     }
                 }
             }
-            
+
             // Formatar valor
             const valorFormatado = 'R$ ' + valorAluguelFinal.toFixed(2).replace('.', ',');
-            
+
             // Data de vencimento do primeiro
             const vencISO = dataInicio.toISOString().split('T')[0];
-            
+
             db.alugueis.push({
                 locatario: locacao.locatario,
                 dataContrato: locacao.dataInicio,
@@ -3341,9 +3394,9 @@
         function marcarComoPago(index) {
             const aluguel = db.alugueis[index];
             if (!aluguel || aluguel.status === 'Pago') return;
-            
+
             aluguel.status = 'Pago';
-            
+
             // LANÇA NO FLUXO DE CAIXA O VALOR PAGO
             const hoje = new Date().toISOString().split('T')[0];
             const descricao = `Pagamento Aluguel - ${aluguel.locatario} - ${aluguel.placa} - Venc. ${formatarDataBR(aluguel.dataVencimento)}`;
@@ -3366,14 +3419,14 @@
             const intervalo = aluguel.tipo === 'mensal' ? 30 : 7;
             const novaDataVencimento = new Date(aluguel.dataVencimento);
             novaDataVencimento.setDate(novaDataVencimento.getDate() + intervalo);
-            
+
             // Procurar a locação ativa correspondente
             const locacao = db.locacoes.find(l =>
                 l.locatario === aluguel.locatario &&
                 l.placa === aluguel.placa &&
                 l.dataInicio === aluguel.dataContrato
             );
-            
+
             if (locacao) {
                 const dataFim = new Date(locacao.dataFim);
                 // Verificar se já existe um aluguel com essa data de vencimento e mesmo locatário/placa
@@ -3392,16 +3445,16 @@
                         const valorBaseStr = (locacao.aluguelMensal || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
                         valorBaseNum = parseFloat(valorBaseStr) || 0;
                     }
-                    
+
                     const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace('.', '').replace(',', '.');
                     const caucaoNum = parseFloat(caucaoStr) || 0;
                     const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace('.', '').replace(',', '.');
                     const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
                     const pagCaucao = locacao.pagCaucao;
-                    
+
                     // número da próxima parcela
                     const proximaParcela = (aluguel.numeroParcela || 1) + 1;
-                    
+
                     let valorAluguelFinal = valorBaseNum;
                     if (caucaoNum > 0) {
                         if (aluguel.tipo === 'mensal') {
@@ -3429,9 +3482,9 @@
                             }
                         }
                     }
-                    
+
                     const valorFormatado = 'R$ ' + valorAluguelFinal.toFixed(2).replace('.', ',');
-                    
+
                     db.alugueis.push({
                         locatario: aluguel.locatario,
                         dataContrato: aluguel.dataContrato,
@@ -3444,7 +3497,7 @@
                     });
                 }
             }
-            
+
             atualizarTabelaAlugueis();
             atualizarTabelaFluxoCaixa();
             atualizarResumoFinanceiro();
@@ -3461,11 +3514,11 @@
             document.getElementById('ctVeiculoCor').value = locacao.cor;
             document.getElementById('ctAnoFabr').value = locacao.anoFabr;
             document.getElementById('ctAnoModel').value = locacao.anoModel;
-            
+
             // Verifica qual valor está preenchido para preencher o contrato
             const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorMensalNum = parseFloat(valorMensalStr) || 0;
-            
+
             if (valorMensalNum > 0) {
                 document.getElementById('ctValorAluguel').value = locacao.aluguelMensal;
             } else {
@@ -3562,7 +3615,7 @@
                 alert('Preencha nome e senha do usuário!');
                 return;
             }
-            
+
             if (usuarioEditandoIndex !== null) {
                 // Atualizar usuário existente
                 db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfie: selfieUsuarioTemp || null };
@@ -3577,7 +3630,7 @@
                 db.usuarios.push({ nome, senha, tipo, permissoes, selfie: selfieUsuarioTemp || null });
                 registrarAuditoria('Cadastro', `Usuário ${nome} (${tipo})`);
             }
-            
+
             atualizarTabelaUsuario();
             salvarDB();
             alert('Usuário salvo!');
@@ -3812,10 +3865,10 @@
                 return;
             }
 
-            const d = { 
-                nome: nome, 
-                tipo: tipo, 
-                data: data, 
+            const d = {
+                nome: nome,
+                tipo: tipo,
+                data: data,
                 referencia: referencia,
                 obs: obs,
                 imagem: docUploadDataUrl || null,
@@ -4146,7 +4199,7 @@
             tbody.innerHTML = '';
             db.historico.forEach((item, index) => {
                 const row = tbody.insertRow();
-                
+
                 let arquivoHtml = '<span style="color: #999;">Sem arquivo</span>';
                 if (item.arquivo) {
                     if (item.arquivoTipo === 'pdf') {
@@ -4155,7 +4208,7 @@
                         arquivoHtml = `<button class="btn-buscar" onclick="openImageModal('${item.arquivo}')" style="padding: 5px 10px; font-size: 12px;">🖼️ Ver Imagem</button>`;
                     }
                 }
-                
+
                 row.innerHTML = `<td>${formatarDataBR(item.data)}</td>
                                  <td>${item.descricao}</td>
                                  <td>${item.placa || '-'}</td>
@@ -4314,7 +4367,7 @@
             document.getElementById('userTipo').value = u.tipo;
             selfieUsuarioTemp = u.selfie || null;
             mostrarPreviewSelfieUsuario();
-            
+
             todasAbas.forEach(aba => {
                 const check = document.getElementById(`perm_aba_${aba.id}`);
                 if (check) check.checked = u.permissoes.abas[aba.id] || false;
@@ -4327,7 +4380,7 @@
                 const check = document.getElementById(`perm_veiculo_${v.placa}`);
                 if (check) check.checked = u.permissoes.veiculos[v.placa] || false;
             });
-            
+
             usuarioEditandoIndex = index;
             atualizarTabelaUsuario();
             registrarAuditoria('Edição', `Usuário editado: ${u.nome}`);
@@ -4590,7 +4643,7 @@
                 quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs
             };
             db.compras.push(compra);
-            
+
             // ADICIONAR AO HISTÓRICO
             const novoItemHistorico = {
                 data: data,
@@ -4603,7 +4656,7 @@
                 arquivoTipo: compPdfFileType || null
             };
             db.historico.push(novoItemHistorico);
-            
+
             atualizarTabelaCompras();
             atualizarTabelaHistorico();
             registrarAuditoria('Cadastro', `Compra: ${produto}`);
@@ -4790,8 +4843,8 @@
             if (file) {
                 const reader = new FileReader();
                 reader.onload = e => {
-                    db.imagens.garagem.fotos.push({ 
-                        nome: file.name, 
+                    db.imagens.garagem.fotos.push({
+                        nome: file.name,
                         data: e.target.result,
                         estado: 'disponivel'
                     });
@@ -4811,23 +4864,23 @@
         function atualizarGaleriaGaragem() {
             const container = document.getElementById('garagemSavedImages');
             container.innerHTML = '';
-            
+
             if (!db.imagens.garagem.fotos || db.imagens.garagem.fotos.length === 0) return;
-            
+
             db.imagens.garagem.fotos.forEach((foto, i) => {
                 if (!foto.estado) foto.estado = 'disponivel';
-                
+
                 const div = document.createElement('div');
                 div.className = 'saved-image-item';
                 div.dataset.estado = foto.estado;
                 div.id = 'img-garagem-' + i;
-                
+
                 div.innerHTML = `
                     <img src="${foto.data}" onclick="openImageModal('${foto.data}')">
                     <button class="delete-btn" onclick="excluirImagemGaragem(${i})">×</button>
                     <button class="status-btn" onclick="toggleStatusImagemGaragem(${i})"></button>
                 `;
-                
+
                 const statusBtn = div.querySelector('.status-btn');
                 if (foto.estado === 'piscando') {
                     div.classList.add('piscando');
@@ -4842,7 +4895,7 @@
                     statusBtn.classList.add('disponivel');
                     statusBtn.textContent = 'DISPONÍVEL';
                 }
-                
+
                 container.appendChild(div);
             });
         }
@@ -5453,10 +5506,10 @@
                 const row = tbody.insertRow();
                 const statusClass = p.status === 'Pago' ? 'status-pago' : 'status-pendente';
                 const statusText = p.status === 'Pago' ? 'Pago' : 'Pendente';
-                const btnAcao = p.status === 'Pendente' ? 
-                    `<button class="btn-success" onclick="marcarPendenciaComoPago(${index})" style="font-size: 12px; padding: 5px 10px;">✓ Pago</button>` : 
+                const btnAcao = p.status === 'Pendente' ?
+                    `<button class="btn-success" onclick="marcarPendenciaComoPago(${index})" style="font-size: 12px; padding: 5px 10px;">✓ Pago</button>` :
                     '<span style="color: #28a745; font-weight: bold;">✓</span>';
-                
+
                 row.innerHTML = `<td>${formatarDataBR(p.data)}</td><td>${p.descricao}</td><td>${p.credito}</td><td>${p.debito}</td><td>${formatarDataBR(p.vencimento)}</td>
                     <td><span class="${statusClass}">${statusText}</span></td>
                     <td>
@@ -5494,8 +5547,17 @@
 
         // INICIALIZAÇÃO
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            inicializarSistema();
+            iniciarAplicacao();
         }
     </script>
+    <!-- 🔒 Regras do Firebase Realtime Database (copie e cole no console do Firebase) -->
+    <!--
+    {
+      "rules": {
+        ".read": true,
+        ".write": true
+      }
+    }
+    -->
 </body>
 </html>
