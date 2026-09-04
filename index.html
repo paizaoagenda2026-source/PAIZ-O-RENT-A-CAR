@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAIZÃO RENT A CAR - Sistema de Locação</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --primary: #1a3c6e;
@@ -1940,27 +1937,6 @@
 
     <script>
         // =============================================
-        // INICIALIZAÇÃO DO FIREBASE
-        // =============================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyAyUNwWrbhXzEFpXA9jjQiLaWPYJxLrVm8",
-            authDomain: "lobao-1fb50.firebaseapp.com",
-            databaseURL: "https://lobao-1fb50-default-rtdb.firebaseio.com",
-            projectId: "lobao-1fb50",
-            storageBucket: "lobao-1fb50.firebasestorage.app",
-            messagingSenderId: "205438942907",
-            appId: "1:205438942907:web:c713bce1526227ad9fb39e",
-            measurementId: "G-TSE6CCJ3FW"
-        };
-        try {
-            firebase.initializeApp(firebaseConfig);
-        } catch (e) {
-            console.error('Erro ao inicializar Firebase:', e);
-            alert('Erro crítico ao inicializar Firebase. Verifique a configuração.');
-        }
-        const firestore = firebase.firestore();
-
-        // =============================================
         // LIMPAR DADOS ANTIGOS DO LOCALSTORAGE (desnecessário, mas mantido)
         // =============================================
         // localStorage.removeItem('paizao_rentacar_db');
@@ -2000,69 +1976,37 @@
             };
         }
 
-        // =============================================
-        // FUNÇÕES DE CARREGAMENTO E SALVAMENTO (Firestore + localStorage)
-        // =============================================
-        let db = null; // será carregado do Firestore ou localStorage
-
-        async function carregarDB() {
-            // Tenta carregar do Firestore
-            try {
-                const doc = await firestore.collection('paizao_rentacar').doc('db').get();
-                if (doc.exists) {
-                    const dados = doc.data();
-                    // Garantir que estruturas existam
-                    if (!dados.pendentes) dados.pendentes = [];
-                    if (!dados.locacoesEncerradas) dados.locacoesEncerradas = [];
-                    if (!dados.historico) dados.historico = [];
-                    dados.pendentes.forEach(p => {
-                        if (!p.status) p.status = 'Pendente';
-                    });
-                    return dados;
-                }
-            } catch (e) {
-                console.error('Erro ao carregar do Firestore:', e);
-            }
-            // Fallback: localStorage
-            const dadosLocal = localStorage.getItem(STORAGE_KEY);
-            if (dadosLocal) {
+        function carregarDB() {
+            const dados = localStorage.getItem(STORAGE_KEY);
+            if (dados) {
                 try {
-                    const dbLocal = JSON.parse(dadosLocal);
-                    if (!dbLocal.pendentes) dbLocal.pendentes = [];
-                    if (!dbLocal.locacoesEncerradas) dbLocal.locacoesEncerradas = [];
-                    if (!dbLocal.historico) dbLocal.historico = [];
-                    dbLocal.pendentes.forEach(p => {
+                    const db = JSON.parse(dados);
+                    if (!db.pendentes) db.pendentes = [];
+                    if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
+                    if (!db.historico) db.historico = [];
+                    db.pendentes.forEach(p => {
                         if (!p.status) p.status = 'Pendente';
                     });
-                    return dbLocal;
+                    return db;
                 } catch (e) {
-                    console.error('Erro ao ler localStorage:', e);
+                    console.error('Erro ao carregar dados do localStorage:', e);
+                    return criarDBPadrao();
                 }
+            } else {
+                return criarDBPadrao();
             }
-            return criarDBPadrao();
         }
 
-        async function salvarDB() {
-            // Salvar localmente (síncrono)
+        function salvarDB() {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
             } catch (e) {
-                console.error('Erro ao salvar no localStorage:', e);
-            }
-            // Enviar para Firestore
-            try {
-                await firestore.collection('paizao_rentacar').doc('db').set(db);
-                // Se chegou aqui, salvou com sucesso
-                console.log('Dados salvos no Firestore com sucesso.');
-            } catch (e) {
-                console.error('Erro ao salvar no Firestore:', e);
-                // Mostrar alerta apenas uma vez por sessão
-                if (!salvarDB.alertShown) {
-                    salvarDB.alertShown = true;
-                    alert('Não foi possível salvar no Firebase! Verifique a conexão e as regras do Firestore. Os dados estão salvos localmente.');
-                }
+                console.error('Erro ao salvar dados no localStorage:', e);
+                alert('Erro ao salvar dados localmente. Verifique o espaço disponível.');
             }
         }
+
+        let db = carregarDB();
 
         // =============================================
         // VARIÁVEIS DO SISTEMA DE SELFIE
@@ -2120,19 +2064,20 @@
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
 
             // Inicializar sistema - chamada imediata para garantir que o usuário padrão exista
-            // REMOVIDO - será chamado pelo init() no final
+            inicializarSistema();
         });
 
         // Inicialização imediata caso o DOM já esteja carregado
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            init();
-        } else {
-            document.addEventListener('DOMContentLoaded', init);
+            inicializarSistema();
         }
 
-        // Função init chamada uma única vez
-        async function init() {
-            await inicializarSistema();
+        function calcularValorTotal() {
+            const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
+            const valorUnitarioStr = document.getElementById('compValorUnitario').value;
+            const valorUnitario = parseFloat(valorUnitarioStr.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
+            const total = qtd * valorUnitario;
+            document.getElementById('compValorTotal').value = 'R$ ' + total.toFixed(2).replace('.', ',');
         }
 
         // =============================================
@@ -2436,8 +2381,7 @@
             return !valor || valor.trim() === '';
         }
 
-        async function inicializarSistema() {
-            db = await carregarDB();
+        function inicializarSistema() {
             // Garantir que o usuário administrador padrão exista sempre
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
@@ -2499,9 +2443,6 @@
             atualizarPlacasManutencao();
             atualizarPlacasMecanico();
             preencherPlacaUsuarioLogado();
-            
-            // Salvar imediatamente para criar a coleção no Firestore
-            await salvarDB();
         }
 
         // =============================================
@@ -3268,7 +3209,7 @@
             const caucaoPago = document.getElementById('locCaucaoPago').value;
 
             if (campoVazio(locatario) || campoVazio(veiculo) || campoVazio(placa) || campoVazio(dataInicio) || campoVazio(
-                    dataFim) || campoVazio(caucao) || campoVazio(valorAluguel)) {
+                    dataFim) || campoVazio(caucao) || campoVazio(valorAluguel) || campoVazio(aluguelMensal)) {
                 alert('Preencha todos os campos obrigatórios da locação!');
                 return;
             }
@@ -3940,12 +3881,24 @@
             });
         }
 
+        // =============================================
+        // FUNÇÃO ATUALIZAR TABELA DE LOCAÇÕES ATIVAS - MODIFICADA
+        // =============================================
         function atualizarTabelaLocacoes() {
             const tbody = document.querySelector('#tabelaLocacoes tbody');
             tbody.innerHTML = '';
             db.locacoes.forEach((l, index) => {
                 const row = tbody.insertRow();
-                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${l.valorAluguel}</td>
+                // Lógica para exibir o valor correto: se aluguelMensal > 0, mostra ele; senão mostra valorAluguel
+                let valorExibido = l.valorAluguel || 'R$ 0,00';
+                if (l.aluguelMensal) {
+                    const valorMensalStr = l.aluguelMensal.replace('R$ ', '').replace('.', '').replace(',', '.');
+                    const valorMensalNum = parseFloat(valorMensalStr);
+                    if (!isNaN(valorMensalNum) && valorMensalNum > 0) {
+                        valorExibido = l.aluguelMensal;
+                    }
+                }
+                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${valorExibido}</td>
                     <td>
                         <button class="btn-warning" onclick="editarLocacao(${index})">✏️</button>
                         <button class="btn-danger" onclick="excluirLocacao(${index})">🗑️</button>
@@ -5551,33 +5504,10 @@
             document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
         }
 
-        // =============================================
         // INICIALIZAÇÃO
-        // =============================================
-        async function init() {
-            await inicializarSistema();
-        }
-
-        // Chamada inicial
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            init();
-        } else {
-            document.addEventListener('DOMContentLoaded', init);
+            inicializarSistema();
         }
-
-        // =============================================
-        // REGRAS DO FIRESTORE (para colocar no console)
-        // =============================================
-        /*
-        rules_version = '2';
-        service cloud.firestore {
-          match /databases/{database}/documents {
-            match /{document=**} {
-              allow read, write: if true;
-            }
-          }
-        }
-        */
     </script>
 </body>
 </html>
