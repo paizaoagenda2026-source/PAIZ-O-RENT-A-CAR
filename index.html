@@ -213,6 +213,7 @@
             border-radius: 5px;
             font-size: 14px;
             transition: border-color 0.3s;
+            width: 100%;
         }
 
         .form-group input:focus,
@@ -1052,8 +1053,64 @@
         .btn-pdf:hover {
             background: #5a6268;
         }
+
+        .despesas-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 99999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .despesas-modal.active {
+            display: flex;
+        }
+
+        .despesas-modal-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .despesas-modal-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .despesas-modal-header h3 {
+            margin: 0;
+        }
+
+        .despesas-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 10px;
+        }
+
+        .despesas-modal-body {
+            padding: 20px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
     </style>
-    <!-- Bibliotecas para processamento de PDF e OCR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js">
@@ -1095,9 +1152,7 @@
             <button class="tab" data-tab="compras">🛒 Compras</button>
             <button class="tab" data-tab="configuracao">⚙️ Configuração</button>
             <button class="tab" data-tab="auditoria">🔍 Auditoria</button>
-            <!-- NOVA ABA PENDENTE -->
             <button class="tab" data-tab="pendente">⏳ Pendente</button>
-            <!-- NOVA ABA HISTÓRICO -->
             <button class="tab" data-tab="historico">📜 HISTÓRICO</button>
             <button class="fullscreen-btn" id="fullscreenBtn">🖥️ Tela Cheia</button>
             <button class="logout-btn" onclick="sairSistema()">🚪 Sair</button>
@@ -1235,6 +1290,8 @@
                             <th>Início</th>
                             <th>Fim</th>
                             <th>Encerrada em</th>
+                            <th>R$ Gerado</th>
+                            <th>Despesas</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -1258,15 +1315,14 @@
                         <option value="">Selecione uma placa</option>
                     </select>
                 </div>
-                <div class="form-group"><label>KM</label><input type="text" id="manKm" class="campo-enter"></div>
                 <div class="form-group"><label>Tipo de Manutenção</label><input type="text" id="manTipo" class="campo-enter"></div>
-                <div class="form-group"><label>Data</label><input type="date" id="manData" class="campo-enter"></div>
+                <div class="form-group"><label>KM</label><input type="text" id="manKm" class="campo-enter"></div>
                 <div class="form-group"><label>OBS</label><textarea id="manObs" rows="3" class="campo-enter"></textarea></div>
             </div>
             <button class="btn-primary" data-permissao="manutencao_salvar" onclick="salvarManutencao()">💾 Salvar</button>
             <div class="table-container">
                 <table id="tabelaManutencao">
-                    <thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>Data</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Veículo</th><th>Placa</th><th>Tipo</th><th>KM</th><th>Ações</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1282,7 +1338,11 @@
                 <div class="form-group"><label>Serviço</label><input type="text" id="mecServico" class="campo-enter"></div>
                 <div class="form-group"><label>Responsável</label><input type="text" id="mecResponsavel" class="campo-enter"></div>
                 <div class="form-group"><label>Carro</label><input type="text" id="mecCarro" class="campo-enter"></div>
-                <div class="form-group"><label>Placa</label><input type="text" id="mecPlaca" class="campo-enter"></div>
+                <div class="form-group"><label>Placa</label>
+                    <select id="mecPlaca" class="campo-enter" onchange="selecionarPlacaMecanico()">
+                        <option value="">Selecione uma placa</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Valor</label><input type="text" id="mecValor" class="money campo-enter"></div>
                 <div class="form-group"><label>OBS</label><textarea id="mecObs" rows="3" class="campo-enter"></textarea></div>
                 <div class="form-group"><label>PDF/Imagem do Orçamento</label>
@@ -1859,6 +1919,19 @@
         </div>
     </div>
 
+    <!-- MODAL DE DESPESAS -->
+    <div class="despesas-modal" id="despesasModal">
+        <div class="despesas-modal-content">
+            <div class="despesas-modal-header">
+                <h3>📋 Despesas da Locação</h3>
+                <button class="despesas-modal-close" onclick="fecharDespesasModal()">×</button>
+            </div>
+            <div class="despesas-modal-body" id="despesasModalBody">
+                <!-- Conteúdo preenchido dinamicamente -->
+            </div>
+        </div>
+    </div>
+
     <!-- ÁREA DE IMPRESSÃO (oculta na tela) -->
     <div id="printArea" class="print-area"></div>
 
@@ -2253,13 +2326,13 @@
                 selfieUsuarioTemp = selfieDataUrl;
                 mostrarPreviewSelfieUsuario();
                 alert('Selfie do usuário capturada com sucesso!');
+                fecharModalSelfie();
             } else {
                 selfieClienteTemp = selfieDataUrl;
                 mostrarPreviewSelfieCliente();
-                alert('Selfie do cliente capturada com sucesso!');
+                fecharModalSelfie();
+                salvarCliente(); // Salva o cliente imediatamente
             }
-            
-            fecharModalSelfie();
         }
 
         function mostrarPreviewSelfieCliente() {
@@ -2368,6 +2441,7 @@
             limparSelfieCliente();
             limparSelfieUsuario();
             atualizarPlacasManutencao();
+            atualizarPlacasMecanico();
             preencherPlacaUsuarioLogado();
         }
 
@@ -2397,6 +2471,103 @@
                 document.getElementById('manVeiculo').value = '';
             }
         }
+
+        // =============================================
+        // NOVA FUNÇÃO: ATUALIZAR PLACAS NA ABA MECÂNICO
+        // =============================================
+        function atualizarPlacasMecanico() {
+            const select = document.getElementById('mecPlaca');
+            if (!select) return;
+            select.innerHTML = '<option value="">Selecione uma placa</option>';
+            db.veiculos.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.placa;
+                option.textContent = v.placa + ' - ' + v.fabricante;
+                select.appendChild(option);
+            });
+        }
+
+        function selecionarPlacaMecanico() {
+            const placa = document.getElementById('mecPlaca').value;
+            if (placa) {
+                const veiculo = db.veiculos.find(v => v.placa === placa);
+                if (veiculo) {
+                    document.getElementById('mecCarro').value = veiculo.fabricante;
+                }
+            } else {
+                document.getElementById('mecCarro').value = '';
+            }
+        }
+
+        // =============================================
+        // FUNÇÃO SALVAR MECÂNICO - ADICIONADA PARA CORRIGIR O BUG
+        // =============================================
+        function salvarMecanico() {
+            const data = document.getElementById('mecData').value;
+            const oficina = document.getElementById('mecOficina').value;
+            const servico = document.getElementById('mecServico').value;
+            const responsavel = document.getElementById('mecResponsavel').value;
+            const carro = document.getElementById('mecCarro').value;
+            const placa = document.getElementById('mecPlaca').value;
+            const valor = document.getElementById('mecValor').value;
+            const obs = document.getElementById('mecObs').value;
+
+            // Validação dos campos obrigatórios
+            if (campoVazio(data) || campoVazio(oficina) || campoVazio(servico) || campoVazio(carro) || campoVazio(placa) || campoVazio(valor)) {
+                alert('Preencha todos os campos obrigatórios (Data, Oficina, Serviço, Carro, Placa, Valor)!');
+                return;
+            }
+
+            // Verifica duplicidade simples (mesmo serviço na mesma data com mesma placa)
+            if (db.mecanico.some(m => m.data === data && m.servico === servico && m.placa === placa)) {
+                alert('Já existe um serviço idêntico registrado!');
+                return;
+            }
+
+            // Cria o objeto de serviço
+            const novoServico = {
+                data,
+                oficina,
+                servico,
+                responsavel,
+                carro,
+                placa,
+                valor,
+                obs,
+                pdfData: mecPdfDataUrl || null,
+                pdfTipo: mecPdfFileType || null
+            };
+
+            db.mecanico.push(novoServico);
+
+            // =============================================
+            // NOVO: LANÇAR TAMBÉM NO HISTÓRICO
+            // =============================================
+            const novoItemHistorico = {
+                data: data,
+                descricao: servico,
+                placa: placa,
+                valor: valor,
+                fornecedor: responsavel,  // usa responsável como fornecedor
+                oficina: oficina,
+                arquivo: mecPdfDataUrl || null,
+                arquivoTipo: mecPdfFileType || null
+            };
+            db.historico.push(novoItemHistorico);
+            atualizarTabelaHistorico();  // Atualiza a aba histórico
+
+            // Atualiza tabela e registra auditoria
+            atualizarTabelaMecanico();
+            registrarAuditoria('Cadastro', `Serviço de mecânico: ${servico} - ${placa}`);
+
+            salvarDB();
+            alert('Serviço salvo com sucesso e lançado no histórico!');
+            limparCamposMecanico();
+        }
+
+        // =============================================
+        // DEMAIS FUNÇÕES (mantidas do original)
+        // =============================================
 
         function gerarPermissoesUI() {
             const container = document.getElementById('permissoesContainer');
@@ -2544,6 +2715,7 @@
 
             atualizarTabelaVeiculos();
             atualizarPlacasManutencao();
+            atualizarPlacasMecanico();
 
             const activeTab = document.querySelector('.tab.active');
             if (activeTab && activeTab.classList.contains('hidden-tab')) {
@@ -2667,6 +2839,7 @@
                 if (tabId === 'locacoes') atualizarCombosLocacao();
                 if (tabId === 'compras') atualizarTabelaCompras();
                 if (tabId === 'manutencao') atualizarPlacasManutencao();
+                if (tabId === 'mecanico') atualizarPlacasMecanico();
                 if (tabId === 'doc') {
                     preencherPlacaUsuarioLogado();
                     atualizarTabelaDoc();
@@ -3018,10 +3191,11 @@
             alert('Veículo salvo!');
             limparCamposVeiculo();
             atualizarPlacasManutencao();
+            atualizarPlacasMecanico();
         }
 
         // =============================================
-        // FUNÇÃO SALVAR LOCAÇÃO - CORRIGIDA (gera apenas o primeiro aluguel)
+        // FUNÇÃO SALVAR LOCAÇÃO - CORRIGIDA
         // =============================================
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
@@ -3080,7 +3254,7 @@
         }
 
         // =============================================
-        // NOVA FUNÇÃO: CRIA APENAS O PRIMEIRO ALUGUEL (com regras de caução)
+        // NOVA FUNÇÃO: CRIA APENAS O PRIMEIRO ALUGUEL
         // =============================================
         function criarAlugueisParaLocacao(locacao) {
             // Limpa aluguéis existentes para esta locação
@@ -3090,7 +3264,7 @@
             const dataFim = new Date(locacao.dataFim);
 
             // Extrair valores numéricos
-            const valorAluguelStr = (locacao.valorAluguel || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorAluguelStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
             const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorMensalNum = parseFloat(valorMensalStr) || 0;
@@ -3128,9 +3302,18 @@
                 if (pagCaucao === 'avista') {
                     valorAluguelFinal += caucaoNum;
                 } else if (pagCaucao === 'parcelado') {
-                    valorAluguelFinal += (caucaoNum / 10);
+                    // Para mensal, dividir por 6 (número de meses padrão)
+                    if (tipo === 'mensal') {
+                        valorAluguelFinal += (caucaoNum / 6);
+                    } else {
+                        valorAluguelFinal += (caucaoNum / 10);
+                    }
                 } else if (pagCaucao === 'entrada') {
-                    valorAluguelFinal += caucaoPagoNum;
+                    if (tipo === 'mensal') {
+                        valorAluguelFinal += caucaoPagoNum;
+                    } else {
+                        valorAluguelFinal += caucaoPagoNum;
+                    }
                 }
             }
             
@@ -3220,21 +3403,29 @@
                     const proximaParcela = (aluguel.numeroParcela || 1) + 1;
                     
                     let valorAluguelFinal = valorBaseNum;
-                    if (caucaoNum > 0 && proximaParcela <= 10) {
-                        if (pagCaucao === 'avista') {
-                            // No caso 'avista', a caução já foi embutida no 1º aluguel, então os próximos não têm acréscimo
-                            // Apenas para manter consistência, não adiciona nada.
-                            // (Regra: 1º = aluguel + caução, demais = apenas aluguel)
-                        } else if (pagCaucao === 'parcelado') {
-                            valorAluguelFinal += (caucaoNum / 10);
-                        } else if (pagCaucao === 'entrada') {
-                            if (proximaParcela === 2) {
-                                // O 2º aluguel já deve ser o primeiro a receber o saldo da caução restante
-                                const saldo = caucaoNum - caucaoPagoNum;
-                                valorAluguelFinal += (saldo / 9);
-                            } else if (proximaParcela >= 3 && proximaParcela <= 10) {
-                                const saldo = caucaoNum - caucaoPagoNum;
-                                valorAluguelFinal += (saldo / 9);
+                    if (caucaoNum > 0) {
+                        if (aluguel.tipo === 'mensal') {
+                            if (pagCaucao === 'avista') {
+                                // nenhum acréscimo
+                            } else if (pagCaucao === 'parcelado') {
+                                valorAluguelFinal += (caucaoNum / 6);
+                            } else if (pagCaucao === 'entrada') {
+                                valorAluguelFinal += ((caucaoNum - caucaoPagoNum) / 6);
+                            }
+                        } else {
+                            if (pagCaucao === 'avista') {
+                                // nenhum acréscimo
+                            } else if (pagCaucao === 'parcelado') {
+                                // CORREÇÃO: Adiciona 1ª e mais 9 parcelas (total 10) apenas quando gerar o próximo vencimento
+                                if (proximaParcela <= 10) {
+                                    valorAluguelFinal += (caucaoNum / 10);
+                                }
+                            } else if (pagCaucao === 'entrada') {
+                                if (proximaParcela === 2) {
+                                    valorAluguelFinal += ((caucaoNum - caucaoPagoNum) / 9);
+                                } else if (proximaParcela >= 3 && proximaParcela <= 10) {
+                                    valorAluguelFinal += ((caucaoNum - caucaoPagoNum) / 9);
+                                }
                             }
                         }
                     }
@@ -3330,25 +3521,27 @@
             salvarDadosContratos();
         }
 
+        // =============================================
+        // FUNÇÃO SALVAR MANUTENÇÃO (SEM DATA, APENAS KM)
+        // =============================================
         function salvarManutencao() {
             const veiculo = document.getElementById('manVeiculo').value;
             const placa = document.getElementById('manPlaca').value;
             const km = document.getElementById('manKm').value;
             const tipo = document.getElementById('manTipo').value;
-            const data = document.getElementById('manData').value;
             const obs = document.getElementById('manObs').value;
 
-            if (campoVazio(veiculo) || campoVazio(placa) || campoVazio(km) || campoVazio(tipo) || campoVazio(data)) {
+            if (campoVazio(veiculo) || campoVazio(placa) || campoVazio(km) || campoVazio(tipo)) {
                 alert('Preencha todos os campos obrigatórios da manutenção!');
                 return;
             }
 
-            if (db.manutencao.some(m => m.veiculo === veiculo && m.placa === placa && m.tipo === tipo && m.data === data)) {
+            if (db.manutencao.some(m => m.veiculo === veiculo && m.placa === placa && m.tipo === tipo && m.km === km)) {
                 alert('Já existe uma manutenção idêntica registrada!');
                 return;
             }
 
-            const m = { veiculo, placa, km, tipo, data, obs };
+            const m = { veiculo, placa, km, tipo, obs };
             db.manutencao.push(m);
             atualizarTabelaManutencao();
             registrarAuditoria('Cadastro', `Manutenção: ${m.veiculo}`);
@@ -3356,55 +3549,7 @@
             alert('Manutenção salva!');
             limparCamposManutencao();
             atualizarPlacasManutencao();
-        }
-
-        // =============================================
-        // FUNÇÃO SALVAR MECÂNICO (COM HISTÓRICO)
-        // =============================================
-        function salvarMecanico() {
-            const data = document.getElementById('mecData').value;
-            const oficina = document.getElementById('mecOficina').value;
-            const servico = document.getElementById('mecServico').value;
-            const responsavel = document.getElementById('mecResponsavel').value;
-            const carro = document.getElementById('mecCarro').value;
-            const placa = document.getElementById('mecPlaca').value;
-            const valor = document.getElementById('mecValor').value;
-            const obs = document.getElementById('mecObs').value;
-
-            if (campoVazio(data) || campoVazio(oficina) || campoVazio(servico) || campoVazio(responsavel) || campoVazio(
-                    carro) || campoVazio(placa) || campoVazio(valor)) {
-                alert('Preencha todos os campos obrigatórios do serviço mecânico!');
-                return;
-            }
-
-            if (db.mecanico.some(m => m.data === data && m.oficina === oficina && m.servico === servico && m.placa ===
-                    placa)) {
-                alert('Já existe um serviço mecânico idêntico registrado!');
-                return;
-            }
-
-            const m = { data, oficina, servico, responsavel, carro, placa, valor, obs };
-            db.mecanico.push(m);
-            
-            // ADICIONAR AO HISTÓRICO
-            const novoItemHistorico = {
-                data: data,
-                descricao: servico,
-                placa: placa,
-                valor: valor,
-                fornecedor: '',
-                oficina: oficina,
-                arquivo: mecPdfDataUrl || null,
-                arquivoTipo: mecPdfFileType || null
-            };
-            db.historico.push(novoItemHistorico);
-            
-            atualizarTabelaMecanico();
-            atualizarTabelaHistorico();
-            registrarAuditoria('Cadastro', `Serviço mecânico: ${m.servico}`);
-            salvarDB();
-            alert('Serviço salvo!');
-            limparCamposMecanico();
+            atualizarPlacasMecanico();
         }
 
         function salvarUsuario() {
@@ -3755,12 +3900,31 @@
             if (!locacao) return;
             if (!confirm(`Encerrar a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
 
+            const dataInicio = new Date(locacao.dataInicio);
+            const dataEncerramento = new Date(); // data de hoje
+            const dias = Math.ceil((dataEncerramento - dataInicio) / (1000 * 60 * 60 * 24)) + 1; // inclui o dia inicial
+
+            // Determinar valor diário (baseado em semanal ou mensal)
+            let valorDiario = 0;
+            const valorAluguelStr = (locacao.valorAluguel || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
+            const aluguelMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const aluguelMensalNum = parseFloat(aluguelMensalStr) || 0;
+
+            if (aluguelMensalNum > 0) {
+                valorDiario = aluguelMensalNum / 30;
+            } else if (valorAluguelNum > 0) {
+                valorDiario = valorAluguelNum / 7;
+            }
+
+            const totalGerado = valorDiario * dias;
+            locacao.totalGerado = 'R$ ' + totalGerado.toFixed(2).replace('.', ',');
             locacao.dataEncerramento = new Date().toISOString().split('T')[0];
             db.locacoesEncerradas.push(locacao);
             db.locacoes.splice(index, 1);
 
-            db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a
-                .dataContrato === locacao.dataInicio));
+            // Remove os aluguéis pendentes da locação (pois foi encerrada)
+            db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
 
             atualizarTabelaLocacoes();
             atualizarTabelaLocEncerrada();
@@ -3775,13 +3939,33 @@
             tbody.innerHTML = '';
             db.locacoesEncerradas.forEach((l, index) => {
                 const row = tbody.insertRow();
-                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td>
+                const totalGerado = l.totalGerado || 'R$ 0,00';
+                const despesas = calcularDespesasLocacao(l);
+                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td><td>${totalGerado}</td><td>${despesas}</td>
                     <td>
                         <button class="btn-warning" data-permissao="locEncerrada_reativar" onclick="reativarLocacao(${index})">🔄 Reativar</button>
                         <button class="btn-danger" data-permissao="locEncerrada_excluir" onclick="excluirLocEncerrada(${index})">🗑️ Excluir</button>
+                        <button class="btn-info" onclick="verDespesasLocacao(${index})">📋 Despesas</button>
                     </td>`;
             });
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
+        }
+
+        function calcularDespesasLocacao(locacao) {
+            if (!locacao || !locacao.placa) return 'R$ 0,00';
+            const despesas = db.historico.filter(item => {
+                if (item.placa !== locacao.placa) return false;
+                if (!item.data) return true;
+                const itemDate = new Date(item.data);
+                const inicio = new Date(locacao.dataInicio);
+                const fim = new Date(locacao.dataEncerramento || locacao.dataFim || new Date());
+                return itemDate >= inicio && itemDate <= fim;
+            });
+            let total = 0;
+            despesas.forEach(item => {
+                const valorStr = (item.valor || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
+                total += parseFloat(valorStr) || 0;
+            });
+            return 'R$ ' + total.toFixed(2).replace('.', ',');
         }
 
         function reativarLocacao(index) {
@@ -3790,6 +3974,7 @@
             if (!confirm(`Reativar a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
 
             delete locacao.dataEncerramento;
+            delete locacao.totalGerado;
             db.locacoes.push(locacao);
             db.locacoesEncerradas.splice(index, 1);
 
@@ -3815,12 +4000,57 @@
             alert('Locação excluída permanentemente.');
         }
 
+        function verDespesasLocacao(index) {
+            const locacao = db.locacoesEncerradas[index];
+            if (!locacao) return;
+
+            const despesas = db.historico.filter(item => {
+                if (item.placa !== locacao.placa) return false;
+                if (item.data && locacao.dataInicio && locacao.dataFim) {
+                    const itemDate = new Date(item.data);
+                    const inicio = new Date(locacao.dataInicio);
+                    const fim = new Date(locacao.dataEncerramento || locacao.dataFim);
+                    return itemDate >= inicio && itemDate <= fim;
+                }
+                return true;
+            });
+
+            const body = document.getElementById('despesasModalBody');
+            body.innerHTML = '';
+
+            if (despesas.length === 0) {
+                body.innerHTML = '<p style="text-align: center; padding: 20px;">Nenhuma despesa encontrada para esta locação.</p>';
+            } else {
+                let html = '<table style="width:100%; border-collapse:collapse;"><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Fornecedor</th><th>Oficina</th></tr></thead><tbody>';
+                despesas.forEach(item => {
+                    html += `<tr>
+                        <td>${formatarDataBR(item.data)}</td>
+                        <td>${item.descricao}</td>
+                        <td>${item.valor || 'R$ 0,00'}</td>
+                        <td>${item.fornecedor || '-'}</td>
+                        <td>${item.oficina || '-'}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                body.innerHTML = html;
+            }
+
+            document.getElementById('despesasModal').classList.add('active');
+        }
+
+        function fecharDespesasModal() {
+            document.getElementById('despesasModal').classList.remove('active');
+        }
+
+        // =============================================
+        // FUNÇÕES DE TABELAS E ATUALIZAÇÕES (continuando)
+        // =============================================
         function atualizarTabelaManutencao() {
             const tbody = document.querySelector('#tabelaManutencao tbody');
             tbody.innerHTML = '';
             db.manutencao.forEach((m, index) => {
                 const row = tbody.insertRow();
-                row.innerHTML = `<td>${m.veiculo}</td><td>${m.placa}</td><td>${m.tipo}</td><td>${formatarDataBR(m.data)}</td>
+                row.innerHTML = `<td>${m.veiculo}</td><td>${m.placa}</td><td>${m.tipo}</td><td>${m.km}</td>
                     <td><button class="btn-warning" onclick="editarManutencao(${index})">✏️</button><button class="btn-danger" onclick="excluirManutencao(${index})">🗑️</button></td>`;
             });
         }
@@ -3848,7 +4078,6 @@
                 row.innerHTML = `<td>${a.locatario}</td><td>${formatarDataBR(a.dataContrato)}</td><td>${a.placa}</td><td>${a.valorAluguel}</td><td>${formatarDataBR(a.dataVencimento)}</td><td><span class="${statusClass}">${a.status}</span></td>
                     <td><button class="btn-success" onclick="marcarComoPago(${index})">✓ Pago</button><button class="btn-danger" onclick="excluirAluguel(${index})">🗑️</button></td>`;
             });
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
         function excluirAluguel(index) {
@@ -3867,7 +4096,6 @@
                 row.innerHTML = `<td>${b.nome}</td><td>${b.agencia}</td><td>${b.conta}</td><td>${b.pix}</td><td>${b.titular}</td>
                     <td><button class="btn-copy" onclick="copiarPix(${index})">📋 Copiar PIX</button><button class="btn-warning" onclick="editarBanco(${index})">✏️</button><button class="btn-danger" onclick="excluirBanco(${index})">🗑️</button></td>`;
             });
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
         function atualizarTabelaFluxoCaixa() {
@@ -3912,9 +4140,6 @@
             });
         }
 
-        // =============================================
-        // FUNÇÃO PARA ATUALIZAR A TABELA DE HISTÓRICO
-        // =============================================
         function atualizarTabelaHistorico() {
             const tbody = document.querySelector('#tabelaHistorico tbody');
             if (!tbody) return;
@@ -4015,6 +4240,7 @@
             registrarAuditoria('Edição', `Veículo editado: ${v.fabricante} - ${v.placa}`);
             salvarDB();
             atualizarPlacasManutencao();
+            atualizarPlacasMecanico();
         }
 
         function excluirVeiculo(index) {
@@ -4030,6 +4256,7 @@
                 registrarAuditoria('Exclusão', `Veículo excluído: ${v.fabricante} - ${v.placa}`);
                 salvarDB();
                 atualizarPlacasManutencao();
+                atualizarPlacasMecanico();
             }
         }
 
@@ -4190,7 +4417,6 @@
             document.getElementById('manPlaca').value = m.placa;
             document.getElementById('manKm').value = m.km;
             document.getElementById('manTipo').value = m.tipo;
-            document.getElementById('manData').value = m.data;
             document.getElementById('manObs').value = m.obs;
             db.manutencao.splice(index, 1);
             atualizarTabelaManutencao();
@@ -4213,7 +4439,6 @@
             document.getElementById('manPlaca').value = '';
             document.getElementById('manKm').value = '';
             document.getElementById('manTipo').value = '';
-            document.getElementById('manData').value = '';
             document.getElementById('manObs').value = '';
         }
 
@@ -4558,7 +4783,7 @@
         }
 
         // =============================================
-        // FUNÇÕES DA GALERIA GARAGEM - CORRIGIDO PARA SEMPRE MOSTRAR BOTÃO
+        // FUNÇÕES DA GALERIA GARAGEM
         // =============================================
         function salvarGaragem() {
             const file = document.getElementById('garagemImagem').files[0];
@@ -4568,7 +4793,7 @@
                     db.imagens.garagem.fotos.push({ 
                         nome: file.name, 
                         data: e.target.result,
-                        estado: 'disponivel' // Garante que o estado inicial seja disponivel
+                        estado: 'disponivel'
                     });
                     atualizarGaleriaGaragem();
                     salvarDB();
@@ -4587,21 +4812,16 @@
             const container = document.getElementById('garagemSavedImages');
             container.innerHTML = '';
             
-            // Se não houver fotos, retorna
             if (!db.imagens.garagem.fotos || db.imagens.garagem.fotos.length === 0) return;
             
             db.imagens.garagem.fotos.forEach((foto, i) => {
-                // Garantir que a foto tenha estado definido
-                if (!foto.estado) {
-                    foto.estado = 'disponivel';
-                }
+                if (!foto.estado) foto.estado = 'disponivel';
                 
                 const div = document.createElement('div');
                 div.className = 'saved-image-item';
                 div.dataset.estado = foto.estado;
                 div.id = 'img-garagem-' + i;
                 
-                // Sempre incluir o botão de status
                 div.innerHTML = `
                     <img src="${foto.data}" onclick="openImageModal('${foto.data}')">
                     <button class="delete-btn" onclick="excluirImagemGaragem(${i})">×</button>
@@ -4634,7 +4854,6 @@
             const estadoAtual = div.dataset.estado;
 
             if (estadoAtual === 'disponivel') {
-                // Primeiro clique: começa a piscar (marca como não alugado mas com atenção)
                 div.dataset.estado = 'piscando';
                 div.classList.add('piscando');
                 statusBtn.classList.remove('disponivel');
@@ -4642,7 +4861,6 @@
                 statusBtn.textContent = 'DISPONÍVEL';
                 db.imagens.garagem.fotos[index].estado = 'piscando';
             } else if (estadoAtual === 'piscando') {
-                // Segundo clique: muda para ALUGADO
                 div.dataset.estado = 'alugado';
                 div.classList.remove('piscando');
                 statusBtn.classList.remove('piscando');
@@ -4650,7 +4868,6 @@
                 statusBtn.textContent = 'ALUGADO';
                 db.imagens.garagem.fotos[index].estado = 'alugado';
             } else if (estadoAtual === 'alugado') {
-                // Terceiro clique: volta para DISPONÍVEL
                 div.dataset.estado = 'disponivel';
                 div.classList.remove('piscando');
                 statusBtn.classList.remove('alugado');
@@ -4671,7 +4888,7 @@
         }
 
         // =============================================
-        // FUNÇÕES DA GALERIA SOS (sem alteração)
+        // FUNÇÕES DA GALERIA SOS
         // =============================================
         function salvarSOS() {
             const file = document.getElementById('sosImagem').files[0];
@@ -5250,7 +5467,6 @@
                     if (!e.target.closest('button')) selecionarPendencia(index);
                 });
             });
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
         function selecionarPendencia(index) {
@@ -5262,8 +5478,24 @@
         }
 
         // =============================================
-        // INICIALIZAÇÃO DO SISTEMA
+        // ATUALIZAR RESUMO FINANCEIRO
         // =============================================
+        function atualizarResumoFinanceiro() {
+            let entradas = 0, saidas = 0;
+            db.fluxoCaixa.forEach(f => {
+                const val = parseFloat(f.valor.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
+                if (f.tipo === 'entrada') entradas += val;
+                else saidas += val;
+            });
+            document.getElementById('totalEntradas').textContent = 'R$ ' + entradas.toFixed(2).replace('.', ',');
+            document.getElementById('totalSaidas').textContent = 'R$ ' + saidas.toFixed(2).replace('.', ',');
+            document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
+        }
+
+        // INICIALIZAÇÃO
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            inicializarSistema();
+        }
     </script>
 </body>
 </html>
