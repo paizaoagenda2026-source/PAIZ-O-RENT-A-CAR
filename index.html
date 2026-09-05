@@ -8,1213 +8,159 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --primary: #1a3c6e;
-            --secondary: #e63946;
-            --accent: #f4a261;
-            --bg: #f8f9fa;
-            --text: #333;
-            --white: #fff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --radius: 8px;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --info: #17a2b8;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #1a3c6e 0%, #0d1b2a 100%);
-        }
-
-        .login-box {
-            background: var(--white);
-            padding: 40px;
-            border-radius: var(--radius);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-            width: 400px;
-            text-align: center;
-        }
-
-        .login-box h1 {
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .login-box h2 {
-            color: var(--secondary);
-            margin-bottom: 30px;
-            font-size: 20px;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 2px solid #ddd;
-            border-radius: var(--radius);
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .login-box input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .login-box button {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            color: var(--white);
-            border: none;
-            border-radius: var(--radius);
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
-            font-weight: bold;
-        }
-
-        .login-box button:hover {
-            background: #0d1b2a;
-        }
-
-        .main-container {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .tabs-container {
-            display: flex;
-            flex-wrap: wrap;
-            background: var(--primary);
-            padding: 10px;
-            gap: 5px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            align-items: center;
-        }
-
-        .tab {
-            padding: 10px 15px;
-            background: transparent;
-            color: var(--white);
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 13px;
-            transition: background 0.3s;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .tab:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .tab.active {
-            background: var(--secondary);
-            color: var(--white);
-        }
-
-        .tab.hidden-tab {
-            display: none !important;
-        }
-
-        .fullscreen-btn {
-            margin-left: auto;
-            background: var(--secondary);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-            white-space: nowrap;
-            margin-left: 5px;
-            transition: background 0.3s;
-        }
-
-        .logout-btn:hover {
-            background: #c82333;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px;
-            background: var(--white);
-            margin: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .tab-content.hidden-content {
-            display: none !important;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: var(--primary);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-            width: 100%;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-
-        .btn-primary:hover {
-            background: #0d1b2a;
-        }
-
-        .btn-secondary {
-            background: var(--secondary);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: #c1272d;
-        }
-
-        .btn-buscar {
-            background: #6c757d;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-
-        .btn-buscar:hover {
-            background: #5a6268;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-warning {
-            background: var(--accent);
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            margin: 2px;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            margin: 2px;
-        }
-
-        .btn-copy {
-            background: var(--info);
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            margin: 2px;
-            transition: background 0.3s;
-        }
-
-        .btn-copy:hover {
-            background: #138496;
-        }
-
-        .btn-info {
-            background: var(--info);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-
-        .btn-info:hover {
-            background: #138496;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-            font-size: 14px;
-        }
-
-        th {
-            background: var(--primary);
-            color: white;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background: #f5f5f5;
-        }
-
-        .filter-input {
-            margin-bottom: 15px;
-            padding: 10px;
-            width: 300px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .subfolder {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-
-        .subfolder-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 5px;
-        }
-
-        .subfolder h4 {
-            color: var(--primary);
-            font-size: 16px;
-        }
-
-        .saved-images {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .saved-image-item {
-            width: auto;
-            height: auto;
-            max-width: 200px;
-            max-height: 320px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            display: inline-block;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .saved-image-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-            border-color: var(--primary);
-        }
-
-        .saved-image-item.piscando {
-            animation: piscar-borda 1s infinite alternate;
-        }
-
-        @keyframes piscar-borda {
-            0% {
-                box-shadow: 0 0 0 6px #ffa500;
-                border-color: #ffa500;
-            }
-            50% {
-                box-shadow: 0 0 0 6px #0000ff;
-                border-color: #0000ff;
-            }
-            100% {
-                box-shadow: 0 0 0 6px #ffa500;
-                border-color: #ffa500;
-            }
-        }
-
-        .saved-image-item img {
-            width: 100%;
-            height: auto;
-            max-height: 250px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .saved-image-item .delete-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(220, 53, 69, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-            transition: background 0.3s;
-        }
-
-        .saved-image-item .delete-btn:hover {
-            background: rgba(220, 53, 69, 1);
-        }
-
-        .status-btn {
-            display: block;
-            width: 100%;
-            margin-top: 5px;
-            padding: 8px 0;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .status-btn.disponivel {
-            background-color: #28a745;
-            color: white;
-        }
-
-        .status-btn.piscando {
-            background-color: #ffc107;
-            color: black;
-        }
-
-        .status-btn.alugado {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .image-preview-card {
-            width: 150px;
-            height: 100px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-            background: #fafafa;
-            position: relative;
-            display: inline-block;
-        }
-
-        .image-preview-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-        }
-
-        .image-preview-card .no-image {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #666;
-            font-size: 10px;
-            text-align: center;
-            padding: 2px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 9999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            max-width: 90%;
-            max-height: 90%;
-            position: relative;
-        }
-
-        .modal-content img {
-            max-width: 100%;
-            max-height: 90vh;
-            object-fit: contain;
-            border-radius: 8px;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: -40px;
-            right: -40px;
-            background: white;
-            color: #333;
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        .config-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .config-section h3 {
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-
-        .sub-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-
-        .sub-tab {
-            padding: 10px 20px;
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-
-        .sub-tab:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .sub-tab.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .sub-tab-content {
-            display: none;
-        }
-
-        .sub-tab-content.active {
-            display: block;
-        }
-
-        .status-pendente {
-            background-color: #ffc107;
-            color: #000;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .status-pago {
-            background-color: #28a745;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .status-atrasado {
-            background-color: #dc3545;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .permissoes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-
-        .permissao-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px;
-            border-radius: 4px;
-        }
-
-        .permissao-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .permissao-item label {
-            cursor: pointer;
-            font-size: 14px;
-            user-select: none;
-        }
-
-        .permissao-grupo {
-            margin-bottom: 15px;
-        }
-
-        .permissao-grupo h5 {
-            color: var(--primary);
-            margin-bottom: 8px;
-            font-size: 15px;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 4px;
-        }
-
-        .permissoes-veiculos {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 5px;
-        }
-
-        .contrato-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 99999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .contrato-modal.active {
-            display: flex;
-        }
-
-        .contrato-modal-content {
-            background: white;
-            width: 95%;
-            max-width: 1200px;
-            height: 90vh;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .contrato-modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 20px;
-            background: var(--primary);
-            color: white;
-            border-radius: 10px 10px 0 0;
-        }
-
-        .contrato-modal-header h3 {
-            font-size: 18px;
-        }
-
-        .contrato-modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            font-weight: bold;
-            padding: 0 10px;
-        }
-
-        .contrato-modal-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .contrato-sub-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-            flex-wrap: wrap;
-        }
-
-        .contrato-sub-tab {
-            padding: 10px 20px;
-            background: #f0f0f0;
-            color: #333;
-            border: 2px solid #ddd;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .contrato-sub-tab:hover {
-            background: #e0e0e0;
-        }
-
-        .contrato-sub-tab.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .contrato-sub-content {
-            display: none;
-        }
-
-        .contrato-sub-content.active {
-            display: block;
-        }
-
-        .contrato-form-group {
-            margin-bottom: 12px;
-        }
-
-        .contrato-form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 4px;
-            font-size: 13px;
-            color: #555;
-        }
-
-        .contrato-form-group input,
-        .contrato-form-group textarea {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 13px;
-            font-family: inherit;
-        }
-
-        .contrato-form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .contrato-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .selfie-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 999999;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .selfie-modal.active {
-            display: flex;
-        }
-
-        .selfie-container {
-            position: relative;
-            width: 100%;
-            max-width: 640px;
-            background: #000;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .selfie-video {
-            width: 100%;
-            height: auto;
-            display: block;
-            transform: scaleX(-1);
-        }
-
-        .selfie-canvas {
-            display: none;
-        }
-
-        .selfie-controls {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .selfie-btn-capture {
-            background: var(--success);
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        .selfie-btn-capture:hover {
-            background: #218838;
-            transform: scale(1.05);
-        }
-
-        .selfie-btn-cancel {
-            background: var(--danger);
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-
-        .selfie-btn-cancel:hover {
-            background: #c82333;
-        }
-
-        .selfie-preview-container {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 120px;
-            height: 90px;
-            border: 2px solid white;
-            border-radius: 8px;
-            overflow: hidden;
-            display: none;
-        }
-
-        .selfie-preview-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-        }
-
-        .selfie-title {
-            color: white;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .selfie-instructions {
-            color: #ccc;
-            font-size: 14px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .selfie-photo-preview {
-            margin-top: 20px;
-            display: none;
-            text-align: center;
-        }
-
-        .selfie-photo-preview img {
-            max-width: 300px;
-            max-height: 300px;
-            border-radius: 10px;
-            border: 3px solid white;
-        }
-
-        .selfie-photo-preview p {
-            color: white;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .print-area,
-            .print-area * {
-                visibility: visible;
-            }
-            .print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 20px;
-                background: white;
-            }
-            .no-print {
-                display: none !important;
-            }
-        }
-
-        .print-area {
-            display: none;
-        }
-
-        .print-area.print-visible {
-            display: block;
-            visibility: visible;
-        }
-
-        .selfie-thumbnail {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--primary);
-            cursor: pointer;
-            transition: transform 0.3s;
-            margin-right: 5px;
-        }
-
-        .selfie-thumbnail:hover {
-            transform: scale(1.2);
-        }
-
-        .pendente-item {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .pendente-item input[type="text"],
-        .pendente-item input[type="date"] {
-            flex: 1;
-        }
-        .btn-pdf {
-            background: #6c757d;
-            color: white;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-pdf:hover {
-            background: #5a6268;
-        }
-
-        .despesas-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 99999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .despesas-modal.active {
-            display: flex;
-        }
-
-        .despesas-modal-content {
-            background: white;
-            width: 90%;
-            max-width: 800px;
-            border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .despesas-modal-header {
-            background: var(--primary);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .despesas-modal-header h3 {
-            margin: 0;
-        }
-
-        .despesas-modal-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            font-weight: bold;
-            padding: 0 10px;
-        }
-
-        .despesas-modal-body {
-            padding: 20px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-
-        /* ===== VISTORIA ===== */
-        .vistoria-sub-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-
-        .vistoria-sub-tab {
-            padding: 10px 20px;
-            background: #f0f0f0;
-            color: #333;
-            border: 2px solid #ddd;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .vistoria-sub-tab:hover {
-            background: #e0e0e0;
-        }
-
-        .vistoria-sub-tab.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .vistoria-foto-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .vistoria-foto-item {
-            position: relative;
-            width: 150px;
-            height: 100px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .vistoria-foto-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .vistoria-foto-item:hover {
-            transform: scale(1.05);
-            border-color: var(--primary);
-        }
-
-        .vistoria-foto-item .delete-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(220, 53, 69, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2;
-            transition: background 0.3s;
-        }
-
-        .vistoria-foto-item .delete-btn:hover {
-            background: rgba(220, 53, 69, 1);
-        }
-
-        .vistoria-camera-btn {
-            background: var(--primary);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
-            margin-right: 10px;
-            transition: background 0.3s;
-        }
-
-        .vistoria-camera-btn:hover {
-            background: #0d1b2a;
-        }
+        /* CSS completo mantido (sem alterações) */
+        :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #1a3c6e 0%, #0d1b2a 100%); }
+        .login-box { background: var(--white); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
+        .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
+        .login-box h2 { color: var(--secondary); margin-bottom: 30px; font-size: 20px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: var(--radius); font-size: 16px; transition: border-color 0.3s; }
+        .login-box input:focus { outline: none; border-color: var(--primary); }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; cursor: pointer; transition: background 0.3s; font-weight: bold; }
+        .login-box button:hover { background: #0d1b2a; }
+        .main-container { display: none; min-height: 100vh; }
+        .tabs-container { display: flex; flex-wrap: wrap; background: var(--primary); padding: 10px; gap: 5px; position: sticky; top: 0; z-index: 100; align-items: center; }
+        .tab { padding: 10px 15px; background: transparent; color: var(--white); border: none; cursor: pointer; border-radius: 5px; font-size: 13px; transition: background 0.3s; font-weight: 500; white-space: nowrap; }
+        .tab:hover { background: rgba(255,255,255,0.2); }
+        .tab.active { background: var(--secondary); color: var(--white); }
+        .tab.hidden-tab { display: none !important; }
+        .fullscreen-btn { margin-left: auto; background: var(--secondary); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; }
+        .logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; white-space: nowrap; margin-left: 5px; transition: background 0.3s; }
+        .logout-btn:hover { background: #c82333; }
+        .tab-content { display: none; padding: 20px; background: var(--white); margin: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .tab-content.active { display: block; }
+        .tab-content.hidden-content { display: none !important; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; position: relative; }
+        .form-group label { font-weight: 600; margin-bottom: 5px; font-size: 14px; color: var(--primary); }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; transition: border-color 0.3s; width: 100%; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+        .btn-primary { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-primary:hover { background: #0d1b2a; }
+        .btn-secondary { background: var(--secondary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-secondary:hover { background: #c1272d; }
+        .btn-buscar { background: #6c757d; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; display: inline-block; }
+        .btn-buscar:hover { background: #5a6268; }
+        .btn-success { background: var(--success); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: var(--accent); color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; }
+        .btn-danger { background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; }
+        .btn-copy { background: var(--info); color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 2px; transition: background 0.3s; }
+        .btn-copy:hover { background: #138496; }
+        .btn-info { background: var(--info); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; margin-right: 10px; margin-bottom: 10px; }
+        .btn-info:hover { background: #138496; }
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background: var(--primary); color: white; font-weight: 600; }
+        tr:hover { background: #f5f5f5; }
+        .filter-input { margin-bottom: 15px; padding: 10px; width: 300px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .subfolder { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 15px 0; }
+        .subfolder-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+        .subfolder h4 { color: var(--primary); font-size: 16px; }
+        .saved-images { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
+        .saved-image-item { width: auto; height: auto; max-width: 200px; max-height: 320px; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .saved-image-item:hover { transform: scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.2); border-color: var(--primary); }
+        .saved-image-item.piscando { animation: piscar-borda 1s infinite alternate; }
+        @keyframes piscar-borda { 0% { box-shadow: 0 0 0 6px #ffa500; border-color: #ffa500; } 50% { box-shadow: 0 0 0 6px #0000ff; border-color: #0000ff; } 100% { box-shadow: 0 0 0 6px #ffa500; border-color: #ffa500; } }
+        .saved-image-item img { width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block; }
+        .saved-image-item .delete-btn { position: absolute; top: 8px; right: 8px; background: rgba(220,53,69,0.9); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 2; transition: background 0.3s; }
+        .saved-image-item .delete-btn:hover { background: rgba(220,53,69,1); }
+        .status-btn { display: block; width: 100%; margin-top: 5px; padding: 8px 0; font-size: 14px; font-weight: bold; text-align: center; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s; }
+        .status-btn.disponivel { background-color: #28a745; color: white; }
+        .status-btn.piscando { background-color: #ffc107; color: black; }
+        .status-btn.alugado { background-color: #dc3545; color: white; }
+        .image-preview-card { width: 150px; height: 100px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #fafafa; position: relative; display: inline-block; }
+        .image-preview-card img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .image-preview-card .no-image { display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 10px; text-align: center; padding: 2px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; cursor: pointer; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { max-width: 90%; max-height: 90%; position: relative; }
+        .modal-content img { max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 8px; }
+        .modal-close { position: absolute; top: -40px; right: -40px; background: white; color: #333; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .config-section { margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid var(--primary); }
+        .config-section h3 { color: var(--primary); margin-bottom: 15px; }
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .sub-tab { padding: 10px 20px; background: transparent; color: var(--primary); border: 2px solid var(--primary); cursor: pointer; border-radius: 5px; font-size: 14px; transition: all 0.3s; font-weight: 600; }
+        .sub-tab:hover { background: var(--primary); color: white; }
+        .sub-tab.active { background: var(--primary); color: white; }
+        .sub-tab-content { display: none; }
+        .sub-tab-content.active { display: block; }
+        .status-pendente { background-color: #ffc107; color: #000; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .status-pago { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .status-atrasado { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+        .permissoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd; }
+        .permissao-item { display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 4px; }
+        .permissao-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .permissao-item label { cursor: pointer; font-size: 14px; user-select: none; }
+        .permissao-grupo { margin-bottom: 15px; }
+        .permissao-grupo h5 { color: var(--primary); margin-bottom: 8px; font-size: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; }
+        .permissoes-veiculos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .contrato-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 99999; display: none; justify-content: center; align-items: center; }
+        .contrato-modal.active { display: flex; }
+        .contrato-modal-content { background: white; width: 95%; max-width: 1200px; height: 90vh; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .contrato-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: var(--primary); color: white; border-radius: 10px 10px 0 0; }
+        .contrato-modal-header h3 { font-size: 18px; }
+        .contrato-modal-close { background: none; border: none; color: white; font-size: 28px; cursor: pointer; font-weight: bold; padding: 0 10px; }
+        .contrato-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+        .contrato-sub-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
+        .contrato-sub-tab { padding: 10px 20px; background: #f0f0f0; color: #333; border: 2px solid #ddd; cursor: pointer; border-radius: 5px; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .contrato-sub-tab:hover { background: #e0e0e0; }
+        .contrato-sub-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .contrato-sub-content { display: none; }
+        .contrato-sub-content.active { display: block; }
+        .contrato-form-group { margin-bottom: 12px; }
+        .contrato-form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; color: #555; }
+        .contrato-form-group input, .contrato-form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .contrato-form-group textarea { min-height: 80px; resize: vertical; }
+        .contrato-actions { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .selfie-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 999999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .selfie-modal.active { display: flex; }
+        .selfie-container { position: relative; width: 100%; max-width: 640px; background: #000; border-radius: 10px; overflow: hidden; }
+        .selfie-video { width: 100%; height: auto; display: block; transform: scaleX(-1); }
+        .selfie-canvas { display: none; }
+        .selfie-controls { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+        .selfie-btn-capture { background: var(--success); color: white; padding: 15px 40px; border: none; border-radius: 50px; cursor: pointer; font-size: 18px; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 15px rgba(40,167,69,0.4); }
+        .selfie-btn-capture:hover { background: #218838; transform: scale(1.05); }
+        .selfie-btn-cancel { background: var(--danger); color: white; padding: 15px 40px; border: none; border-radius: 50px; cursor: pointer; font-size: 18px; font-weight: bold; transition: all 0.3s; }
+        .selfie-btn-cancel:hover { background: #c82333; }
+        .selfie-preview-container { position: absolute; top: 10px; right: 10px; width: 120px; height: 90px; border: 2px solid white; border-radius: 8px; overflow: hidden; display: none; }
+        .selfie-preview-container img { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .selfie-title { color: white; font-size: 24px; margin-bottom: 20px; text-align: center; }
+        .selfie-instructions { color: #ccc; font-size: 14px; margin-bottom: 15px; text-align: center; }
+        .selfie-photo-preview { margin-top: 20px; display: none; text-align: center; }
+        .selfie-photo-preview img { max-width: 300px; max-height: 300px; border-radius: 10px; border: 3px solid white; }
+        .selfie-photo-preview p { color: white; margin-top: 10px; font-weight: bold; }
+        @media print { body * { visibility: hidden; } .print-area, .print-area * { visibility: visible; } .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; background: white; } .no-print { display: none !important; } }
+        .print-area { display: none; }
+        .print-area.print-visible { display: block; visibility: visible; }
+        .selfie-thumbnail { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); cursor: pointer; transition: transform 0.3s; margin-right: 5px; }
+        .selfie-thumbnail:hover { transform: scale(1.2); }
+        .pendente-item { display: flex; gap: 10px; margin-bottom: 10px; }
+        .pendente-item input[type="text"], .pendente-item input[type="date"] { flex: 1; }
+        .btn-pdf { background: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-pdf:hover { background: #5a6268; }
+        .despesas-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 99999; display: none; justify-content: center; align-items: center; }
+        .despesas-modal.active { display: flex; }
+        .despesas-modal-content { background: white; width: 90%; max-width: 800px; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; }
+        .despesas-modal-header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .despesas-modal-header h3 { margin: 0; }
+        .despesas-modal-close { background: none; border: none; color: white; font-size: 28px; cursor: pointer; font-weight: bold; padding: 0 10px; }
+        .despesas-modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+        .vistoria-sub-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .vistoria-sub-tab { padding: 10px 20px; background: #f0f0f0; color: #333; border: 2px solid #ddd; cursor: pointer; border-radius: 5px; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .vistoria-sub-tab:hover { background: #e0e0e0; }
+        .vistoria-sub-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .vistoria-foto-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .vistoria-foto-item { position: relative; width: 150px; height: 100px; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+        .vistoria-foto-item img { width: 100%; height: 100%; object-fit: cover; }
+        .vistoria-foto-item:hover { transform: scale(1.05); border-color: var(--primary); }
+        .vistoria-foto-item .delete-btn { position: absolute; top: 5px; right: 5px; background: rgba(220,53,69,0.9); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; z-index: 2; transition: background 0.3s; }
+        .vistoria-foto-item .delete-btn:hover { background: rgba(220,53,69,1); }
+        .vistoria-camera-btn { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; margin-right: 10px; transition: background 0.3s; }
+        .vistoria-camera-btn:hover { background: #0d1b2a; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -1380,7 +326,7 @@
             </div>
         </div>
 
-        <!-- ABA: LOCAÇÕES ENCERRADAS (NOVA) -->
+        <!-- ABA: LOCAÇÕES ENCERRADAS -->
         <div class="tab-content" id="locEncerrada">
             <h2>🏁 Locações Encerradas</h2>
             <input type="text" class="filter-input" placeholder="🔍 Filtrar locações encerradas..." id="filterLocEncerrada">
@@ -1552,7 +498,7 @@
             </div>
         </div>
 
-        <!-- ABA: DOCUMENTOS (antes COMPROVANTES) -->
+        <!-- ABA: DOCUMENTOS -->
         <div class="tab-content" id="comprovantes">
             <h2>📄 Documentos</h2>
             <div class="sub-tabs">
@@ -1660,7 +606,7 @@
             </div>
         </div>
 
-        <!-- ABA: COMPROVANTE (antes DOC) - COM PREENCHIMENTO AUTOMÁTICO -->
+        <!-- ABA: COMPROVANTE -->
         <div class="tab-content" id="doc">
             <h2>📁 Comprovante</h2>
             <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc">
@@ -1801,13 +747,12 @@
             <div class="table-container">
                 <table id="tabelaAuditoria">
                     <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>IP</th></tr></thead>
-                    <tbody>
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- NOVA ABA: PENDENTE -->
+        <!-- ABA: PENDENTE -->
         <div class="tab-content" id="pendente">
             <h2>⏳ Pendências</h2>
             <input type="text" class="filter-input" placeholder="🔍 Filtrar pendências..." id="filterPendentes">
@@ -1864,7 +809,7 @@
             </div>
         </div>
 
-        <!-- NOVA ABA: HISTÓRICO -->
+        <!-- ABA: HISTÓRICO -->
         <div class="tab-content" id="historico">
             <h2>📜 Histórico de Lançamentos (Compras & Mecânico)</h2>
             <input type="text" class="filter-input" placeholder="🔍 Pesquisar por texto ou placa..." id="filterHistorico">
@@ -2097,7 +1042,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const firestoreDB = firebase.firestore();
-        const DB_DOC_REF = firestoreDB.collection('sistema').doc('dados'); // Coleção "sistema", documento "dados"
+        const DB_DOC_REF = firestoreDB.collection('sistema').doc('dados');
 
         // =============================================
         // VARIÁVEL GLOBAL DO BANCO (carregada do Firestore)
@@ -2142,6 +1087,20 @@
                     garagem: { subpasta: 'Fotos da Garagem', fotos: [] },
                     sos: { subpasta: 'Imagens SOS', fotos: [] },
                     comprovantes: { subpasta: 'Comprovantes', fotos: [] }
+                },
+                config: {
+                    empresa: 'PAIZÃO RENT A CAR',
+                    cnpj: '',
+                    telefone: '',
+                    email: '',
+                    endereco: '',
+                    juros: '',
+                    multa: '',
+                    minAluguel: '',
+                    prazoMax: '',
+                    senhaMin: '',
+                    sessao: '',
+                    backup: 'sim'
                 }
             };
         }
@@ -2151,14 +1110,18 @@
         // =============================================
         async function carregarDadosFirestore() {
             try {
+                // Desabilita o botão de login enquanto carrega
+                document.getElementById('loginButton').disabled = true;
                 const doc = await DB_DOC_REF.get();
                 if (doc.exists) {
                     db = doc.data();
+                    // Garantir campos essenciais
                     if (!db.pendentes) db.pendentes = [];
                     if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
                     if (!db.historico) db.historico = [];
                     if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
                     if (!db.imagens) db.imagens = { garagem:{subpasta:'Fotos da Garagem', fotos:[]}, sos:{subpasta:'Imagens SOS', fotos:[]}, comprovantes:{subpasta:'Comprovantes', fotos:[]} };
+                    if (!db.config) db.config = criarDBPadrao().config;
                     if (db.locacoes) db.locacoes.forEach(l => { if (!l.vistoria) l.vistoria = []; });
                     db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
                     if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
@@ -2175,6 +1138,7 @@
                     await DB_DOC_REF.set(db);
                 }
                 dbCarregado = true;
+                document.getElementById('loginButton').disabled = false;
                 inicializarSistema();
             } catch (error) {
                 console.error('Erro ao carregar dados do Firebase:', error);
@@ -2217,7 +1181,6 @@
         let vistoriaStream = null;
         let vistoriaDataUrl = null;
         let vistoriaLocacaoIndex = null;
-        let vistoriaDestino = null;
 
         // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
@@ -2624,6 +1587,7 @@
             atualizarGaleriaSOS();
             atualizarGaleriaComprovantes();
             carregarDadosContratos();
+            carregarConfiguracoes();
             limparSelfieCliente();
             limparSelfieUsuario();
             atualizarPlacasManutencao();
@@ -2687,7 +1651,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR MECÂNICO - ADICIONADA PARA CORRIGIR O BUG
+        // FUNÇÃO SALVAR MECÂNICO
         // =============================================
         function salvarMecanico() {
             const data = document.getElementById('mecData').value;
@@ -2746,7 +1710,7 @@
         }
 
         // =============================================
-        // DEMAIS FUNÇÕES (mantidas do original)
+        // DEMAIS FUNÇÕES
         // =============================================
 
         function gerarPermissoesUI() {
@@ -2920,12 +1884,6 @@
             return data;
         }
 
-        function formatarDataParaInput(data) {
-            if (!data) return '';
-            const d = new Date(data);
-            return d.toISOString().split('T')[0];
-        }
-
         function copiarPix(index) {
             const banco = db.bancos[index];
             if (banco && banco.pix) {
@@ -2949,6 +1907,11 @@
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim().toUpperCase();
             const pass = document.getElementById('loginPassword').value;
+            
+            if (!dbCarregado) {
+                alert('Sistema ainda carregando... aguarde.');
+                return;
+            }
             
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
@@ -3226,7 +2189,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR CLIENTE - CORRIGIDA
+        // FUNÇÃO SALVAR CLIENTE
         // =============================================
         function salvarCliente() {
             const nome = document.getElementById('cliNome').value.trim();
@@ -3363,10 +2326,6 @@
             atualizarTabelaVeiculos();
             atualizarPermissoesVeiculos();
             atualizarCombosLocacao();
-            if (usuarioLogado && usuarioLogado.tipo !== 'ADM') {
-                const check = document.getElementById(`perm_veiculo_${veiculo.placa}`);
-                if (check) check.checked = false;
-            }
             registrarAuditoria('Cadastro', `Novo veículo: ${veiculo.fabricante} - ${veiculo.placa}`);
             salvarDB();
             alert('Veículo salvo!');
@@ -3376,7 +2335,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR LOCAÇÃO - CORRIGIDA
+        // FUNÇÃO SALVAR LOCAÇÃO
         // =============================================
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
@@ -3437,7 +2396,7 @@
         }
 
         // =============================================
-        // NOVA FUNÇÃO: CRIA APENAS O PRIMEIRO ALUGUEL
+        // FUNÇÃO PARA CRIAR PRIMEIRO ALUGUEL
         // =============================================
         function criarAlugueisParaLocacao(locacao) {
             db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
@@ -3505,7 +2464,7 @@
         }
 
         // =============================================
-        // FUNÇÃO MARCAR COMO PAGO (gera o próximo vencimento apenas quando pago)
+        // FUNÇÃO MARCAR COMO PAGO
         // =============================================
         function marcarComoPago(index) {
             const aluguel = db.alugueis[index];
@@ -3569,15 +2528,16 @@
                     if (caucaoNum > 0) {
                         if (aluguel.tipo === 'mensal') {
                             if (pagCaucao === 'avista') {
-                                // nenhum acréscimo
+                                // Sem acréscimo
                             } else if (pagCaucao === 'parcelado') {
                                 valorAluguelFinal += (caucaoNum / 6);
                             } else if (pagCaucao === 'entrada') {
-                                valorAluguelFinal += ((caucaoNum - caucaoPagoNum) / 6);
+                                // Após entrada, restante dividido em 5 meses
+                                valorAluguelFinal += ((caucaoNum - caucaoPagoNum) / 5);
                             }
                         } else {
                             if (pagCaucao === 'avista') {
-                                // nenhum acréscimo
+                                // Sem acréscimo
                             } else if (pagCaucao === 'parcelado') {
                                 if (proximaParcela <= 10) {
                                     valorAluguelFinal += (caucaoNum / 10);
@@ -3683,7 +2643,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR MANUTENÇÃO (SEM DATA, APENAS KM)
+        // FUNÇÃO SALVAR MANUTENÇÃO
         // =============================================
         function salvarManutencao() {
             const veiculo = document.getElementById('manVeiculo').value;
@@ -3827,13 +2787,11 @@
                 } else {
                     textoExtraido = await extrairTextoImagem(file);
                 }
+                preencherCamposComprovante(textoExtraido);
             } catch (erro) {
                 console.error('Erro ao extrair texto:', erro);
                 alert('Não foi possível extrair o texto do arquivo. Preencha os campos manualmente.');
-                return;
             }
-
-            preencherCamposComprovante(textoExtraido);
         }
 
         async function extrairTextoPDF(file) {
@@ -4011,7 +2969,6 @@
                 row.innerHTML = `<td>${v.fabricante}</td><td>${v.placa}</td><td>${v.cor}</td><td>${v.anoFabr}/${v.anoModel}</td><td>${v.aluguel}</td>
                     <td><button class="btn-warning" onclick="editarVeiculo(${index})">✏️</button><button class="btn-danger" onclick="excluirVeiculo(${index})">🗑️</button></td>`;
             });
-            if (usuarioLogado) aplicarPermissoesBotoesDinamicos();
         }
 
         function atualizarTabelaClientes() {
@@ -4039,7 +2996,7 @@
         }
 
         // =============================================
-        // FUNÇÃO ATUALIZAR TABELA DE LOCAÇÕES ATIVAS - MODIFICADA
+        // FUNÇÃO ATUALIZAR TABELA DE LOCAÇÕES ATIVAS
         // =============================================
         function atualizarTabelaLocacoes() {
             const tbody = document.querySelector('#tabelaLocacoes tbody');
@@ -4211,7 +3168,7 @@
         }
 
         // =============================================
-        // FUNÇÕES DE TABELAS E ATUALIZAÇÕES (continuando)
+        // FUNÇÕES DE TABELAS (continuação)
         // =============================================
         function atualizarTabelaManutencao() {
             const tbody = document.querySelector('#tabelaManutencao tbody');
@@ -4728,7 +3685,7 @@
         }
 
         // =============================================
-        // FUNÇÕES DE COMPRAS (COM HISTÓRICO)
+        // FUNÇÕES DE COMPRAS
         // =============================================
         function salvarCompra() {
             const data = document.getElementById('compData').value;
@@ -4852,29 +3809,62 @@
         }
 
         function salvarConfiguracao() {
+            const config = {
+                empresa: document.getElementById('configEmpresa').value,
+                cnpj: document.getElementById('configCnpj').value,
+                telefone: document.getElementById('configTelefone').value,
+                email: document.getElementById('configEmail').value,
+                endereco: document.getElementById('configEndereco').value,
+                juros: document.getElementById('configJuros').value,
+                multa: document.getElementById('configMulta').value,
+                minAluguel: document.getElementById('configMinAluguel').value,
+                prazoMax: document.getElementById('configPrazoMax').value,
+                senhaMin: document.getElementById('configSenhaMin').value,
+                sessao: document.getElementById('configSessao').value,
+                backup: document.getElementById('configBackup').value
+            };
+            db.config = config;
+            salvarDB();
             alert('Configurações salvas!');
             registrarAuditoria('Cadastro', 'Config salva');
-            salvarDB();
         }
 
         function restaurarPadroes() {
             if (confirm('Restaurar padrões?')) {
-                document.getElementById('configEmpresa').value = 'PAIZÃO RENT A CAR';
-                document.getElementById('configCnpj').value = '';
-                document.getElementById('configTelefone').value = '';
-                document.getElementById('configEmail').value = '';
-                document.getElementById('configEndereco').value = '';
-                document.getElementById('configJuros').value = '';
-                document.getElementById('configMulta').value = '';
-                document.getElementById('configMinAluguel').value = '';
-                document.getElementById('configPrazoMax').value = '';
-                document.getElementById('configSenhaMin').value = '';
-                document.getElementById('configSessao').value = '';
-                document.getElementById('configBackup').value = 'sim';
-                registrarAuditoria('Edição', 'Config restaurada');
+                const padrao = criarDBPadrao().config;
+                document.getElementById('configEmpresa').value = padrao.empresa;
+                document.getElementById('configCnpj').value = padrao.cnpj;
+                document.getElementById('configTelefone').value = padrao.telefone;
+                document.getElementById('configEmail').value = padrao.email;
+                document.getElementById('configEndereco').value = padrao.endereco;
+                document.getElementById('configJuros').value = padrao.juros;
+                document.getElementById('configMulta').value = padrao.multa;
+                document.getElementById('configMinAluguel').value = padrao.minAluguel;
+                document.getElementById('configPrazoMax').value = padrao.prazoMax;
+                document.getElementById('configSenhaMin').value = padrao.senhaMin;
+                document.getElementById('configSessao').value = padrao.sessao;
+                document.getElementById('configBackup').value = padrao.backup;
+                db.config = padrao;
                 salvarDB();
+                registrarAuditoria('Edição', 'Config restaurada');
                 alert('Configurações restauradas!');
             }
+        }
+
+        function carregarConfiguracoes() {
+            if (!db.config) return;
+            document.getElementById('configEmpresa').value = db.config.empresa || 'PAIZÃO RENT A CAR';
+            document.getElementById('configCnpj').value = db.config.cnpj || '';
+            document.getElementById('configTelefone').value = db.config.telefone || '';
+            document.getElementById('configEmail').value = db.config.email || '';
+            document.getElementById('configEndereco').value = db.config.endereco || '';
+            document.getElementById('configJuros').value = db.config.juros || '';
+            document.getElementById('configMulta').value = db.config.multa || '';
+            document.getElementById('configMinAluguel').value = db.config.minAluguel || '';
+            document.getElementById('configPrazoMax').value = db.config.prazoMax || '';
+            document.getElementById('configSenhaMin').value = db.config.senhaMin || '';
+            document.getElementById('configSessao').value = db.config.sessao || '';
+            document.getElementById('configBackup').value = db.config.backup || 'sim';
         }
 
         function registrarAuditoria(acao, descricao) {
@@ -5163,16 +4153,6 @@
             alert('🚨 Multas - Em desenvolvimento');
             registrarAuditoria('Cadastro', 'Acesso Multas');
             salvarDB();
-        }
-
-        function aplicarPermissoesBotoesDinamicos() {
-            if (!usuarioLogado) return;
-            const permissoes = usuarioLogado.permissoes;
-            document.querySelectorAll('[data-permissao]').forEach(btn => {
-                const perm = btn.dataset.permissao;
-                if (!permissoes.botoes[perm]) btn.style.display = 'none';
-                else btn.style.display = '';
-            });
         }
 
         // =============================================
