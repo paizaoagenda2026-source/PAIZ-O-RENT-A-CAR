@@ -1126,7 +1126,6 @@
                             canvas.height = height;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, width, height);
-                            // Reduz qualidade se ainda estiver grande
                             let q = qualidade;
                             let dataUrl = canvas.toDataURL('image/jpeg', q);
                             while (dataUrl.length > 100000 && q > 0.1) {
@@ -1141,7 +1140,6 @@
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 } else {
-                    // Para PDFs, apenas converte para base64 sem compressão
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         resolve(e.target.result);
@@ -1157,7 +1155,7 @@
             return new Promise((resolve) => {
                 if (!dataUrl) return resolve(null);
                 if (dataUrl.startsWith('data:application/pdf') || dataUrl.startsWith('data:application/octet-stream') || dataUrl.startsWith('data:image/svg')) {
-                    return resolve(dataUrl); // PDFs e SVGs não são comprimidos
+                    return resolve(dataUrl);
                 }
                 const img = new Image();
                 img.onload = () => {
@@ -1190,7 +1188,6 @@
         // =============================================
         async function comprimirDB() {
             console.log("Comprimindo banco de dados para evitar erro de tamanho...");
-            // Clientes
             if (db.clientes) {
                 for (let i = 0; i < db.clientes.length; i++) {
                     if (db.clientes[i].selfie) {
@@ -1198,7 +1195,6 @@
                     }
                 }
             }
-            // Usuários
             if (db.usuarios) {
                 for (let i = 0; i < db.usuarios.length; i++) {
                     if (db.usuarios[i].selfie) {
@@ -1206,7 +1202,6 @@
                     }
                 }
             }
-            // Imagens - Garagem
             if (db.imagens && db.imagens.garagem && db.imagens.garagem.fotos) {
                 for (let i = 0; i < db.imagens.garagem.fotos.length; i++) {
                     if (db.imagens.garagem.fotos[i].data) {
@@ -1214,7 +1209,6 @@
                     }
                 }
             }
-            // Imagens - SOS
             if (db.imagens && db.imagens.sos && db.imagens.sos.fotos) {
                 for (let i = 0; i < db.imagens.sos.fotos.length; i++) {
                     if (db.imagens.sos.fotos[i].data) {
@@ -1222,7 +1216,6 @@
                     }
                 }
             }
-            // Imagens - Comprovantes
             if (db.imagens && db.imagens.comprovantes && db.imagens.comprovantes.fotos) {
                 for (let i = 0; i < db.imagens.comprovantes.fotos.length; i++) {
                     if (db.imagens.comprovantes.fotos[i].data) {
@@ -1230,7 +1223,6 @@
                     }
                 }
             }
-            // Documentos
             if (db.documentos) {
                 for (let i = 0; i < db.documentos.length; i++) {
                     if (db.documentos[i].imagem) {
@@ -1238,7 +1230,6 @@
                     }
                 }
             }
-            // Mecânico
             if (db.mecanico) {
                 for (let i = 0; i < db.mecanico.length; i++) {
                     if (db.mecanico[i].pdfData) {
@@ -1246,7 +1237,6 @@
                     }
                 }
             }
-            // Compras
             if (db.compras) {
                 for (let i = 0; i < db.compras.length; i++) {
                     if (db.compras[i].arquivo) {
@@ -1254,7 +1244,6 @@
                     }
                 }
             }
-            // Pendentes
             if (db.pendentes) {
                 for (let i = 0; i < db.pendentes.length; i++) {
                     if (db.pendentes[i].docDataUrl) {
@@ -1262,7 +1251,6 @@
                     }
                 }
             }
-            // Histórico
             if (db.historico) {
                 for (let i = 0; i < db.historico.length; i++) {
                     if (db.historico[i].arquivo) {
@@ -1270,7 +1258,6 @@
                     }
                 }
             }
-            // Locações - Vistorias
             if (db.locacoes) {
                 for (let i = 0; i < db.locacoes.length; i++) {
                     if (db.locacoes[i].vistoria) {
@@ -1288,12 +1275,10 @@
         // =============================================
         async function carregarDadosFirestore() {
             try {
-                // Desabilita o botão de login enquanto carrega
                 document.getElementById('loginButton').disabled = true;
                 const doc = await DB_DOC_REF.get();
                 if (doc.exists) {
                     db = doc.data();
-                    // Garantir campos essenciais
                     if (!db.pendentes) db.pendentes = [];
                     if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
                     if (!db.historico) db.historico = [];
@@ -1330,7 +1315,6 @@
         async function salvarDB() {
             try {
                 if (!db) return;
-                // Verifica se o tamanho excede 1MB antes de salvar
                 const json = JSON.stringify(db);
                 const tamanho = new Blob([json]).size;
                 if (tamanho > 1048576) {
@@ -1408,7 +1392,6 @@
         // =============================================
         // SISTEMA DE PERMISSÕES
         // =============================================
-
         const todasAbas = [
             { id: 'veiculos', label: '🚗 Veículos' },
             { id: 'clientes', label: '👤 Clientes' },
@@ -1530,14 +1513,10 @@
                     auditoria: false, pendente: false, historico: true, vistoria: true
                 },
                 botoes: {
-                    garagem_salvar: true,
-                    sos_salvar: true,
-                    sos_baixar: true,
                     banco_copiar: true,
                     doc_salvar: true,
                     doc_limpar: true,
-                    doc_selecionar: true,
-                    vistoria_camera: true
+                    doc_selecionar: true
                 },
                 veiculos: {}
             },
@@ -1642,7 +1621,6 @@
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                // Comprime a selfie
                 selfieDataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 
                 document.getElementById('selfiePhotoResult').src = selfieDataUrl;
@@ -1676,7 +1654,7 @@
                 selfieClienteTemp = selfieDataUrl;
                 mostrarPreviewSelfieCliente();
                 fecharModalSelfie();
-                salvarCliente(); // Salva o cliente imediatamente
+                salvarCliente();
             }
         }
 
@@ -1727,7 +1705,6 @@
         }
 
         function inicializarSistema() {
-            // Garantir que o usuário administrador padrão exista sempre
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
                     nome: 'SERGIO',
@@ -1922,7 +1899,6 @@
         // =============================================
         // DEMAIS FUNÇÕES
         // =============================================
-
         function gerarPermissoesUI() {
             const container = document.getElementById('permissoesContainer');
             container.innerHTML = '';
@@ -2399,7 +2375,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR CLIENTE (com selfie comprimida)
+        // FUNÇÃO SALVAR CLIENTE (sem criação de usuário automática)
         // =============================================
         async function salvarCliente() {
             const nome = document.getElementById('cliNome').value.trim();
@@ -2426,10 +2402,8 @@
                 return;
             }
 
-            // Comprime a selfie se existir
             let selfieFinal = selfieClienteTemp;
             if (selfieFinal && selfieFinal.startsWith('data:image') && selfieFinal.length > 200000) {
-                // Já comprimida na captura, mas se necessário comprimir mais
                 const img = new Image();
                 img.src = selfieFinal;
                 await new Promise(resolve => { img.onload = resolve; });
@@ -2464,8 +2438,6 @@
 
             db.clientes.push(cliente);
             
-            criarUsuarioDoCliente(cliente);
-            
             atualizarTabelaClientes();
             atualizarCombosLocacao();
             
@@ -2473,46 +2445,15 @@
             
             salvarDB();
             
-            alert('Cliente salvo com sucesso! Usuário criado automaticamente.');
+            alert('Cliente salvo com sucesso!');
             
             limparCamposCliente();
             limparSelfieCliente();
         }
 
-        function criarUsuarioDoCliente(cliente) {
-            const nomeCliente = cliente.nome.trim();
-            if (!nomeCliente) return;
-
-            const primeiroNome = nomeCliente.split(/\s+/)[0].toUpperCase();
-            const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
-            let senha = telefoneLimpo;
-            if (telefoneLimpo.length >= 10) {
-                senha = telefoneLimpo.substring(2);
-            }
-            if (!senha) {
-                senha = '';
-            }
-
-            const usuarioExistente = db.usuarios.find(u => u.nome === primeiroNome);
-            if (usuarioExistente) return;
-
-            const novoUsuario = {
-                nome: primeiroNome,
-                senha: senha,
-                tipo: 'MOTORISTA',
-                permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
-                selfie: cliente.selfie || null
-            };
-
-            db.usuarios.push(novoUsuario);
-            atualizarTabelaUsuario();
-            registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
-        }
-
         // =============================================
         // DEMAIS FUNÇÕES DE SALVAMENTO
         // =============================================
-
         function salvarVeiculo() {
             const fabricante = document.getElementById('veicFabricante').value;
             const cor = document.getElementById('veicCor').value;
@@ -2566,7 +2507,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR LOCAÇÃO (modificada para permissões de veículo)
+        // FUNÇÃO SALVAR LOCAÇÃO (com criação automática de usuário MOTORISTA)
         // =============================================
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
@@ -2614,6 +2555,10 @@
                 vistoria: []
             };
             db.locacoes.push(locacao);
+
+            // Criação automática de usuário para o locatário (tipo MOTORISTA)
+            criarUsuarioParaLocacao(locacao);
+
             atualizarTabelaLocacoes();
             criarAlugueisParaLocacao(locacao);
 
@@ -2622,36 +2567,60 @@
             atualizarTabelaAlugueis();
             registrarAuditoria('Cadastro', `Locação: ${locatario} - ${placa}`);
             salvarDB();
-            alert('Locação salva com sucesso!');
+            alert('Locação salva com sucesso! Usuário criado automaticamente como MOTORISTA.');
             atualizarVistoria();
+        }
 
-            // -------- Atualização das permissões do motorista --------
-            const primeiroNome = locatario.split(/\s+/)[0].toUpperCase();
-            let usuarioMotorista = db.usuarios.find(u => u.nome === primeiroNome && u.tipo === 'MOTORISTA');
-            if (!usuarioMotorista) {
-                // Criar novo usuário motorista com permissões padrão
-                const cliente = db.clientes.find(c => c.nome === locatario);
-                let senha = '';
-                if (cliente) {
-                    const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
-                    if (telefoneLimpo.length >= 10) senha = telefoneLimpo.substring(2);
-                }
-                usuarioMotorista = {
-                    nome: primeiroNome,
-                    senha: senha,
-                    tipo: 'MOTORISTA',
-                    permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
-                    selfie: cliente ? (cliente.selfie || null) : null
-                };
-                db.usuarios.push(usuarioMotorista);
+        // =============================================
+        // FUNÇÃO CRIAR USUÁRIO PARA LOCAÇÃO (MOTORISTA)
+        // =============================================
+        function extrairSenhaTelefone(telefone) {
+            if (!telefone) return '';
+            const digitos = telefone.replace(/\D/g, '');
+            if (digitos.length >= 10) {
+                return digitos.substring(2);
             }
-            // Adicionar a placa do veículo locado às permissões do motorista
-            if (!usuarioMotorista.permissoes.veiculos[placa]) {
-                usuarioMotorista.permissoes.veiculos[placa] = true;
+            return digitos;
+        }
+
+        function criarUsuarioParaLocacao(locacao) {
+            // Localizar cliente pelo nome
+            const cliente = db.clientes.find(c => c.nome === locacao.locatario);
+            if (!cliente) {
+                console.warn('Cliente não encontrado para criar usuário automático.');
+                return;
             }
+
+            // Obter senha: telefone sem DDD
+            const telefone = cliente.telefone || '';
+            const senha = extrairSenhaTelefone(telefone);
+            if (!senha) {
+                console.warn('Telefone não encontrado para criar senha do usuário.');
+                return;
+            }
+
+            // Primeiro nome do cliente (em maiúsculas)
+            const primeiroNome = locacao.locatario.trim().split(/\s+/)[0].toUpperCase();
+
+            // Placa do veículo da locação
+            const placa = locacao.placa;
+
+            // Permissões padrão do tipo MOTORISTA, mas com o veículo permitido
+            const permissoes = JSON.parse(JSON.stringify(permissoesPadrao['MOTORISTA']));
+            permissoes.veiculos[placa] = true;
+
+            // Criar novo usuário
+            const novoUsuario = {
+                nome: primeiroNome,
+                senha: senha,
+                tipo: 'MOTORISTA',
+                permissoes: permissoes,
+                selfie: null
+            };
+
+            db.usuarios.push(novoUsuario);
             atualizarTabelaUsuario();
-            atualizarPermissoesVeiculos(); // Atualizar UI de permissões
-            salvarDB();
+            registrarAuditoria('Cadastro', `Usuário automático criado para locação: ${primeiroNome} (tipo: MOTORISTA, senha: ${senha})`);
         }
 
         // =============================================
@@ -2791,7 +2760,6 @@
                             } else if (pagCaucao === 'parcelado') {
                                 valorAluguelFinal += (caucaoNum / 6);
                             } else if (pagCaucao === 'entrada') {
-                                // Após entrada, restante dividido em 5 meses
                                 valorAluguelFinal += ((caucaoNum - caucaoPagoNum) / 5);
                             }
                         } else {
@@ -3031,7 +2999,6 @@
                 return;
             }
 
-            // Comprime a imagem se for imagem
             if (extensao !== 'pdf') {
                 const dataUrl = await comprimirImagem(file, 400, 0.4);
                 docUploadDataUrl = dataUrl;
@@ -5068,7 +5035,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                // Comprime a foto da vistoria
                 vistoriaDataUrl = canvas.toDataURL('image/jpeg', 0.4);
                 
                 document.getElementById('vistoriaPhotoResult').src = vistoriaDataUrl;
