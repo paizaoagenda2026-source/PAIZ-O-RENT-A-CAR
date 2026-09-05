@@ -612,7 +612,7 @@
             <input type="text" class="filter-input" placeholder="🔍 Filtrar comprovantes..." id="filterDoc">
             <div class="form-grid" id="formDoc">
                 <div class="form-group"><label>Nome do Documento</label><input type="text" id="docNome" class="campo-enter"></div>
-                <div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="campo-enter" placeholder="Valor do comprovante"></div>
+                <div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="money campo-enter" placeholder="Valor do comprovante"></div>
                 <div class="form-group"><label>VENCIMENTO</label><input type="date" id="docData" class="campo-enter"></div>
                 <div class="form-group"><label>Veículo/Cliente</label><input type="text" id="docReferencia" class="campo-enter" placeholder="Placa do veículo"></div>
                 <div class="form-group"><label>Observações</label><textarea id="docObs" rows="3" class="campo-enter"></textarea></div>
@@ -923,36 +923,36 @@
                 <div class="contrato-sub-content active" id="contratoLocacao">
                     <h4 style="margin-bottom: 15px; color: var(--primary);">📋 Contrato de Locação de Veículos</h4>
                     <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                        <div class="contrato-form-group"><label>Número do Contrato:</label><input type="text" id="ctNumero" value="0001"></div>
-                        <div class="contrato-form-group"><label>Locadora (Razão Social):</label><input type="text" id="ctLocadora" value="PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME"></div>
-                        <div class="contrato-form-group"><label>Endereço da Locadora:</label><input type="text" id="ctEnderecoLocadora" value="AV. Vila Ema 5445 Vila Ema São Paulo SP"></div>
-                        <div class="contrato-form-group"><label>CNPJ da Locadora:</label><input type="text" id="ctCnpjLocadora" value="74.410.606.0001-31"></div>
-                        <div class="contrato-form-group"><label>Locatário (Nome):</label><input type="text" id="ctLocatario" value="PABLO MEDEIRO"></div>
-                        <div class="contrato-form-group"><label>Endereço do Locatário:</label><input type="text" id="ctEnderecoLocatario" value="Rua Joaquim Abreu Luiz 150 Parque São Lucas São Paulo SP"></div>
-                        <div class="contrato-form-group"><label>CEP do Locatário:</label><input type="text" id="ctCepLocatario" value="03263-020"></div>
-                        <div class="contrato-form-group"><label>RG do Locatário:</label><input type="text" id="ctRgLocatario" value="54.806-749-1"></div>
-                        <div class="contrato-form-group"><label>CPF do Locatário:</label><input type="text" id="ctCpfLocatario" value="464.065.988-14"></div>
-                        <div class="contrato-form-group"><label>Veículo (Modelo):</label><input type="text" id="ctVeiculoModelo" value="Nissan/Kicks Sense CVT"></div>
-                        <div class="contrato-form-group"><label>Cor do Veículo:</label><input type="text" id="ctVeiculoCor" value="cinza"></div>
-                        <div class="contrato-form-group"><label>Placa do Veículo:</label><input type="text" id="ctVeiculoPlaca" value="QMK3B93"></div>
-                        <div class="contrato-form-group"><label>Ano de Fabricação:</label><input type="text" id="ctAnoFabr" value="2020"></div>
-                        <div class="contrato-form-group"><label>Ano Modelo:</label><input type="text" id="ctAnoModel" value="2020"></div>
-                        <div class="contrato-form-group"><label>Gestor do Contrato:</label><input type="text" id="ctGestor" value="Sergio Pereira da Silva"></div>
-                        <div class="contrato-form-group"><label>Local de Vistoria:</label><input type="text" id="ctLocalVistoria" value="AV. VILA EMA 5445 VILA EMA SÃO PAULO"></div>
-                        <div class="contrato-form-group"><label>Multa por Rescisão Antecipada:</label><input type="text" id="ctMultaRescisao" value="R$ 2.500,00 (dois e quinhentos reais)"></div>
-                        <div class="contrato-form-group"><label>Taxa de Troca de Veículo:</label><input type="text" id="ctTaxaTroca" value="R$ 600,00 (seiscentos reais)"></div>
-                        <div class="contrato-form-group"><label>Valor do Aluguel Semanal:</label><input type="text" id="ctValorAluguel" value="R$ 1.200,00 (um mil e duzentos reais)"></div>
-                        <div class="contrato-form-group"><label>Limite de KM por Semana:</label><input type="text" id="ctLimiteKm" value="1.750"></div>
-                        <div class="contrato-form-group"><label>Valor por KM Excedente:</label><input type="text" id="ctValorKmExcedente" value="R$ 0,90 centavos"></div>
-                        <div class="contrato-form-group"><label>Valor da Caução:</label><input type="text" id="ctValorCaucao" value="R$ 2.500,00"></div>
-                        <div class="contrato-form-group"><label>Caução Dividida em:</label><input type="text" id="ctCaucaoParcelas" value="10 semanas"></div>
-                        <div class="contrato-form-group"><label>Valor Devolvido após Contrato:</label><input type="text" id="ctValorDevolvido" value="R$ 2.000,00"></div>
-                        <div class="contrato-form-group"><label>Multa por Não Pagamento:</label><input type="text" id="ctMultaNaoPagamento" value="R$ 2.500,00 (dois mil e quinhentos reais)"></div>
-                        <div class="contrato-form-group"><label>Taxa de Higienização:</label><input type="text" id="ctTaxaHigienizacao" value="R$220,00"></div>
-                        <div class="contrato-form-group"><label>Taxa para Entrega em Local Diverso:</label><input type="text" id="ctTaxaEntregaDiversa" value="R$ 500,00 (quinhentos reais)"></div>
-                        <div class="contrato-form-group"><label>Data do Contrato:</label><input type="text" id="ctDataContrato" value="22 de julho de 2026"></div>
-                        <div class="contrato-form-group"><label>Testemunha 1:</label><input type="text" id="ctTestemunha1" value="Testemunha 1"></div>
-                        <div class="contrato-form-group"><label>Testemunha 2:</label><input type="text" id="ctTestemunha2" value="Testemunha 2"></div>
+                        <div class="contrato-form-group"><label>Número do Contrato:</label><input type="text" id="ctNumero" value="0001" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Locadora (Razão Social):</label><input type="text" id="ctLocadora" value="PAIZAO COMERCIO DE AUTO PEÇAS EIRELI ME" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Endereço da Locadora:</label><input type="text" id="ctEnderecoLocadora" value="AV. Vila Ema 5445 Vila Ema São Paulo SP" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CNPJ da Locadora:</label><input type="text" id="ctCnpjLocadora" value="74.410.606.0001-31" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Locatário (Nome):</label><input type="text" id="ctLocatario" value="PABLO MEDEIRO" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Endereço do Locatário:</label><input type="text" id="ctEnderecoLocatario" value="Rua Joaquim Abreu Luiz 150 Parque São Lucas São Paulo SP" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CEP do Locatário:</label><input type="text" id="ctCepLocatario" value="03263-020" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>RG do Locatário:</label><input type="text" id="ctRgLocatario" value="54.806-749-1" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CPF do Locatário:</label><input type="text" id="ctCpfLocatario" value="464.065.988-14" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Veículo (Modelo):</label><input type="text" id="ctVeiculoModelo" value="Nissan/Kicks Sense CVT" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Cor do Veículo:</label><input type="text" id="ctVeiculoCor" value="cinza" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Placa do Veículo:</label><input type="text" id="ctVeiculoPlaca" value="QMK3B93" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Ano de Fabricação:</label><input type="text" id="ctAnoFabr" value="2020" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Ano Modelo:</label><input type="text" id="ctAnoModel" value="2020" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Gestor do Contrato:</label><input type="text" id="ctGestor" value="Sergio Pereira da Silva" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Local de Vistoria:</label><input type="text" id="ctLocalVistoria" value="AV. VILA EMA 5445 VILA EMA SÃO PAULO" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Multa por Rescisão Antecipada:</label><input type="text" id="ctMultaRescisao" value="R$ 2.500,00 (dois e quinhentos reais)" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Taxa de Troca de Veículo:</label><input type="text" id="ctTaxaTroca" value="R$ 600,00 (seiscentos reais)" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Valor do Aluguel Semanal:</label><input type="text" id="ctValorAluguel" value="R$ 1.200,00 (um mil e duzentos reais)" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Limite de KM por Semana:</label><input type="text" id="ctLimiteKm" value="1.750" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Valor por KM Excedente:</label><input type="text" id="ctValorKmExcedente" value="R$ 0,90 centavos" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Valor da Caução:</label><input type="text" id="ctValorCaucao" value="R$ 2.500,00" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Caução Dividida em:</label><input type="text" id="ctCaucaoParcelas" value="10 semanas" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Valor Devolvido após Contrato:</label><input type="text" id="ctValorDevolvido" value="R$ 2.000,00" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Multa por Não Pagamento:</label><input type="text" id="ctMultaNaoPagamento" value="R$ 2.500,00 (dois mil e quinhentos reais)" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Taxa de Higienização:</label><input type="text" id="ctTaxaHigienizacao" value="R$220,00" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Taxa para Entrega em Local Diverso:</label><input type="text" id="ctTaxaEntregaDiversa" value="R$ 500,00 (quinhentos reais)" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Data do Contrato:</label><input type="text" id="ctDataContrato" value="22 de julho de 2026" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Testemunha 1:</label><input type="text" id="ctTestemunha1" value="Testemunha 1" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Testemunha 2:</label><input type="text" id="ctTestemunha2" value="Testemunha 2" class="campo-enter"></div>
                     </div>
                     <div class="contrato-actions">
                         <button class="btn-primary" onclick="imprimirDocumento('contratoLocacao')">🖨️ Imprimir / Gerar PDF</button>
@@ -964,16 +964,16 @@
                 <div class="contrato-sub-content" id="termoResponsabilidade">
                     <h4 style="margin-bottom: 15px; color: var(--primary);">📝 Termo de Responsabilidade e Autorização de Transferência de Pontuações</h4>
                     <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                        <div class="contrato-form-group"><label>Nome do Condutor:</label><input type="text" id="trNome" value="PABLO MEDEIRO"></div>
-                        <div class="contrato-form-group"><label>RG:</label><input type="text" id="trRg" value="54.806-749-1"></div>
-                        <div class="contrato-form-group"><label>CPF:</label><input type="text" id="trCpf" value="464.065.988-14"></div>
-                        <div class="contrato-form-group"><label>CNH - Número de Registro:</label><input type="text" id="trCnhRegistro" value="06607239173"></div>
-                        <div class="contrato-form-group"><label>CNH - Validade:</label><input type="text" id="trCnhValidade" value="07/05/2033"></div>
-                        <div class="contrato-form-group"><label>Veículo (Marca/Modelo):</label><input type="text" id="trVeiculoMarca" value="NISSAN KICKS SV CVT"></div>
-                        <div class="contrato-form-group"><label>Placa do Veículo:</label><input type="text" id="trVeiculoPlaca" value="QMK3B93"></div>
-                        <div class="contrato-form-group"><label>Proprietária do Veículo:</label><input type="text" id="trProprietaria" value="SIMONE GONÇALVES DA SILVA"></div>
-                        <div class="contrato-form-group"><label>CPF da Proprietária:</label><input type="text" id="trCpfProprietaria" value="329.678.268-04"></div>
-                        <div class="contrato-form-group"><label>Data do Termo:</label><input type="text" id="trData" value="23 de julho de 2026"></div>
+                        <div class="contrato-form-group"><label>Nome do Condutor:</label><input type="text" id="trNome" value="PABLO MEDEIRO" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>RG:</label><input type="text" id="trRg" value="54.806-749-1" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CPF:</label><input type="text" id="trCpf" value="464.065.988-14" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CNH - Número de Registro:</label><input type="text" id="trCnhRegistro" value="06607239173" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CNH - Validade:</label><input type="text" id="trCnhValidade" value="07/05/2033" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Veículo (Marca/Modelo):</label><input type="text" id="trVeiculoMarca" value="NISSAN KICKS SV CVT" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Placa do Veículo:</label><input type="text" id="trVeiculoPlaca" value="QMK3B93" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Proprietária do Veículo:</label><input type="text" id="trProprietaria" value="SIMONE GONÇALVES DA SILVA" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CPF da Proprietária:</label><input type="text" id="trCpfProprietaria" value="329.678.268-04" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Data do Termo:</label><input type="text" id="trData" value="23 de julho de 2026" class="campo-enter"></div>
                     </div>
                     <div class="contrato-actions">
                         <button class="btn-primary" onclick="imprimirDocumento('termoResponsabilidade')">🖨️ Imprimir / Gerar PDF</button>
@@ -985,22 +985,22 @@
                 <div class="contrato-sub-content" id="notaPromissoria">
                     <h4 style="margin-bottom: 15px; color: var(--primary);">💰 Nota Promissória</h4>
                     <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                        <div class="contrato-form-group"><label>Número da Nota:</label><input type="text" id="npNumero" value="0001"></div>
-                        <div class="contrato-form-group"><label>Vencimento:</label><input type="text" id="npVencimento" value="24 de julho de 2026"></div>
-                        <div class="contrato-form-group"><label>Valor:</label><input type="text" id="npValor" value="R$ 2.500,00"></div>
-                        <div class="contrato-form-group"><label>Data de Emissão:</label><input type="text" id="npDataEmissao" value="14 de julho de 2025"></div>
-                        <div class="contrato-form-group"><label>Beneficiário (Locadora):</label><input type="text" id="npBeneficiario" value="PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME"></div>
-                        <div class="contrato-form-group"><label>CNPJ do Beneficiário:</label><input type="text" id="npCnpjBeneficiario" value="74.410.606.0001-31"></div>
-                        <div class="contrato-form-group"><label>Valor por Extenso:</label><input type="text" id="npValorExtenso" value="dois mil e quinhentos reais"></div>
-                        <div class="contrato-form-group"><label>Pagável em:</label><input type="text" id="npPagavelEm" value="São Paulo (SP)"></div>
-                        <div class="contrato-form-group"><label>Nome do Emitente:</label><input type="text" id="npEmitenteNome" value="PABLO MEDEIRO"></div>
-                        <div class="contrato-form-group"><label>CPF do Emitente:</label><input type="text" id="npEmitenteCpf" value="464.065.988-14"></div>
-                        <div class="contrato-form-group"><label>Documento de Identificação:</label><input type="text" id="npEmitenteDoc" value="Carteira Nacional de Habilitação (CNH) n. 06607239173, expedida por DETRAN SP"></div>
-                        <div class="contrato-form-group"><label>Endereço do Emitente:</label><input type="text" id="npEmitenteEndereco" value="Rua Joaquim Abreu Luiz 150 PARQUE SÃO LUCAS"></div>
-                        <div class="contrato-form-group"><label>Cidade/UF:</label><input type="text" id="npEmitenteCidade" value="São Paulo SP"></div>
-                        <div class="contrato-form-group"><label>CEP:</label><input type="text" id="npEmitenteCep" value="03263-020"></div>
-                        <div class="contrato-form-group"><label>Cartório:</label><input type="text" id="npCartorio" value="Cartório de Registro Civil de Sapopemba"></div>
-                        <div class="contrato-form-group"><label>Data da Assinatura:</label><input type="text" id="npDataAssinatura" value="23 de julho de 2026"></div>
+                        <div class="contrato-form-group"><label>Número da Nota:</label><input type="text" id="npNumero" value="0001" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Vencimento:</label><input type="text" id="npVencimento" value="24 de julho de 2026" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Valor:</label><input type="text" id="npValor" value="R$ 2.500,00" class="money campo-enter"></div>
+                        <div class="contrato-form-group"><label>Data de Emissão:</label><input type="text" id="npDataEmissao" value="14 de julho de 2025" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Beneficiário (Locadora):</label><input type="text" id="npBeneficiario" value="PAIZAO COMERCIO DE AUTOPEÇAS EIRELI ME" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CNPJ do Beneficiário:</label><input type="text" id="npCnpjBeneficiario" value="74.410.606.0001-31" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Valor por Extenso:</label><input type="text" id="npValorExtenso" value="dois mil e quinhentos reais" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Pagável em:</label><input type="text" id="npPagavelEm" value="São Paulo (SP)" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Nome do Emitente:</label><input type="text" id="npEmitenteNome" value="PABLO MEDEIRO" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CPF do Emitente:</label><input type="text" id="npEmitenteCpf" value="464.065.988-14" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Documento de Identificação:</label><input type="text" id="npEmitenteDoc" value="Carteira Nacional de Habilitação (CNH) n. 06607239173, expedida por DETRAN SP" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Endereço do Emitente:</label><input type="text" id="npEmitenteEndereco" value="Rua Joaquim Abreu Luiz 150 PARQUE SÃO LUCAS" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Cidade/UF:</label><input type="text" id="npEmitenteCidade" value="São Paulo SP" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>CEP:</label><input type="text" id="npEmitenteCep" value="03263-020" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Cartório:</label><input type="text" id="npCartorio" value="Cartório de Registro Civil de Sapopemba" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Data da Assinatura:</label><input type="text" id="npDataAssinatura" value="23 de julho de 2026" class="campo-enter"></div>
                     </div>
                     <div class="contrato-actions">
                         <button class="btn-primary" onclick="imprimirDocumento('notaPromissoria')">🖨️ Imprimir / Gerar PDF</button>
@@ -1106,6 +1106,13 @@
         }
 
         // =============================================
+        // FUNÇÃO DE FORMATAÇÃO DE MOEDA BRASILEIRA
+        // =============================================
+        function formatarMoedaBR(valor) {
+            return 'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // =============================================
         // FUNÇÃO DE COMPRESSÃO DE IMAGEM (AGGRESSIVA)
         // =============================================
         function comprimirImagem(file, maxWidth = 400, qualidade = 0.4) {
@@ -1126,6 +1133,7 @@
                             canvas.height = height;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, width, height);
+                            // Reduz qualidade se ainda estiver grande
                             let q = qualidade;
                             let dataUrl = canvas.toDataURL('image/jpeg', q);
                             while (dataUrl.length > 100000 && q > 0.1) {
@@ -1140,6 +1148,7 @@
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 } else {
+                    // Para PDFs, apenas converte para base64 sem compressão
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         resolve(e.target.result);
@@ -1155,7 +1164,7 @@
             return new Promise((resolve) => {
                 if (!dataUrl) return resolve(null);
                 if (dataUrl.startsWith('data:application/pdf') || dataUrl.startsWith('data:application/octet-stream') || dataUrl.startsWith('data:image/svg')) {
-                    return resolve(dataUrl);
+                    return resolve(dataUrl); // PDFs e SVGs não são comprimidos
                 }
                 const img = new Image();
                 img.onload = () => {
@@ -1188,6 +1197,7 @@
         // =============================================
         async function comprimirDB() {
             console.log("Comprimindo banco de dados para evitar erro de tamanho...");
+            // Clientes
             if (db.clientes) {
                 for (let i = 0; i < db.clientes.length; i++) {
                     if (db.clientes[i].selfie) {
@@ -1195,6 +1205,7 @@
                     }
                 }
             }
+            // Usuários
             if (db.usuarios) {
                 for (let i = 0; i < db.usuarios.length; i++) {
                     if (db.usuarios[i].selfie) {
@@ -1202,6 +1213,7 @@
                     }
                 }
             }
+            // Imagens - Garagem
             if (db.imagens && db.imagens.garagem && db.imagens.garagem.fotos) {
                 for (let i = 0; i < db.imagens.garagem.fotos.length; i++) {
                     if (db.imagens.garagem.fotos[i].data) {
@@ -1209,6 +1221,7 @@
                     }
                 }
             }
+            // Imagens - SOS
             if (db.imagens && db.imagens.sos && db.imagens.sos.fotos) {
                 for (let i = 0; i < db.imagens.sos.fotos.length; i++) {
                     if (db.imagens.sos.fotos[i].data) {
@@ -1216,6 +1229,7 @@
                     }
                 }
             }
+            // Imagens - Comprovantes
             if (db.imagens && db.imagens.comprovantes && db.imagens.comprovantes.fotos) {
                 for (let i = 0; i < db.imagens.comprovantes.fotos.length; i++) {
                     if (db.imagens.comprovantes.fotos[i].data) {
@@ -1223,6 +1237,7 @@
                     }
                 }
             }
+            // Documentos
             if (db.documentos) {
                 for (let i = 0; i < db.documentos.length; i++) {
                     if (db.documentos[i].imagem) {
@@ -1230,6 +1245,7 @@
                     }
                 }
             }
+            // Mecânico
             if (db.mecanico) {
                 for (let i = 0; i < db.mecanico.length; i++) {
                     if (db.mecanico[i].pdfData) {
@@ -1237,6 +1253,7 @@
                     }
                 }
             }
+            // Compras
             if (db.compras) {
                 for (let i = 0; i < db.compras.length; i++) {
                     if (db.compras[i].arquivo) {
@@ -1244,6 +1261,7 @@
                     }
                 }
             }
+            // Pendentes
             if (db.pendentes) {
                 for (let i = 0; i < db.pendentes.length; i++) {
                     if (db.pendentes[i].docDataUrl) {
@@ -1251,6 +1269,7 @@
                     }
                 }
             }
+            // Histórico
             if (db.historico) {
                 for (let i = 0; i < db.historico.length; i++) {
                     if (db.historico[i].arquivo) {
@@ -1258,6 +1277,7 @@
                     }
                 }
             }
+            // Locações - Vistorias
             if (db.locacoes) {
                 for (let i = 0; i < db.locacoes.length; i++) {
                     if (db.locacoes[i].vistoria) {
@@ -1275,10 +1295,12 @@
         // =============================================
         async function carregarDadosFirestore() {
             try {
+                // Desabilita o botão de login enquanto carrega
                 document.getElementById('loginButton').disabled = true;
                 const doc = await DB_DOC_REF.get();
                 if (doc.exists) {
                     db = doc.data();
+                    // Garantir campos essenciais
                     if (!db.pendentes) db.pendentes = [];
                     if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
                     if (!db.historico) db.historico = [];
@@ -1315,6 +1337,7 @@
         async function salvarDB() {
             try {
                 if (!db) return;
+                // Verifica se o tamanho excede 1MB antes de salvar
                 const json = JSON.stringify(db);
                 const tamanho = new Blob([json]).size;
                 if (tamanho > 1048576) {
@@ -1381,17 +1404,31 @@
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
         });
 
+        // Máscara de dinheiro com ponto de milhar e vírgula decimal
+        document.querySelectorAll('.money').forEach(input => {
+            input.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value) {
+                    value = (parseInt(value) / 100).toFixed(2);
+                    let [intPart, decPart] = value.split('.');
+                    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    e.target.value = 'R$ ' + intPart + ',' + decPart;
+                }
+            });
+        });
+
         function calcularValorTotal() {
             const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
             const valorUnitarioStr = document.getElementById('compValorUnitario').value;
-            const valorUnitario = parseFloat(valorUnitarioStr.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
+            const valorUnitario = parseFloat(valorUnitarioStr.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
             const total = qtd * valorUnitario;
-            document.getElementById('compValorTotal').value = 'R$ ' + total.toFixed(2).replace('.', ',');
+            document.getElementById('compValorTotal').value = formatarMoedaBR(total);
         }
 
         // =============================================
         // SISTEMA DE PERMISSÕES
         // =============================================
+
         const todasAbas = [
             { id: 'veiculos', label: '🚗 Veículos' },
             { id: 'clientes', label: '👤 Clientes' },
@@ -1513,10 +1550,14 @@
                     auditoria: false, pendente: false, historico: true, vistoria: true
                 },
                 botoes: {
+                    garagem_salvar: true,
+                    sos_salvar: true,
+                    sos_baixar: true,
                     banco_copiar: true,
                     doc_salvar: true,
                     doc_limpar: true,
-                    doc_selecionar: true
+                    doc_selecionar: true,
+                    vistoria_camera: true
                 },
                 veiculos: {}
             },
@@ -1621,6 +1662,7 @@
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
+                // Comprime a selfie
                 selfieDataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 
                 document.getElementById('selfiePhotoResult').src = selfieDataUrl;
@@ -1654,7 +1696,7 @@
                 selfieClienteTemp = selfieDataUrl;
                 mostrarPreviewSelfieCliente();
                 fecharModalSelfie();
-                salvarCliente();
+                salvarCliente(); // Salva o cliente imediatamente
             }
         }
 
@@ -1705,6 +1747,7 @@
         }
 
         function inicializarSistema() {
+            // Garantir que o usuário administrador padrão exista sempre
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
                     nome: 'SERGIO',
@@ -1899,6 +1942,7 @@
         // =============================================
         // DEMAIS FUNÇÕES
         // =============================================
+
         function gerarPermissoesUI() {
             const container = document.getElementById('permissoesContainer');
             container.innerHTML = '';
@@ -2233,16 +2277,6 @@
             }
         });
 
-        document.querySelectorAll('.money').forEach(input => {
-            input.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value) {
-                    value = (parseInt(value) / 100).toFixed(2).replace('.', ',');
-                    e.target.value = 'R$ ' + value;
-                }
-            });
-        });
-
         function setupFilter(inputId, tableId) {
             const input = document.getElementById(inputId);
             if (input) {
@@ -2375,7 +2409,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR CLIENTE (sem criação de usuário automática)
+        // FUNÇÃO SALVAR CLIENTE (com selfie comprimida)
         // =============================================
         async function salvarCliente() {
             const nome = document.getElementById('cliNome').value.trim();
@@ -2402,8 +2436,10 @@
                 return;
             }
 
+            // Comprime a selfie se existir
             let selfieFinal = selfieClienteTemp;
             if (selfieFinal && selfieFinal.startsWith('data:image') && selfieFinal.length > 200000) {
+                // Já comprimida na captura, mas se necessário comprimir mais
                 const img = new Image();
                 img.src = selfieFinal;
                 await new Promise(resolve => { img.onload = resolve; });
@@ -2438,6 +2474,8 @@
 
             db.clientes.push(cliente);
             
+            criarUsuarioDoCliente(cliente);
+            
             atualizarTabelaClientes();
             atualizarCombosLocacao();
             
@@ -2445,15 +2483,46 @@
             
             salvarDB();
             
-            alert('Cliente salvo com sucesso!');
+            alert('Cliente salvo com sucesso! Usuário criado automaticamente.');
             
             limparCamposCliente();
             limparSelfieCliente();
         }
 
+        function criarUsuarioDoCliente(cliente) {
+            const nomeCliente = cliente.nome.trim();
+            if (!nomeCliente) return;
+
+            const primeiroNome = nomeCliente.split(/\s+/)[0].toUpperCase();
+            const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
+            let senha = telefoneLimpo;
+            if (telefoneLimpo.length >= 10) {
+                senha = telefoneLimpo.substring(2);
+            }
+            if (!senha) {
+                senha = '';
+            }
+
+            const usuarioExistente = db.usuarios.find(u => u.nome === primeiroNome);
+            if (usuarioExistente) return;
+
+            const novoUsuario = {
+                nome: primeiroNome,
+                senha: senha,
+                tipo: 'MOTORISTA',
+                permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
+                selfie: cliente.selfie || null
+            };
+
+            db.usuarios.push(novoUsuario);
+            atualizarTabelaUsuario();
+            registrarAuditoria('Cadastro', `Usuário criado automaticamente: ${primeiroNome} (MOTORISTA)`);
+        }
+
         // =============================================
         // DEMAIS FUNÇÕES DE SALVAMENTO
         // =============================================
+
         function salvarVeiculo() {
             const fabricante = document.getElementById('veicFabricante').value;
             const cor = document.getElementById('veicCor').value;
@@ -2507,7 +2576,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR LOCAÇÃO (com criação automática de usuário MOTORISTA)
+        // FUNÇÃO SALVAR LOCAÇÃO (modificada para permissões de veículo)
         // =============================================
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
@@ -2555,10 +2624,6 @@
                 vistoria: []
             };
             db.locacoes.push(locacao);
-
-            // Criação automática de usuário para o locatário (tipo MOTORISTA)
-            criarUsuarioParaLocacao(locacao);
-
             atualizarTabelaLocacoes();
             criarAlugueisParaLocacao(locacao);
 
@@ -2567,60 +2632,36 @@
             atualizarTabelaAlugueis();
             registrarAuditoria('Cadastro', `Locação: ${locatario} - ${placa}`);
             salvarDB();
-            alert('Locação salva com sucesso! Usuário criado automaticamente como MOTORISTA.');
+            alert('Locação salva com sucesso!');
             atualizarVistoria();
-        }
 
-        // =============================================
-        // FUNÇÃO CRIAR USUÁRIO PARA LOCAÇÃO (MOTORISTA)
-        // =============================================
-        function extrairSenhaTelefone(telefone) {
-            if (!telefone) return '';
-            const digitos = telefone.replace(/\D/g, '');
-            if (digitos.length >= 10) {
-                return digitos.substring(2);
+            // -------- Atualização das permissões do motorista --------
+            const primeiroNome = locatario.split(/\s+/)[0].toUpperCase();
+            let usuarioMotorista = db.usuarios.find(u => u.nome === primeiroNome && u.tipo === 'MOTORISTA');
+            if (!usuarioMotorista) {
+                // Criar novo usuário motorista com permissões padrão
+                const cliente = db.clientes.find(c => c.nome === locatario);
+                let senha = '';
+                if (cliente) {
+                    const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
+                    if (telefoneLimpo.length >= 10) senha = telefoneLimpo.substring(2);
+                }
+                usuarioMotorista = {
+                    nome: primeiroNome,
+                    senha: senha,
+                    tipo: 'MOTORISTA',
+                    permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
+                    selfie: cliente ? (cliente.selfie || null) : null
+                };
+                db.usuarios.push(usuarioMotorista);
             }
-            return digitos;
-        }
-
-        function criarUsuarioParaLocacao(locacao) {
-            // Localizar cliente pelo nome
-            const cliente = db.clientes.find(c => c.nome === locacao.locatario);
-            if (!cliente) {
-                console.warn('Cliente não encontrado para criar usuário automático.');
-                return;
+            // Adicionar a placa do veículo locado às permissões do motorista
+            if (!usuarioMotorista.permissoes.veiculos[placa]) {
+                usuarioMotorista.permissoes.veiculos[placa] = true;
             }
-
-            // Obter senha: telefone sem DDD
-            const telefone = cliente.telefone || '';
-            const senha = extrairSenhaTelefone(telefone);
-            if (!senha) {
-                console.warn('Telefone não encontrado para criar senha do usuário.');
-                return;
-            }
-
-            // Primeiro nome do cliente (em maiúsculas)
-            const primeiroNome = locacao.locatario.trim().split(/\s+/)[0].toUpperCase();
-
-            // Placa do veículo da locação
-            const placa = locacao.placa;
-
-            // Permissões padrão do tipo MOTORISTA, mas com o veículo permitido
-            const permissoes = JSON.parse(JSON.stringify(permissoesPadrao['MOTORISTA']));
-            permissoes.veiculos[placa] = true;
-
-            // Criar novo usuário
-            const novoUsuario = {
-                nome: primeiroNome,
-                senha: senha,
-                tipo: 'MOTORISTA',
-                permissoes: permissoes,
-                selfie: null
-            };
-
-            db.usuarios.push(novoUsuario);
             atualizarTabelaUsuario();
-            registrarAuditoria('Cadastro', `Usuário automático criado para locação: ${primeiroNome} (tipo: MOTORISTA, senha: ${senha})`);
+            atualizarPermissoesVeiculos(); // Atualizar UI de permissões
+            salvarDB();
         }
 
         // =============================================
@@ -2632,9 +2673,9 @@
             const dataInicio = new Date(locacao.dataInicio);
             const dataFim = new Date(locacao.dataFim);
 
-            const valorAluguelStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorAluguelStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
-            const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const valorMensalNum = parseFloat(valorMensalStr) || 0;
             
             let valorBase = 0;
@@ -2652,10 +2693,10 @@
                 return;
             }
 
-            const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const caucaoNum = parseFloat(caucaoStr) || 0;
             
-            const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
             
             const pagCaucao = locacao.pagCaucao;
@@ -2675,7 +2716,7 @@
                 }
             }
             
-            const valorFormatado = 'R$ ' + valorAluguelFinal.toFixed(2).replace('.', ',');
+            const valorFormatado = formatarMoedaBR(valorAluguelFinal);
             
             const vencISO = dataInicio.toISOString().split('T')[0];
             
@@ -2702,7 +2743,7 @@
             
             const hoje = new Date().toISOString().split('T')[0];
             const descricao = `Pagamento Aluguel - ${aluguel.locatario} - ${aluguel.placa} - Venc. ${formatarDataBR(aluguel.dataVencimento)}`;
-            const valorStr = aluguel.valorAluguel.replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorStr = aluguel.valorAluguel.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const valorNum = parseFloat(valorStr) || 0;
             if (valorNum > 0) {
                 const existeLancamento = db.fluxoCaixa.some(f => f.data === hoje && f.descricao === descricao && f.valor === aluguel.valorAluguel && f.tipo === 'entrada');
@@ -2737,16 +2778,16 @@
                 if (!proximoExistente && novaDataVencimento <= dataFim) {
                     let valorBaseNum = 0;
                     if (aluguel.tipo === 'semanal') {
-                        const valorBaseStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
+                        const valorBaseStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
                         valorBaseNum = parseFloat(valorBaseStr) || 0;
                     } else {
-                        const valorBaseStr = (locacao.aluguelMensal || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
+                        const valorBaseStr = (locacao.aluguelMensal || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
                         valorBaseNum = parseFloat(valorBaseStr) || 0;
                     }
                     
-                    const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+                    const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
                     const caucaoNum = parseFloat(caucaoStr) || 0;
-                    const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+                    const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
                     const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
                     const pagCaucao = locacao.pagCaucao;
                     
@@ -2760,6 +2801,7 @@
                             } else if (pagCaucao === 'parcelado') {
                                 valorAluguelFinal += (caucaoNum / 6);
                             } else if (pagCaucao === 'entrada') {
+                                // Após entrada, restante dividido em 5 meses
                                 valorAluguelFinal += ((caucaoNum - caucaoPagoNum) / 5);
                             }
                         } else {
@@ -2779,7 +2821,7 @@
                         }
                     }
                     
-                    const valorFormatado = 'R$ ' + valorAluguelFinal.toFixed(2).replace('.', ',');
+                    const valorFormatado = formatarMoedaBR(valorAluguelFinal);
                     
                     db.alugueis.push({
                         locatario: aluguel.locatario,
@@ -2811,7 +2853,7 @@
             document.getElementById('ctAnoFabr').value = locacao.anoFabr;
             document.getElementById('ctAnoModel').value = locacao.anoModel;
             
-            const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const valorMensalNum = parseFloat(valorMensalStr) || 0;
             
             if (valorMensalNum > 0) {
@@ -2999,6 +3041,7 @@
                 return;
             }
 
+            // Comprime a imagem se for imagem
             if (extensao !== 'pdf') {
                 const dataUrl = await comprimirImagem(file, 400, 0.4);
                 docUploadDataUrl = dataUrl;
@@ -3239,7 +3282,7 @@
                 const row = tbody.insertRow();
                 let valorExibido = l.valorAluguel || 'R$ 0,00';
                 if (l.aluguelMensal) {
-                    const valorMensalStr = l.aluguelMensal.replace('R$ ', '').replace('.', '').replace(',', '.');
+                    const valorMensalStr = l.aluguelMensal.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
                     const valorMensalNum = parseFloat(valorMensalStr);
                     if (!isNaN(valorMensalNum) && valorMensalNum > 0) {
                         valorExibido = l.aluguelMensal;
@@ -3264,9 +3307,9 @@
             const dias = Math.ceil((dataEncerramento - dataInicio) / (1000 * 60 * 60 * 24)) + 1;
 
             let valorDiario = 0;
-            const valorAluguelStr = (locacao.valorAluguel || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const valorAluguelStr = (locacao.valorAluguel || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
-            const aluguelMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
+            const aluguelMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
             const aluguelMensalNum = parseFloat(aluguelMensalStr) || 0;
 
             if (aluguelMensalNum > 0) {
@@ -3276,7 +3319,7 @@
             }
 
             const totalGerado = valorDiario * dias;
-            locacao.totalGerado = 'R$ ' + totalGerado.toFixed(2).replace('.', ',');
+            locacao.totalGerado = formatarMoedaBR(totalGerado);
             locacao.dataEncerramento = new Date().toISOString().split('T')[0];
             db.locacoesEncerradas.push(locacao);
             db.locacoes.splice(index, 1);
@@ -3320,10 +3363,10 @@
             });
             let total = 0;
             despesas.forEach(item => {
-                const valorStr = (item.valor || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
+                const valorStr = (item.valor || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
                 total += parseFloat(valorStr) || 0;
             });
-            return 'R$ ' + total.toFixed(2).replace('.', ',');
+            return formatarMoedaBR(total);
         }
 
         function reativarLocacao(index) {
@@ -4903,13 +4946,13 @@
         function atualizarResumoFinanceiro() {
             let entradas = 0, saidas = 0;
             db.fluxoCaixa.forEach(f => {
-                const val = parseFloat(f.valor.replace('R$ ', '').replace('.', '').replace(',', '.')) || 0;
+                const val = parseFloat(f.valor.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
                 if (f.tipo === 'entrada') entradas += val;
                 else saidas += val;
             });
-            document.getElementById('totalEntradas').textContent = 'R$ ' + entradas.toFixed(2).replace('.', ',');
-            document.getElementById('totalSaidas').textContent = 'R$ ' + saidas.toFixed(2).replace('.', ',');
-            document.getElementById('saldoTotal').textContent = 'R$ ' + (entradas - saidas).toFixed(2).replace('.', ',');
+            document.getElementById('totalEntradas').textContent = formatarMoedaBR(entradas);
+            document.getElementById('totalSaidas').textContent = formatarMoedaBR(saidas);
+            document.getElementById('saldoTotal').textContent = formatarMoedaBR(entradas - saidas);
         }
 
         // =============================================
@@ -5035,6 +5078,7 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
+                // Comprime a foto da vistoria
                 vistoriaDataUrl = canvas.toDataURL('image/jpeg', 0.4);
                 
                 document.getElementById('vistoriaPhotoResult').src = vistoriaDataUrl;
