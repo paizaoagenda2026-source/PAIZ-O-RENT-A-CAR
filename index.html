@@ -7,6 +7,7 @@
     <!-- Firebase SDKs (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <style>
         /* CSS completo mantido (sem alterações) */
         :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
@@ -1042,6 +1043,7 @@
         };
         firebase.initializeApp(firebaseConfig);
         const firestoreDB = firebase.firestore();
+        const storage = firebase.storage();
         const DB_DOC_REF = firestoreDB.collection('sistema').doc('dados');
 
         // =============================================
@@ -1157,8 +1159,35 @@
                 console.log('Dados salvos com sucesso no Firebase.');
             } catch (error) {
                 console.error('Erro ao salvar dados no Firebase:', error);
-                alert('Erro ao salvar dados no Firebase: ' + error.message + '\nVerifique sua conexão e o tamanho dos dados (evite imagens muito grandes).');
+                alert('Erro ao salvar dados no Firebase: ' + error.message + '\nVerifique sua conexão e o tamanho dos dados.');
             }
+        }
+
+        // =============================================
+        // FUNÇÃO PARA UPLOAD DE IMAGEM AO STORAGE
+        // =============================================
+        async function uploadImagemStorage(file, pasta) {
+            return new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve(null);
+                    return;
+                }
+                const nomeArquivo = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+                const storageRef = storage.ref(pasta + '/' + nomeArquivo);
+                const uploadTask = storageRef.put(file);
+                uploadTask.on('state_changed', 
+                    (snapshot) => {},
+                    (error) => {
+                        console.error('Erro no upload:', error);
+                        reject(error);
+                    },
+                    () => {
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            resolve(downloadURL);
+                        }).catch((error) => reject(error));
+                    }
+                );
+            });
         }
 
         // =============================================
@@ -1431,7 +1460,7 @@
             }
         }
 
-        function capturarSelfie() {
+        async function capturarSelfie() {
             const video = document.getElementById('selfieVideo');
             const canvas = document.getElementById('selfieCanvas');
             
@@ -1444,9 +1473,10 @@
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                selfieDataUrl = canvas.toDataURL('image/png');
+                const dataUrl = canvas.toDataURL('image/png');
+                selfieDataUrl = dataUrl;
                 
-                document.getElementById('selfiePhotoResult').src = selfieDataUrl;
+                document.getElementById('selfiePhotoResult').src = dataUrl;
                 document.getElementById('selfiePhotoPreview').style.display = 'block';
                 document.getElementById('selfieCaptureBtn').style.display = 'none';
                 document.getElementById('selfieConfirmBtn').style.display = 'inline-block';
@@ -1462,22 +1492,34 @@
             }
         }
 
-        function confirmarSelfie() {
+        async function confirmarSelfie() {
             if (!selfieDataUrl) {
                 alert('Nenhuma selfie foi capturada!');
                 return;
             }
             
-            if (selfieDestino === 'usuario') {
-                selfieUsuarioTemp = selfieDataUrl;
-                mostrarPreviewSelfieUsuario();
-                alert('Selfie do usuário capturada com sucesso!');
+            // Converter dataURL para Blob e fazer upload
+            try {
+                const blob = await fetch(selfieDataUrl).then(res => res.blob());
+                const nomeArquivo = 'selfie_' + Date.now() + '.png';
+                const storageRef = storage.ref('selfies/' + nomeArquivo);
+                await storageRef.put(blob);
+                const url = await storageRef.getDownloadURL();
+                
+                if (selfieDestino === 'usuario') {
+                    selfieUsuarioTemp = url;
+                    mostrarPreviewSelfieUsuario();
+                    alert('Selfie do usuário capturada com sucesso!');
+                } else {
+                    selfieClienteTemp = url;
+                    mostrarPreviewSelfieCliente();
+                    fecharModalSelfie();
+                    salvarCliente(); // Salva o cliente imediatamente
+                }
                 fecharModalSelfie();
-            } else {
-                selfieClienteTemp = selfieDataUrl;
-                mostrarPreviewSelfieCliente();
-                fecharModalSelfie();
-                salvarCliente(); // Salva o cliente imediatamente
+            } catch (error) {
+                console.error('Erro ao enviar selfie:', error);
+                alert('Erro ao salvar selfie. Tente novamente.');
             }
         }
 
@@ -1655,7 +1697,7 @@
         // =============================================
         // FUNÇÃO SALVAR MECÂNICO
         // =============================================
-        function salvarMecanico() {
+        async function salvarMecanico() {
             const data = document.getElementById('mecData').value;
             const oficina = document.getElementById('mecOficina').value;
             const servico = document.getElementById('mecServico').value;
@@ -1675,6 +1717,19 @@
                 return;
             }
 
+            let pdfUrl = null;
+            let pdfTipo = null;
+            const file = document.getElementById('mecUpload').files[0];
+            if (file) {
+                try {
+                    pdfUrl = await uploadImagemStorage(file, 'mecanico');
+                    pdfTipo = file.name.split('.').pop().toLowerCase();
+                } catch (e) {
+                    alert('Erro ao enviar o arquivo: ' + e.message);
+                    return;
+                }
+            }
+
             const novoServico = {
                 data,
                 oficina,
@@ -1684,8 +1739,8 @@
                 placa,
                 valor,
                 obs,
-                pdfData: mecPdfDataUrl || null,
-                pdfTipo: mecPdfFileType || null
+                pdfUrl: pdfUrl,
+                pdfTipo: pdfTipo
             };
 
             db.mecanico.push(novoServico);
@@ -1697,8 +1752,8 @@
                 valor: valor,
                 fornecedor: responsavel,
                 oficina: oficina,
-                arquivo: mecPdfDataUrl || null,
-                arquivoTipo: mecPdfFileType || null
+                arquivo: pdfUrl,
+                arquivoTipo: pdfTipo
             };
             db.historico.push(novoItemHistorico);
             atualizarTabelaHistorico();
@@ -2193,7 +2248,7 @@
         // =============================================
         // FUNÇÃO SALVAR CLIENTE
         // =============================================
-        function salvarCliente() {
+        async function salvarCliente() {
             const nome = document.getElementById('cliNome').value.trim();
             const cpf = document.getElementById('cliCpf').value.trim();
             const rg = document.getElementById('cliRg').value.trim();
@@ -2675,7 +2730,7 @@
             atualizarPlacasMecanico();
         }
 
-        function salvarUsuario() {
+        async function salvarUsuario() {
             const nome = document.getElementById('userNome').value.trim().toUpperCase();
             const senha = document.getElementById('userSenha').value;
             const tipo = document.getElementById('userTipo').value;
@@ -2774,13 +2829,16 @@
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                docUploadDataUrl = e.target.result;
+            try {
+                // Upload para storage
+                const url = await uploadImagemStorage(file, 'documentos');
+                docUploadDataUrl = url;
                 docUploadFileType = extensao;
                 atualizarPreviewDoc();
-            };
-            reader.readAsDataURL(file);
+            } catch (e) {
+                alert('Erro ao enviar arquivo: ' + e.message);
+                return;
+            }
 
             let textoExtraido = '';
             try {
@@ -3689,7 +3747,7 @@
         // =============================================
         // FUNÇÕES DE COMPRAS
         // =============================================
-        function salvarCompra() {
+        async function salvarCompra() {
             const data = document.getElementById('compData').value;
             const produto = document.getElementById('compProduto').value;
             const fornecedor = document.getElementById('compFornecedor').value;
@@ -3713,9 +3771,24 @@
                 return;
             }
 
+            let arquivoUrl = null;
+            let arquivoTipo = null;
+            const file = document.getElementById('compUpload').files[0];
+            if (file) {
+                try {
+                    arquivoUrl = await uploadImagemStorage(file, 'compras');
+                    arquivoTipo = file.name.split('.').pop().toLowerCase();
+                } catch (e) {
+                    alert('Erro ao enviar arquivo: ' + e.message);
+                    return;
+                }
+            }
+
             const compra = {
                 data, produto, fornecedor, cnpjFornecedor, placa,
-                quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs
+                quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs,
+                arquivo: arquivoUrl,
+                arquivoTipo: arquivoTipo
             };
             db.compras.push(compra);
             
@@ -3726,8 +3799,8 @@
                 valor: valorTotal,
                 fornecedor: fornecedor,
                 oficina: '',
-                arquivo: compPdfDataUrl || null,
-                arquivoTipo: compPdfFileType || null
+                arquivo: arquivoUrl,
+                arquivoTipo: arquivoTipo
             };
             db.historico.push(novoItemHistorico);
             
@@ -3945,14 +4018,14 @@
         // =============================================
         // FUNÇÕES DA GALERIA GARAGEM
         // =============================================
-        function salvarGaragem() {
+        async function salvarGaragem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
+                try {
+                    const url = await uploadImagemStorage(file, 'garagem');
                     db.imagens.garagem.fotos.push({ 
                         nome: file.name, 
-                        data: e.target.result,
+                        data: url,
                         estado: 'disponivel'
                     });
                     atualizarGaleriaGaragem();
@@ -3963,8 +4036,9 @@
                     document.getElementById('garagemPreview').src = '';
                     document.getElementById('garagemNoImage').style.display = 'flex';
                     registrarAuditoria('Cadastro', 'Imagem garagem');
-                };
-                reader.readAsDataURL(file);
+                } catch (e) {
+                    alert('Erro ao enviar imagem: ' + e.message);
+                }
             } else alert('Selecione uma imagem!');
         }
 
@@ -4050,12 +4124,12 @@
         // =============================================
         // FUNÇÕES DA GALERIA SOS
         // =============================================
-        function salvarSOS() {
+        async function salvarSOS() {
             const file = document.getElementById('sosImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    db.imagens.sos.fotos.push({ nome: file.name, data: e.target.result });
+                try {
+                    const url = await uploadImagemStorage(file, 'sos');
+                    db.imagens.sos.fotos.push({ nome: file.name, data: url });
                     atualizarGaleriaSOS();
                     salvarDB();
                     alert('Imagem SOS salva!');
@@ -4064,8 +4138,9 @@
                     document.getElementById('sosPreview').src = '';
                     document.getElementById('sosNoImage').style.display = 'flex';
                     registrarAuditoria('Cadastro', 'Imagem SOS');
-                };
-                reader.readAsDataURL(file);
+                } catch (e) {
+                    alert('Erro ao enviar imagem: ' + e.message);
+                }
             } else alert('Selecione uma imagem!');
         }
 
@@ -4098,12 +4173,12 @@
             } else alert('Nenhuma imagem SOS salva!');
         }
 
-        function salvarComprovante() {
+        async function salvarComprovante() {
             const file = document.getElementById('compImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    db.imagens.comprovantes.fotos.push({ nome: file.name, data: e.target.result });
+                try {
+                    const url = await uploadImagemStorage(file, 'comprovantes');
+                    db.imagens.comprovantes.fotos.push({ nome: file.name, data: url });
                     atualizarGaleriaComprovantes();
                     salvarDB();
                     alert('Comprovante salvo!');
@@ -4112,8 +4187,9 @@
                     document.getElementById('compPreview').src = '';
                     document.getElementById('compNoImage').style.display = 'flex';
                     registrarAuditoria('Cadastro', 'Comprovante');
-                };
-                reader.readAsDataURL(file);
+                } catch (e) {
+                    alert('Erro ao enviar comprovante: ' + e.message);
+                }
             } else alert('Selecione um comprovante!');
         }
 
@@ -4382,7 +4458,7 @@
         // =============================================
         // FUNÇÕES DA NOVA ABA PENDENTE
         // =============================================
-        function salvarPendencia() {
+        async function salvarPendencia() {
             const data = document.getElementById('pendData').value;
             const descricao = document.getElementById('pendDescricao').value.trim();
             const credito = document.getElementById('pendCredito').value;
@@ -4398,14 +4474,27 @@
                 return;
             }
 
+            let docUrl = null;
+            let docTipo = null;
+            const file = document.getElementById('pendUpload').files[0];
+            if (file) {
+                try {
+                    docUrl = await uploadImagemStorage(file, 'pendencias');
+                    docTipo = file.name.split('.').pop().toLowerCase();
+                } catch (e) {
+                    alert('Erro ao enviar arquivo: ' + e.message);
+                    return;
+                }
+            }
+
             const pendencia = {
                 data,
                 descricao,
                 credito: credito || 'R$ 0,00',
                 debito: debito || 'R$ 0,00',
                 vencimento,
-                docDataUrl: pendDocDataUrl || null,
-                docFileType: pendDocFileType || null,
+                docUrl: docUrl,
+                docTipo: docTipo,
                 status: 'Pendente'
             };
 
@@ -4440,9 +4529,9 @@
             document.getElementById('pendCredito').value = p.credito;
             document.getElementById('pendDebito').value = p.debito;
             document.getElementById('pendVencimento').value = p.vencimento;
-            pendDocDataUrl = p.docDataUrl;
-            pendDocFileType = p.docFileType;
-            document.getElementById('pendDocPreview').textContent = p.docDataUrl ? (p.docFileType === 'pdf' ? '📄 PDF carregado' :
+            pendDocDataUrl = p.docUrl || null;
+            pendDocFileType = p.docTipo || null;
+            document.getElementById('pendDocPreview').textContent = p.docUrl ? (p.docTipo === 'pdf' ? '📄 PDF carregado' :
                 '📄 Imagem carregada') : 'Nenhum arquivo';
             document.getElementById('formPendente').scrollIntoView({ behavior: 'smooth' });
         }
@@ -4487,14 +4576,17 @@
                 document.getElementById('pendUpload').value = '';
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                pendDocDataUrl = e.target.result;
+
+            try {
+                const url = await uploadImagemStorage(file, 'pendencias');
+                pendDocDataUrl = url;
                 pendDocFileType = extensao;
                 document.getElementById('pendDocPreview').textContent = extensao === 'pdf' ? '📄 PDF carregado' :
                     '📄 Imagem carregada';
-            };
-            reader.readAsDataURL(file);
+            } catch (e) {
+                alert('Erro ao enviar arquivo: ' + e.message);
+                return;
+            }
 
             let textoExtraido = '';
             try {
@@ -4583,8 +4675,8 @@
                 debito: pend.debito,
                 vencimento: novaDataVenc.toISOString().split('T')[0],
                 status: 'Pendente',
-                docDataUrl: null,
-                docFileType: null
+                docUrl: null,
+                docTipo: null
             };
             db.pendentes.push(novaPendencia);
 
@@ -4755,7 +4847,7 @@
             vistoriaDataUrl = null;
         }
 
-        function capturarVistoria() {
+        async function capturarVistoria() {
             const video = document.getElementById('vistoriaVideo');
             const canvas = document.getElementById('vistoriaCanvas');
             
@@ -4765,9 +4857,10 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                vistoriaDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                vistoriaDataUrl = dataUrl;
                 
-                document.getElementById('vistoriaPhotoResult').src = vistoriaDataUrl;
+                document.getElementById('vistoriaPhotoResult').src = dataUrl;
                 document.getElementById('vistoriaPhotoPreview').style.display = 'block';
                 document.getElementById('vistoriaCaptureBtn').style.display = 'none';
                 document.getElementById('vistoriaConfirmBtn').style.display = 'inline-block';
@@ -4782,7 +4875,7 @@
             }
         }
 
-        function confirmarVistoria() {
+        async function confirmarVistoria() {
             if (!vistoriaDataUrl) {
                 alert('Nenhuma foto capturada!');
                 return;
@@ -4794,14 +4887,25 @@
                 return;
             }
             
-            if (!loc.vistoria) loc.vistoria = [];
-            loc.vistoria.push(vistoriaDataUrl);
-            
-            atualizarVistoria();
-            salvarDB();
-            registrarAuditoria('Cadastro', `Foto de vistoria adicionada para ${loc.locatario} - ${loc.placa}`);
-            fecharCameraVistoria();
-            alert('Foto salva com sucesso!');
+            try {
+                // Converter dataUrl para blob e enviar para storage
+                const blob = await fetch(vistoriaDataUrl).then(res => res.blob());
+                const nomeArquivo = 'vistoria_' + Date.now() + '.jpg';
+                const storageRef = storage.ref('vistorias/' + nomeArquivo);
+                await storageRef.put(blob);
+                const url = await storageRef.getDownloadURL();
+                
+                if (!loc.vistoria) loc.vistoria = [];
+                loc.vistoria.push(url);
+                
+                atualizarVistoria();
+                salvarDB();
+                registrarAuditoria('Cadastro', `Foto de vistoria adicionada para ${loc.locatario} - ${loc.placa}`);
+                fecharCameraVistoria();
+                alert('Foto salva com sucesso!');
+            } catch (e) {
+                alert('Erro ao salvar a foto: ' + e.message);
+            }
         }
 
         function excluirFotoVistoria(index) {
