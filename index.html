@@ -1213,6 +1213,24 @@
             background: #0d1b2a;
         }
     </style>
+    <!-- Firebase SDKs (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCF0tcskYn400YdZkVa_pFP5_DTUnAUPGk",
+            authDomain: "lobao20-136c0.firebaseapp.com",
+            projectId: "lobao20-136c0",
+            storageBucket: "lobao20-136c0.firebasestorage.app",
+            messagingSenderId: "579416123473",
+            appId: "1:579416123473:web:f796e6ecb20a47f5633070",
+            measurementId: "G-SRJ333TSQT"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const firestoreDB = firebase.firestore();
+        const DB_DOC_REF = firestoreDB.collection('appData').doc('main');
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js">
@@ -2083,15 +2101,8 @@
 
     <script>
         // =============================================
-        // LIMPAR DADOS ANTIGOS DO LOCALSTORAGE (desnecessário, mas mantido)
+        // SISTEMA DE PERSISTÊNCIA COM FIREBASE FIRESTORE
         // =============================================
-        // localStorage.removeItem('paizao_rentacar_db');
-        
-        // =============================================
-        // SISTEMA DE PERSISTÊNCIA LOCAL (localStorage)
-        // =============================================
-        const STORAGE_KEY = 'paizao_rentacar_db_v2';
-
         function criarDBPadrao() {
             return {
                 veiculos: [],
@@ -2122,43 +2133,58 @@
             };
         }
 
-        function carregarDB() {
-            const dados = localStorage.getItem(STORAGE_KEY);
-            if (dados) {
-                try {
-                    const db = JSON.parse(dados);
-                    if (!db.pendentes) db.pendentes = [];
-                    if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
-                    if (!db.historico) db.historico = [];
-                    db.pendentes.forEach(p => {
-                        if (!p.status) p.status = 'Pendente';
-                    });
-                    // Garantir que todas as locações tenham o campo vistoria
-                    if (db.locacoes) {
-                        db.locacoes.forEach(l => {
+        // Função assíncrona para carregar o banco de dados do Firestore
+        async function carregarDB() {
+            try {
+                const doc = await DB_DOC_REF.get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Normalização para garantir compatibilidade
+                    if (!data.pendentes) data.pendentes = [];
+                    if (!data.locacoesEncerradas) data.locacoesEncerradas = [];
+                    if (!data.historico) data.historico = [];
+                    if (data.pendentes) {
+                        data.pendentes.forEach(p => {
+                            if (!p.status) p.status = 'Pendente';
+                        });
+                    }
+                    if (data.locacoes) {
+                        data.locacoes.forEach(l => {
                             if (!l.vistoria) l.vistoria = [];
                         });
                     }
-                    return db;
-                } catch (e) {
-                    console.error('Erro ao carregar dados do localStorage:', e);
-                    return criarDBPadrao();
+                    return data;
+                } else {
+                    // Se não existir, cria o documento padrão
+                    const dbPadrao = criarDBPadrao();
+                    await DB_DOC_REF.set(dbPadrao);
+                    return dbPadrao;
                 }
-            } else {
+            } catch (e) {
+                console.error('Erro ao carregar dados do Firestore:', e);
+                alert('Não foi possível carregar os dados do Firestore. Verifique sua conexão.');
+                // Fallback: retorna banco padrão
                 return criarDBPadrao();
             }
         }
 
+        // Função de salvamento com debounce para evitar excesso de gravações
+        let saveTimeout;
         function salvarDB() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-            } catch (e) {
-                console.error('Erro ao salvar dados no localStorage:', e);
-                alert('Erro ao salvar dados localmente. Verifique o espaço disponível.');
-            }
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(async () => {
+                try {
+                    await DB_DOC_REF.set(db);
+                    console.log('Dados salvos no Firestore.');
+                } catch (e) {
+                    console.error('Erro ao salvar dados no Firestore:', e);
+                    alert('Erro ao salvar dados no Firestore. Verifique sua conexão.');
+                }
+            }, 500);
         }
 
-        let db = carregarDB();
+        // Inicializa a variável global 'db' com um banco padrão temporário
+        let db = criarDBPadrao();
 
         // =============================================
         // VARIÁVEIS DO SISTEMA DE SELFIE
@@ -2189,7 +2215,15 @@
         // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
         // =============================================
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Carrega o banco de dados do Firestore antes de inicializar
+            try {
+                db = await carregarDB();
+            } catch (e) {
+                console.error('Falha ao carregar banco de dados:', e);
+            }
+
+            // Configura navegação por tecla Enter
             document.querySelectorAll('.campo-enter').forEach(function(campo) {
                 campo.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
@@ -2221,15 +2255,11 @@
             document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
 
-            // Inicializar sistema - chamada imediata para garantir que o usuário padrão exista
+            // Inicializar sistema
             inicializarSistema();
         });
 
-        // Inicialização imediata caso o DOM já esteja carregado
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            inicializarSistema();
-        }
-
+        // Função para calcular valor total
         function calcularValorTotal() {
             const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
             const valorUnitarioStr = document.getElementById('compValorUnitario').value;
@@ -5864,10 +5894,11 @@
             atualizarVistoria();
         }
 
+        // =============================================
         // INICIALIZAÇÃO
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            inicializarSistema();
-        }
+        // =============================================
+        // O carregamento do banco de dados é assíncrono e já está no DOMContentLoaded.
+        // Não é necessário chamar inicializarSistema aqui, pois será chamado após o carregamento.
     </script>
 </body>
 </html>
