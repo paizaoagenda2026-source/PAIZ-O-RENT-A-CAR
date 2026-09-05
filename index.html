@@ -1110,7 +1110,6 @@
         // =============================================
         async function carregarDadosFirestore() {
             try {
-                // Desabilita o botão de login enquanto carrega
                 document.getElementById('loginButton').disabled = true;
                 const doc = await DB_DOC_REF.get();
                 if (doc.exists) {
@@ -1142,20 +1141,23 @@
                 inicializarSistema();
             } catch (error) {
                 console.error('Erro ao carregar dados do Firebase:', error);
-                alert('Erro ao conectar com o Firebase. Verifique sua conexão e recarregue a página.');
+                alert('Erro ao conectar com o Firebase. Verifique sua conexão e recarregue a página.\nDetalhes: ' + error.message);
             }
         }
 
         // =============================================
-        // SALVAR DADOS NO FIRESTORE (assíncrono)
+        // SALVAR DADOS NO FIRESTORE (assíncrono) - CORRIGIDO
         // =============================================
         async function salvarDB() {
             try {
                 if (!db) return;
-                await DB_DOC_REF.set(db);
+                // Remove possíveis dados não serializáveis e cria uma cópia limpa
+                const dados = JSON.parse(JSON.stringify(db));
+                await DB_DOC_REF.set(dados, { merge: true });
+                console.log('Dados salvos com sucesso no Firebase.');
             } catch (error) {
                 console.error('Erro ao salvar dados no Firebase:', error);
-                alert('Erro ao salvar dados no Firebase. Verifique sua conexão.');
+                alert('Erro ao salvar dados no Firebase: ' + error.message + '\nVerifique sua conexão e o tamanho dos dados (evite imagens muito grandes).');
             }
         }
 
