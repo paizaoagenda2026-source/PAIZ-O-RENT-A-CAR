@@ -2576,7 +2576,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR LOCAÇÃO (modificada para permissões de veículo)
+        // FUNÇÃO SALVAR LOCAÇÃO (modificada para permissões de veículo e validações)
         // =============================================
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
@@ -2589,18 +2589,52 @@
             const aluguelMensal = document.getElementById('locAluguelMensal').value;
             const caucaoPago = document.getElementById('locCaucaoPago').value;
 
-            if (campoVazio(locatario) || campoVazio(veiculo) || campoVazio(placa) || campoVazio(dataInicio) || campoVazio(
-                    dataFim) || campoVazio(caucao) || campoVazio(valorAluguel) || campoVazio(aluguelMensal)) {
-                alert('Preencha todos os campos obrigatórios da locação!');
+            // Validação dos campos obrigatórios com foco no primeiro vazio
+            if (campoVazio(locatario)) {
+                alert('Selecione o locatário!');
+                document.getElementById('locLocatario').focus();
+                return;
+            }
+            if (campoVazio(veiculo)) {
+                alert('Selecione o veículo!');
+                document.getElementById('locVeiculo').focus();
+                return;
+            }
+            if (campoVazio(placa)) {
+                alert('Selecione a placa!');
+                document.getElementById('locPlaca').focus();
+                return;
+            }
+            if (campoVazio(dataInicio)) {
+                alert('A Data de Início é obrigatória!');
+                document.getElementById('locDataInicio').focus();
+                return;
+            }
+            if (campoVazio(dataFim)) {
+                alert('A Data de Fim é obrigatória!');
+                document.getElementById('locDataFim').focus();
+                return;
+            }
+            if (campoVazio(caucao)) {
+                alert('Informe o valor da caução!');
+                document.getElementById('locCaucao').focus();
+                return;
+            }
+            if (campoVazio(valorAluguel)) {
+                alert('Informe o valor do aluguel!');
+                document.getElementById('locValorAluguel').focus();
+                return;
+            }
+            if (campoVazio(aluguelMensal)) {
+                alert('Informe o valor do aluguel mensal!');
+                document.getElementById('locAluguelMensal').focus();
                 return;
             }
 
-            if (db.locacoes.some(l =>
-                    l.locatario === locatario &&
-                    l.placa === placa &&
-                    l.dataInicio === dataInicio
-                )) {
-                alert('Já existe uma locação para este veículo, locatário e data de início!');
+            // Verificação de placa duplicada em locações ativas
+            if (db.locacoes.some(l => l.placa === placa)) {
+                alert('Esta placa já está alugada em uma locação ativa!');
+                document.getElementById('locPlaca').focus();
                 return;
             }
 
