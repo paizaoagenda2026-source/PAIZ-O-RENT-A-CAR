@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PAIZÃO RENT A CAR - Sistema de Locação</title>
+    <!-- Firebase SDKs (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --primary: #1a3c6e;
@@ -1213,28 +1216,8 @@
             background: #0d1b2a;
         }
     </style>
-    <!-- Firebase SDKs (compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script>
-        // Initialize Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyCF0tcskYn400YdZkVa_pFP5_DTUnAUPGk",
-            authDomain: "lobao20-136c0.firebaseapp.com",
-            projectId: "lobao20-136c0",
-            storageBucket: "lobao20-136c0.firebasestorage.app",
-            messagingSenderId: "579416123473",
-            appId: "1:579416123473:web:f796e6ecb20a47f5633070",
-            measurementId: "G-SRJ333TSQT"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const firestoreDB = firebase.firestore();
-        const DB_DOC_REF = firestoreDB.collection('appData').doc('main');
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -2101,7 +2084,29 @@
 
     <script>
         // =============================================
-        // SISTEMA DE PERSISTÊNCIA COM FIREBASE FIRESTORE
+        // CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
+        // =============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcPHYGMK30pTCTbmbZIVa4IEeBkAf5Bi0",
+            authDomain: "lobao-57c91.firebaseapp.com",
+            projectId: "lobao-57c91",
+            storageBucket: "lobao-57c91.firebasestorage.app",
+            messagingSenderId: "479688101660",
+            appId: "1:479688101660:web:f3e87424e1e874f5ceb4d9",
+            measurementId: "G-R4J7S8ZXYC"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const firestoreDB = firebase.firestore();
+        const DB_DOC_REF = firestoreDB.collection('sistema').doc('dados'); // Coleção "sistema", documento "dados"
+
+        // =============================================
+        // VARIÁVEL GLOBAL DO BANCO (carregada do Firestore)
+        // =============================================
+        let db = null;
+        let dbCarregado = false;
+
+        // =============================================
+        // FUNÇÃO PADRÃO DO BANCO (caso não exista no Firestore)
         // =============================================
         function criarDBPadrao() {
             return {
@@ -2111,7 +2116,15 @@
                 locacoesEncerradas: [],
                 manutencao: [],
                 mecanico: [],
-                usuarios: [],
+                usuarios: [
+                    {
+                        nome: 'SERGIO',
+                        senha: '080888',
+                        tipo: 'ADM',
+                        permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
+                        selfie: null
+                    }
+                ],
                 alugueis: [],
                 fluxoCaixa: [],
                 documentos: [],
@@ -2133,58 +2146,54 @@
             };
         }
 
-        // Função assíncrona para carregar o banco de dados do Firestore
-        async function carregarDB() {
+        // =============================================
+        // CARREGAR DADOS DO FIRESTORE (assíncrono)
+        // =============================================
+        async function carregarDadosFirestore() {
             try {
                 const doc = await DB_DOC_REF.get();
                 if (doc.exists) {
-                    const data = doc.data();
-                    // Normalização para garantir compatibilidade
-                    if (!data.pendentes) data.pendentes = [];
-                    if (!data.locacoesEncerradas) data.locacoesEncerradas = [];
-                    if (!data.historico) data.historico = [];
-                    if (data.pendentes) {
-                        data.pendentes.forEach(p => {
-                            if (!p.status) p.status = 'Pendente';
+                    db = doc.data();
+                    if (!db.pendentes) db.pendentes = [];
+                    if (!db.locacoesEncerradas) db.locacoesEncerradas = [];
+                    if (!db.historico) db.historico = [];
+                    if (!db.contratos) db.contratos = { contratoLocacao:{}, termoResponsabilidade:{}, notaPromissoria:{} };
+                    if (!db.imagens) db.imagens = { garagem:{subpasta:'Fotos da Garagem', fotos:[]}, sos:{subpasta:'Imagens SOS', fotos:[]}, comprovantes:{subpasta:'Comprovantes', fotos:[]} };
+                    if (db.locacoes) db.locacoes.forEach(l => { if (!l.vistoria) l.vistoria = []; });
+                    db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
+                    if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
+                        db.usuarios.push({
+                            nome: 'SERGIO',
+                            senha: '080888',
+                            tipo: 'ADM',
+                            permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
+                            selfie: null
                         });
                     }
-                    if (data.locacoes) {
-                        data.locacoes.forEach(l => {
-                            if (!l.vistoria) l.vistoria = [];
-                        });
-                    }
-                    return data;
                 } else {
-                    // Se não existir, cria o documento padrão
-                    const dbPadrao = criarDBPadrao();
-                    await DB_DOC_REF.set(dbPadrao);
-                    return dbPadrao;
+                    db = criarDBPadrao();
+                    await DB_DOC_REF.set(db);
                 }
-            } catch (e) {
-                console.error('Erro ao carregar dados do Firestore:', e);
-                alert('Não foi possível carregar os dados do Firestore. Verifique sua conexão.');
-                // Fallback: retorna banco padrão
-                return criarDBPadrao();
+                dbCarregado = true;
+                inicializarSistema();
+            } catch (error) {
+                console.error('Erro ao carregar dados do Firebase:', error);
+                alert('Erro ao conectar com o Firebase. Verifique sua conexão e recarregue a página.');
             }
         }
 
-        // Função de salvamento com debounce para evitar excesso de gravações
-        let saveTimeout;
-        function salvarDB() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(async () => {
-                try {
-                    await DB_DOC_REF.set(db);
-                    console.log('Dados salvos no Firestore.');
-                } catch (e) {
-                    console.error('Erro ao salvar dados no Firestore:', e);
-                    alert('Erro ao salvar dados no Firestore. Verifique sua conexão.');
-                }
-            }, 500);
+        // =============================================
+        // SALVAR DADOS NO FIRESTORE (assíncrono)
+        // =============================================
+        async function salvarDB() {
+            try {
+                if (!db) return;
+                await DB_DOC_REF.set(db);
+            } catch (error) {
+                console.error('Erro ao salvar dados no Firebase:', error);
+                alert('Erro ao salvar dados no Firebase. Verifique sua conexão.');
+            }
         }
-
-        // Inicializa a variável global 'db' com um banco padrão temporário
-        let db = criarDBPadrao();
 
         // =============================================
         // VARIÁVEIS DO SISTEMA DE SELFIE
@@ -2205,48 +2214,32 @@
         let pendenciaEditandoIndex = null;
         let pendDocDataUrl = null;
         let pendDocFileType = null;
-
-        // Variáveis da vistoria
         let vistoriaStream = null;
         let vistoriaDataUrl = null;
         let vistoriaLocacaoIndex = null;
-        let vistoriaDestino = null; // 'locacao' ou 'usuario' (para reutilizar lógica)
+        let vistoriaDestino = null;
 
         // =============================================
         // SISTEMA DE NAVEGAÇÃO POR TECLA ENTER
         // =============================================
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Carrega o banco de dados do Firestore antes de inicializar
-            try {
-                db = await carregarDB();
-            } catch (e) {
-                console.error('Falha ao carregar banco de dados:', e);
-            }
-
-            // Configura navegação por tecla Enter
+        document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.campo-enter').forEach(function(campo) {
                 campo.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        const form = this.closest('.form-grid') || this.closest('form') || this.closest(
-                            '.tab-content');
+                        const form = this.closest('.form-grid') || this.closest('form') || this.closest('.tab-content');
                         if (!form) return;
-                        const campos = form.querySelectorAll(
-                            'input:not([type="hidden"]):not([readonly]), select, textarea, button');
+                        const campos = form.querySelectorAll('input:not([type="hidden"]):not([readonly]), select, textarea, button');
                         const index = Array.from(campos).indexOf(this);
                         if (index !== -1 && index < campos.length - 1) {
                             const proximo = campos[index + 1];
                             if (proximo) {
                                 proximo.focus();
-                                if (proximo.tagName === 'SELECT') {
-                                    proximo.click();
-                                }
+                                if (proximo.tagName === 'SELECT') proximo.click();
                             }
                         } else if (index === campos.length - 1) {
                             const botoes = form.querySelectorAll('.btn-primary, .btn-success, .btn-secondary');
-                            if (botoes.length > 0) {
-                                botoes[0].focus();
-                            }
+                            if (botoes.length > 0) botoes[0].focus();
                         }
                     }
                 });
@@ -2254,12 +2247,8 @@
 
             document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
-
-            // Inicializar sistema
-            inicializarSistema();
         });
 
-        // Função para calcular valor total
         function calcularValorTotal() {
             const qtd = parseFloat(document.getElementById('compQuantidade').value) || 0;
             const valorUnitarioStr = document.getElementById('compValorUnitario').value;
@@ -2605,7 +2594,6 @@
                 db.historico = [];
                 salvarDB();
             }
-            // Garantir que todas as locações tenham vistoria
             if (db.locacoes) {
                 db.locacoes.forEach(l => {
                     if (!l.vistoria) l.vistoria = [];
@@ -2711,19 +2699,16 @@
             const valor = document.getElementById('mecValor').value;
             const obs = document.getElementById('mecObs').value;
 
-            // Validação dos campos obrigatórios
             if (campoVazio(data) || campoVazio(oficina) || campoVazio(servico) || campoVazio(carro) || campoVazio(placa) || campoVazio(valor)) {
                 alert('Preencha todos os campos obrigatórios (Data, Oficina, Serviço, Carro, Placa, Valor)!');
                 return;
             }
 
-            // Verifica duplicidade simples (mesmo serviço na mesma data com mesma placa)
             if (db.mecanico.some(m => m.data === data && m.servico === servico && m.placa === placa)) {
                 alert('Já existe um serviço idêntico registrado!');
                 return;
             }
 
-            // Cria o objeto de serviço
             const novoServico = {
                 data,
                 oficina,
@@ -2739,23 +2724,19 @@
 
             db.mecanico.push(novoServico);
 
-            // =============================================
-            // NOVO: LANÇAR TAMBÉM NO HISTÓRICO
-            // =============================================
             const novoItemHistorico = {
                 data: data,
                 descricao: servico,
                 placa: placa,
                 valor: valor,
-                fornecedor: responsavel,  // usa responsável como fornecedor
+                fornecedor: responsavel,
                 oficina: oficina,
                 arquivo: mecPdfDataUrl || null,
                 arquivoTipo: mecPdfFileType || null
             };
             db.historico.push(novoItemHistorico);
-            atualizarTabelaHistorico();  // Atualiza a aba histórico
+            atualizarTabelaHistorico();
 
-            // Atualiza tabela e registra auditoria
             atualizarTabelaMecanico();
             registrarAuditoria('Cadastro', `Serviço de mecânico: ${servico} - ${placa}`);
 
@@ -2969,7 +2950,6 @@
             const user = document.getElementById('loginUser').value.trim().toUpperCase();
             const pass = document.getElementById('loginPassword').value;
             
-            // Verificação de emergência: garantir que o admin padrão exista
             if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
                 db.usuarios.push({
                     nome: 'SERGIO',
@@ -3441,7 +3421,7 @@
                 proprietario: document.getElementById('locProprietario').value,
                 cpfPropr: document.getElementById('locCpfPropr').value,
                 pagCaucao: document.getElementById('locPagCaucao').value,
-                vistoria: []  // NOVO: inicializa o array de fotos de vistoria
+                vistoria: []
             };
             db.locacoes.push(locacao);
             atualizarTabelaLocacoes();
@@ -3453,26 +3433,23 @@
             registrarAuditoria('Cadastro', `Locação: ${locatario} - ${placa}`);
             salvarDB();
             alert('Locação salva com sucesso!');
-            atualizarVistoria(); // Atualiza a aba vistoria
+            atualizarVistoria();
         }
 
         // =============================================
         // NOVA FUNÇÃO: CRIA APENAS O PRIMEIRO ALUGUEL
         // =============================================
         function criarAlugueisParaLocacao(locacao) {
-            // Limpa aluguéis existentes para esta locação
             db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
 
             const dataInicio = new Date(locacao.dataInicio);
             const dataFim = new Date(locacao.dataFim);
 
-            // Extrair valores numéricos
             const valorAluguelStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
             const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorMensalNum = parseFloat(valorMensalStr) || 0;
             
-            // Determinar o valor base e o tipo
             let valorBase = 0;
             let tipo = '';
             let intervaloDias = 0;
@@ -3485,45 +3462,34 @@
                 tipo = 'mensal';
                 intervaloDias = 30;
             } else {
-                return; // sem aluguel definido
+                return;
             }
 
-            // Extrair caução
             const caucaoStr = (locacao.caucao || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const caucaoNum = parseFloat(caucaoStr) || 0;
             
-            // Extrair caução paga (entrada)
             const caucaoPagoStr = (locacao.caucaoPago || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
             
-            // Determinar o tipo de pagamento da caução
-            const pagCaucao = locacao.pagCaucao; // 'avista', 'parcelado', 'entrada'
+            const pagCaucao = locacao.pagCaucao;
 
-            // Calcular valor do primeiro aluguel
             let valorAluguelFinal = valorBase;
             if (caucaoNum > 0) {
                 if (pagCaucao === 'avista') {
                     valorAluguelFinal += caucaoNum;
                 } else if (pagCaucao === 'parcelado') {
-                    // Para mensal, dividir por 6 (número de meses padrão)
                     if (tipo === 'mensal') {
                         valorAluguelFinal += (caucaoNum / 6);
                     } else {
                         valorAluguelFinal += (caucaoNum / 10);
                     }
                 } else if (pagCaucao === 'entrada') {
-                    if (tipo === 'mensal') {
-                        valorAluguelFinal += caucaoPagoNum;
-                    } else {
-                        valorAluguelFinal += caucaoPagoNum;
-                    }
+                    valorAluguelFinal += caucaoPagoNum;
                 }
             }
             
-            // Formatar valor
             const valorFormatado = 'R$ ' + valorAluguelFinal.toFixed(2).replace('.', ',');
             
-            // Data de vencimento do primeiro
             const vencISO = dataInicio.toISOString().split('T')[0];
             
             db.alugueis.push({
@@ -3547,7 +3513,6 @@
             
             aluguel.status = 'Pago';
             
-            // LANÇA NO FLUXO DE CAIXA O VALOR PAGO
             const hoje = new Date().toISOString().split('T')[0];
             const descricao = `Pagamento Aluguel - ${aluguel.locatario} - ${aluguel.placa} - Venc. ${formatarDataBR(aluguel.dataVencimento)}`;
             const valorStr = aluguel.valorAluguel.replace('R$ ', '').replace('.', '').replace(',', '.');
@@ -3565,12 +3530,10 @@
                 }
             }
 
-            // Determina intervalo
             const intervalo = aluguel.tipo === 'mensal' ? 30 : 7;
             const novaDataVencimento = new Date(aluguel.dataVencimento);
             novaDataVencimento.setDate(novaDataVencimento.getDate() + intervalo);
             
-            // Procurar a locação ativa correspondente
             const locacao = db.locacoes.find(l =>
                 l.locatario === aluguel.locatario &&
                 l.placa === aluguel.placa &&
@@ -3579,14 +3542,12 @@
             
             if (locacao) {
                 const dataFim = new Date(locacao.dataFim);
-                // Verificar se já existe um aluguel com essa data de vencimento e mesmo locatário/placa
                 const proximoExistente = db.alugueis.find(a =>
                     a.locatario === aluguel.locatario &&
                     a.placa === aluguel.placa &&
                     a.dataVencimento === novaDataVencimento.toISOString().split('T')[0]
                 );
                 if (!proximoExistente && novaDataVencimento <= dataFim) {
-                    // Calcular o valor do próximo aluguel conforme a regra de caução
                     let valorBaseNum = 0;
                     if (aluguel.tipo === 'semanal') {
                         const valorBaseStr = (locacao.valorAluguel || '0').replace('R$ ', '').replace('.', '').replace(',', '.');
@@ -3602,7 +3563,6 @@
                     const caucaoPagoNum = parseFloat(caucaoPagoStr) || 0;
                     const pagCaucao = locacao.pagCaucao;
                     
-                    // número da próxima parcela
                     const proximaParcela = (aluguel.numeroParcela || 1) + 1;
                     
                     let valorAluguelFinal = valorBaseNum;
@@ -3619,7 +3579,6 @@
                             if (pagCaucao === 'avista') {
                                 // nenhum acréscimo
                             } else if (pagCaucao === 'parcelado') {
-                                // CORREÇÃO: Adiciona 1ª e mais 9 parcelas (total 10) apenas quando gerar o próximo vencimento
                                 if (proximaParcela <= 10) {
                                     valorAluguelFinal += (caucaoNum / 10);
                                 }
@@ -3665,7 +3624,6 @@
             document.getElementById('ctAnoFabr').value = locacao.anoFabr;
             document.getElementById('ctAnoModel').value = locacao.anoModel;
             
-            // Verifica qual valor está preenchido para preencher o contrato
             const valorMensalStr = (locacao.aluguelMensal || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorMensalNum = parseFloat(valorMensalStr) || 0;
             
@@ -3767,12 +3725,10 @@
             }
             
             if (usuarioEditandoIndex !== null) {
-                // Atualizar usuário existente
                 db.usuarios[usuarioEditandoIndex] = { nome, senha, tipo, permissoes, selfie: selfieUsuarioTemp || null };
                 usuarioEditandoIndex = null;
                 registrarAuditoria('Edição', `Usuário atualizado: ${nome}`);
             } else {
-                // Verificar duplicado
                 if (db.usuarios.some(u => u.nome === nome)) {
                     alert('Já existe um usuário com esse nome!');
                     return;
@@ -3904,8 +3860,6 @@
 
         function preencherCamposComprovante(texto) {
             if (!texto) return;
-
-            const textoMin = texto.toLowerCase();
 
             let nome = '';
             const padroesNome = [
@@ -4092,7 +4046,6 @@
             tbody.innerHTML = '';
             db.locacoes.forEach((l, index) => {
                 const row = tbody.insertRow();
-                // Lógica para exibir o valor correto: se aluguelMensal > 0, mostra ele; senão mostra valorAluguel
                 let valorExibido = l.valorAluguel || 'R$ 0,00';
                 if (l.aluguelMensal) {
                     const valorMensalStr = l.aluguelMensal.replace('R$ ', '').replace('.', '').replace(',', '.');
@@ -4116,10 +4069,9 @@
             if (!confirm(`Encerrar a locação de ${locacao.locatario} - ${locacao.placa}?`)) return;
 
             const dataInicio = new Date(locacao.dataInicio);
-            const dataEncerramento = new Date(); // data de hoje
-            const dias = Math.ceil((dataEncerramento - dataInicio) / (1000 * 60 * 60 * 24)) + 1; // inclui o dia inicial
+            const dataEncerramento = new Date();
+            const dias = Math.ceil((dataEncerramento - dataInicio) / (1000 * 60 * 60 * 24)) + 1;
 
-            // Determinar valor diário (baseado em semanal ou mensal)
             let valorDiario = 0;
             const valorAluguelStr = (locacao.valorAluguel || '').replace('R$ ', '').replace('.', '').replace(',', '.');
             const valorAluguelNum = parseFloat(valorAluguelStr) || 0;
@@ -4138,7 +4090,6 @@
             db.locacoesEncerradas.push(locacao);
             db.locacoes.splice(index, 1);
 
-            // Remove os aluguéis pendentes da locação (pois foi encerrada)
             db.alugueis = db.alugueis.filter(a => !(a.locatario === locacao.locatario && a.placa === locacao.placa && a.dataContrato === locacao.dataInicio));
 
             atualizarTabelaLocacoes();
@@ -4146,7 +4097,7 @@
             atualizarTabelaAlugueis();
             registrarAuditoria('Edição', `Locação encerrada: ${locacao.locatario} - ${locacao.placa}`);
             salvarDB();
-            atualizarVistoria(); // atualiza vistoria
+            atualizarVistoria();
             alert('Locação encerrada com sucesso!');
         }
 
@@ -4809,7 +4760,6 @@
             };
             db.compras.push(compra);
             
-            // ADICIONAR AO HISTÓRICO
             const novoItemHistorico = {
                 data: data,
                 descricao: produto,
@@ -5728,7 +5678,6 @@
 
             nenhumaDiv.style.display = 'none';
             
-            // Criar sub-tabs para cada locação ativa
             db.locacoes.forEach((loc, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'vistoria-sub-tab';
@@ -5738,7 +5687,6 @@
                 subTabsContainer.appendChild(btn);
             });
 
-            // Selecionar a primeira locação por padrão
             if (vistoriaLocacaoIndex === null || vistoriaLocacaoIndex >= db.locacoes.length) {
                 vistoriaLocacaoIndex = 0;
             }
@@ -5750,7 +5698,6 @@
             const loc = db.locacoes[index];
             if (!loc) return;
 
-            // Atualizar botões ativos
             document.querySelectorAll('.vistoria-sub-tab').forEach((btn, i) => {
                 btn.classList.toggle('active', i === index);
             });
@@ -5793,7 +5740,7 @@
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({
                     video: {
-                        facingMode: 'environment', // câmera traseira para fotos do veículo
+                        facingMode: 'environment',
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     },
@@ -5890,15 +5837,11 @@
         function limparVistoriaSelecionada() {
             vistoriaLocacaoIndex = null;
             document.getElementById('vistoriaContent').style.display = 'none';
-            // Pode selecionar a primeira novamente ou mostrar nada
             atualizarVistoria();
         }
 
-        // =============================================
-        // INICIALIZAÇÃO
-        // =============================================
-        // O carregamento do banco de dados é assíncrono e já está no DOMContentLoaded.
-        // Não é necessário chamar inicializarSistema aqui, pois será chamado após o carregamento.
+        // INICIALIZAÇÃO FINAL
+        carregarDadosFirestore();
     </script>
 </body>
 </html>
