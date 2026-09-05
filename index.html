@@ -1522,8 +1522,23 @@
                 veiculos: {}
             },
             MOTORISTA: {
-                abas: { veiculos: false, clientes: false, locacoes: false, locEncerrada: false, manutencao: false, mecanico: false, usuario: false, garagem: true, sos: true, comprovantes: true, pagamentos: false, banco: true, fluxocaixa: false, doc: true, compras: false, configuracao: false, auditoria: false, pendente: false, historico: false, vistoria: true },
-                botoes: { garagem_buscar: true, garagem_salvar: true, sos_buscar: true, sos_salvar: true, sos_baixar: true, comprovantes_buscar: true, comprovantes_salvar: true, banco_copiar: true, vistoria_camera: true },
+                abas: {
+                    veiculos: false, clientes: false, locacoes: false, locEncerrada: false,
+                    manutencao: true, mecanico: false, usuario: false, garagem: true,
+                    sos: true, comprovantes: true, pagamentos: false, banco: true,
+                    fluxocaixa: false, doc: true, compras: false, configuracao: false,
+                    auditoria: false, pendente: false, historico: true, vistoria: true
+                },
+                botoes: {
+                    garagem_salvar: true,
+                    sos_salvar: true,
+                    sos_baixar: true,
+                    banco_copiar: true,
+                    doc_salvar: true,
+                    doc_limpar: true,
+                    doc_selecionar: true,
+                    vistoria_camera: true
+                },
                 veiculos: {}
             },
             OFICINA: {
@@ -2551,7 +2566,7 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR LOCAÇÃO
+        // FUNÇÃO SALVAR LOCAÇÃO (modificada para permissões de veículo)
         // =============================================
         function salvarLocacao() {
             const locatario = document.getElementById('locLocatario').value;
@@ -2609,6 +2624,34 @@
             salvarDB();
             alert('Locação salva com sucesso!');
             atualizarVistoria();
+
+            // -------- Atualização das permissões do motorista --------
+            const primeiroNome = locatario.split(/\s+/)[0].toUpperCase();
+            let usuarioMotorista = db.usuarios.find(u => u.nome === primeiroNome && u.tipo === 'MOTORISTA');
+            if (!usuarioMotorista) {
+                // Criar novo usuário motorista com permissões padrão
+                const cliente = db.clientes.find(c => c.nome === locatario);
+                let senha = '';
+                if (cliente) {
+                    const telefoneLimpo = cliente.telefone.replace(/\D/g, '');
+                    if (telefoneLimpo.length >= 10) senha = telefoneLimpo.substring(2);
+                }
+                usuarioMotorista = {
+                    nome: primeiroNome,
+                    senha: senha,
+                    tipo: 'MOTORISTA',
+                    permissoes: JSON.parse(JSON.stringify(permissoesPadrao.MOTORISTA)),
+                    selfie: cliente ? (cliente.selfie || null) : null
+                };
+                db.usuarios.push(usuarioMotorista);
+            }
+            // Adicionar a placa do veículo locado às permissões do motorista
+            if (!usuarioMotorista.permissoes.veiculos[placa]) {
+                usuarioMotorista.permissoes.veiculos[placa] = true;
+            }
+            atualizarTabelaUsuario();
+            atualizarPermissoesVeiculos(); // Atualizar UI de permissões
+            salvarDB();
         }
 
         // =============================================
