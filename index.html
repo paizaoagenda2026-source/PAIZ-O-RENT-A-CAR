@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAIZÃO RENT A CAR - Sistema de Locação</title>
+    <title>LOBÃO - SISTEMA DE LOCAÇÃO DE CARROS</title>
     <!-- Firebase SDKs (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <style>
         /* CSS completo mantido (sem alterações) */
         :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
-        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #1a3c6e 0%, #0d1b2a 100%); }
-        .login-box { background: var(--white); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
+        .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: url('lobao.jpg') no-repeat center center fixed; background-size: cover; }
+        .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
         .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
         .login-box h2 { color: var(--secondary); margin-bottom: 30px; font-size: 20px; }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: var(--radius); font-size: 16px; transition: border-color 0.3s; }
@@ -171,8 +170,8 @@
     <!-- LOGIN -->
     <div class="login-container" id="loginContainer">
         <div class="login-box">
-            <h1>🚗 PAIZÃO RENT A CAR</h1>
-            <h2>📍 Sistema de Locação</h2>
+            <h1>🦁 LOBÃO</h1>
+            <h2>SISTEMA DE LOCAÇÃO DE CARROS</h2>
             <form id="loginForm">
                 <input type="text" id="loginUser" placeholder="Usuário" required autocomplete="off" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
                 <input type="password" id="loginPassword" placeholder="Senha" required>
@@ -695,7 +694,7 @@
             <div class="config-section">
                 <h3>🔧 Configurações Gerais</h3>
                 <div class="form-grid" id="formConfig">
-                    <div class="form-group"><label>Nome da Empresa</label><input type="text" id="configEmpresa" value="PAIZÃO RENT A CAR" class="campo-enter"></div>
+                    <div class="form-group"><label>Nome da Empresa</label><input type="text" id="configEmpresa" value="LOBÃO" class="campo-enter"></div>
                     <div class="form-group"><label>CNPJ</label><input type="text" id="configCnpj" class="campo-enter"></div>
                     <div class="form-group"><label>Telefone</label><input type="text" id="configTelefone" class="campo-enter"></div>
                     <div class="form-group"><label>Email</label><input type="text" id="configEmail" class="campo-enter"></div>
@@ -1043,7 +1042,6 @@
         };
         firebase.initializeApp(firebaseConfig);
         const firestoreDB = firebase.firestore();
-        const storage = firebase.storage();
         const DB_DOC_REF = firestoreDB.collection('sistema').doc('dados');
 
         // =============================================
@@ -1091,7 +1089,7 @@
                     comprovantes: { subpasta: 'Comprovantes', fotos: [] }
                 },
                 config: {
-                    empresa: 'PAIZÃO RENT A CAR',
+                    empresa: 'LOBÃO',
                     cnpj: '',
                     telefone: '',
                     email: '',
@@ -1112,6 +1110,7 @@
         // =============================================
         async function carregarDadosFirestore() {
             try {
+                // Desabilita o botão de login enquanto carrega
                 document.getElementById('loginButton').disabled = true;
                 const doc = await DB_DOC_REF.get();
                 if (doc.exists) {
@@ -1143,51 +1142,21 @@
                 inicializarSistema();
             } catch (error) {
                 console.error('Erro ao carregar dados do Firebase:', error);
-                alert('Erro ao conectar com o Firebase. Verifique sua conexão e recarregue a página.\nDetalhes: ' + error.message);
+                alert('Erro ao conectar com o Firebase. Verifique sua conexão e recarregue a página.');
             }
         }
 
         // =============================================
-        // SALVAR DADOS NO FIRESTORE (assíncrono) - CORRIGIDO
+        // SALVAR DADOS NO FIRESTORE (assíncrono)
         // =============================================
         async function salvarDB() {
             try {
                 if (!db) return;
-                // Remove possíveis dados não serializáveis e cria uma cópia limpa
-                const dados = JSON.parse(JSON.stringify(db));
-                await DB_DOC_REF.set(dados, { merge: true });
-                console.log('Dados salvos com sucesso no Firebase.');
+                await DB_DOC_REF.set(db);
             } catch (error) {
                 console.error('Erro ao salvar dados no Firebase:', error);
-                alert('Erro ao salvar dados no Firebase: ' + error.message + '\nVerifique sua conexão e o tamanho dos dados.');
+                alert('Erro ao salvar dados no Firebase. Verifique sua conexão.');
             }
-        }
-
-        // =============================================
-        // FUNÇÃO PARA UPLOAD DE IMAGEM AO STORAGE
-        // =============================================
-        async function uploadImagemStorage(file, pasta) {
-            return new Promise((resolve, reject) => {
-                if (!file) {
-                    resolve(null);
-                    return;
-                }
-                const nomeArquivo = Date.now() + '_' + file.name.replace(/\s+/g, '_');
-                const storageRef = storage.ref(pasta + '/' + nomeArquivo);
-                const uploadTask = storageRef.put(file);
-                uploadTask.on('state_changed', 
-                    (snapshot) => {},
-                    (error) => {
-                        console.error('Erro no upload:', error);
-                        reject(error);
-                    },
-                    () => {
-                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                            resolve(downloadURL);
-                        }).catch((error) => reject(error));
-                    }
-                );
-            });
         }
 
         // =============================================
@@ -1460,7 +1429,7 @@
             }
         }
 
-        async function capturarSelfie() {
+        function capturarSelfie() {
             const video = document.getElementById('selfieVideo');
             const canvas = document.getElementById('selfieCanvas');
             
@@ -1473,10 +1442,9 @@
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                const dataUrl = canvas.toDataURL('image/png');
-                selfieDataUrl = dataUrl;
+                selfieDataUrl = canvas.toDataURL('image/png');
                 
-                document.getElementById('selfiePhotoResult').src = dataUrl;
+                document.getElementById('selfiePhotoResult').src = selfieDataUrl;
                 document.getElementById('selfiePhotoPreview').style.display = 'block';
                 document.getElementById('selfieCaptureBtn').style.display = 'none';
                 document.getElementById('selfieConfirmBtn').style.display = 'inline-block';
@@ -1492,34 +1460,22 @@
             }
         }
 
-        async function confirmarSelfie() {
+        function confirmarSelfie() {
             if (!selfieDataUrl) {
                 alert('Nenhuma selfie foi capturada!');
                 return;
             }
             
-            // Converter dataURL para Blob e fazer upload
-            try {
-                const blob = await fetch(selfieDataUrl).then(res => res.blob());
-                const nomeArquivo = 'selfie_' + Date.now() + '.png';
-                const storageRef = storage.ref('selfies/' + nomeArquivo);
-                await storageRef.put(blob);
-                const url = await storageRef.getDownloadURL();
-                
-                if (selfieDestino === 'usuario') {
-                    selfieUsuarioTemp = url;
-                    mostrarPreviewSelfieUsuario();
-                    alert('Selfie do usuário capturada com sucesso!');
-                } else {
-                    selfieClienteTemp = url;
-                    mostrarPreviewSelfieCliente();
-                    fecharModalSelfie();
-                    salvarCliente(); // Salva o cliente imediatamente
-                }
+            if (selfieDestino === 'usuario') {
+                selfieUsuarioTemp = selfieDataUrl;
+                mostrarPreviewSelfieUsuario();
+                alert('Selfie do usuário capturada com sucesso!');
                 fecharModalSelfie();
-            } catch (error) {
-                console.error('Erro ao enviar selfie:', error);
-                alert('Erro ao salvar selfie. Tente novamente.');
+            } else {
+                selfieClienteTemp = selfieDataUrl;
+                mostrarPreviewSelfieCliente();
+                fecharModalSelfie();
+                salvarCliente(); // Salva o cliente imediatamente
             }
         }
 
@@ -1697,7 +1653,7 @@
         // =============================================
         // FUNÇÃO SALVAR MECÂNICO
         // =============================================
-        async function salvarMecanico() {
+        function salvarMecanico() {
             const data = document.getElementById('mecData').value;
             const oficina = document.getElementById('mecOficina').value;
             const servico = document.getElementById('mecServico').value;
@@ -1717,19 +1673,6 @@
                 return;
             }
 
-            let pdfUrl = null;
-            let pdfTipo = null;
-            const file = document.getElementById('mecUpload').files[0];
-            if (file) {
-                try {
-                    pdfUrl = await uploadImagemStorage(file, 'mecanico');
-                    pdfTipo = file.name.split('.').pop().toLowerCase();
-                } catch (e) {
-                    alert('Erro ao enviar o arquivo: ' + e.message);
-                    return;
-                }
-            }
-
             const novoServico = {
                 data,
                 oficina,
@@ -1739,8 +1682,8 @@
                 placa,
                 valor,
                 obs,
-                pdfUrl: pdfUrl,
-                pdfTipo: pdfTipo
+                pdfData: mecPdfDataUrl || null,
+                pdfTipo: mecPdfFileType || null
             };
 
             db.mecanico.push(novoServico);
@@ -1752,8 +1695,8 @@
                 valor: valor,
                 fornecedor: responsavel,
                 oficina: oficina,
-                arquivo: pdfUrl,
-                arquivoTipo: pdfTipo
+                arquivo: mecPdfDataUrl || null,
+                arquivoTipo: mecPdfFileType || null
             };
             db.historico.push(novoItemHistorico);
             atualizarTabelaHistorico();
@@ -2248,7 +2191,7 @@
         // =============================================
         // FUNÇÃO SALVAR CLIENTE
         // =============================================
-        async function salvarCliente() {
+        function salvarCliente() {
             const nome = document.getElementById('cliNome').value.trim();
             const cpf = document.getElementById('cliCpf').value.trim();
             const rg = document.getElementById('cliRg').value.trim();
@@ -2730,7 +2673,7 @@
             atualizarPlacasMecanico();
         }
 
-        async function salvarUsuario() {
+        function salvarUsuario() {
             const nome = document.getElementById('userNome').value.trim().toUpperCase();
             const senha = document.getElementById('userSenha').value;
             const tipo = document.getElementById('userTipo').value;
@@ -2829,16 +2772,13 @@
                 return;
             }
 
-            try {
-                // Upload para storage
-                const url = await uploadImagemStorage(file, 'documentos');
-                docUploadDataUrl = url;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                docUploadDataUrl = e.target.result;
                 docUploadFileType = extensao;
                 atualizarPreviewDoc();
-            } catch (e) {
-                alert('Erro ao enviar arquivo: ' + e.message);
-                return;
-            }
+            };
+            reader.readAsDataURL(file);
 
             let textoExtraido = '';
             try {
@@ -3747,7 +3687,7 @@
         // =============================================
         // FUNÇÕES DE COMPRAS
         // =============================================
-        async function salvarCompra() {
+        function salvarCompra() {
             const data = document.getElementById('compData').value;
             const produto = document.getElementById('compProduto').value;
             const fornecedor = document.getElementById('compFornecedor').value;
@@ -3771,24 +3711,9 @@
                 return;
             }
 
-            let arquivoUrl = null;
-            let arquivoTipo = null;
-            const file = document.getElementById('compUpload').files[0];
-            if (file) {
-                try {
-                    arquivoUrl = await uploadImagemStorage(file, 'compras');
-                    arquivoTipo = file.name.split('.').pop().toLowerCase();
-                } catch (e) {
-                    alert('Erro ao enviar arquivo: ' + e.message);
-                    return;
-                }
-            }
-
             const compra = {
                 data, produto, fornecedor, cnpjFornecedor, placa,
-                quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs,
-                arquivo: arquivoUrl,
-                arquivoTipo: arquivoTipo
+                quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs
             };
             db.compras.push(compra);
             
@@ -3799,8 +3724,8 @@
                 valor: valorTotal,
                 fornecedor: fornecedor,
                 oficina: '',
-                arquivo: arquivoUrl,
-                arquivoTipo: arquivoTipo
+                arquivo: compPdfDataUrl || null,
+                arquivoTipo: compPdfFileType || null
             };
             db.historico.push(novoItemHistorico);
             
@@ -3928,7 +3853,7 @@
 
         function carregarConfiguracoes() {
             if (!db.config) return;
-            document.getElementById('configEmpresa').value = db.config.empresa || 'PAIZÃO RENT A CAR';
+            document.getElementById('configEmpresa').value = db.config.empresa || 'LOBÃO';
             document.getElementById('configCnpj').value = db.config.cnpj || '';
             document.getElementById('configTelefone').value = db.config.telefone || '';
             document.getElementById('configEmail').value = db.config.email || '';
@@ -4018,14 +3943,14 @@
         // =============================================
         // FUNÇÕES DA GALERIA GARAGEM
         // =============================================
-        async function salvarGaragem() {
+        function salvarGaragem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
-                try {
-                    const url = await uploadImagemStorage(file, 'garagem');
+                const reader = new FileReader();
+                reader.onload = e => {
                     db.imagens.garagem.fotos.push({ 
                         nome: file.name, 
-                        data: url,
+                        data: e.target.result,
                         estado: 'disponivel'
                     });
                     atualizarGaleriaGaragem();
@@ -4036,9 +3961,8 @@
                     document.getElementById('garagemPreview').src = '';
                     document.getElementById('garagemNoImage').style.display = 'flex';
                     registrarAuditoria('Cadastro', 'Imagem garagem');
-                } catch (e) {
-                    alert('Erro ao enviar imagem: ' + e.message);
-                }
+                };
+                reader.readAsDataURL(file);
             } else alert('Selecione uma imagem!');
         }
 
@@ -4124,12 +4048,12 @@
         // =============================================
         // FUNÇÕES DA GALERIA SOS
         // =============================================
-        async function salvarSOS() {
+        function salvarSOS() {
             const file = document.getElementById('sosImagem').files[0];
             if (file) {
-                try {
-                    const url = await uploadImagemStorage(file, 'sos');
-                    db.imagens.sos.fotos.push({ nome: file.name, data: url });
+                const reader = new FileReader();
+                reader.onload = e => {
+                    db.imagens.sos.fotos.push({ nome: file.name, data: e.target.result });
                     atualizarGaleriaSOS();
                     salvarDB();
                     alert('Imagem SOS salva!');
@@ -4138,9 +4062,8 @@
                     document.getElementById('sosPreview').src = '';
                     document.getElementById('sosNoImage').style.display = 'flex';
                     registrarAuditoria('Cadastro', 'Imagem SOS');
-                } catch (e) {
-                    alert('Erro ao enviar imagem: ' + e.message);
-                }
+                };
+                reader.readAsDataURL(file);
             } else alert('Selecione uma imagem!');
         }
 
@@ -4173,12 +4096,12 @@
             } else alert('Nenhuma imagem SOS salva!');
         }
 
-        async function salvarComprovante() {
+        function salvarComprovante() {
             const file = document.getElementById('compImagem').files[0];
             if (file) {
-                try {
-                    const url = await uploadImagemStorage(file, 'comprovantes');
-                    db.imagens.comprovantes.fotos.push({ nome: file.name, data: url });
+                const reader = new FileReader();
+                reader.onload = e => {
+                    db.imagens.comprovantes.fotos.push({ nome: file.name, data: e.target.result });
                     atualizarGaleriaComprovantes();
                     salvarDB();
                     alert('Comprovante salvo!');
@@ -4187,9 +4110,8 @@
                     document.getElementById('compPreview').src = '';
                     document.getElementById('compNoImage').style.display = 'flex';
                     registrarAuditoria('Cadastro', 'Comprovante');
-                } catch (e) {
-                    alert('Erro ao enviar comprovante: ' + e.message);
-                }
+                };
+                reader.readAsDataURL(file);
             } else alert('Selecione um comprovante!');
         }
 
@@ -4458,7 +4380,7 @@
         // =============================================
         // FUNÇÕES DA NOVA ABA PENDENTE
         // =============================================
-        async function salvarPendencia() {
+        function salvarPendencia() {
             const data = document.getElementById('pendData').value;
             const descricao = document.getElementById('pendDescricao').value.trim();
             const credito = document.getElementById('pendCredito').value;
@@ -4474,27 +4396,14 @@
                 return;
             }
 
-            let docUrl = null;
-            let docTipo = null;
-            const file = document.getElementById('pendUpload').files[0];
-            if (file) {
-                try {
-                    docUrl = await uploadImagemStorage(file, 'pendencias');
-                    docTipo = file.name.split('.').pop().toLowerCase();
-                } catch (e) {
-                    alert('Erro ao enviar arquivo: ' + e.message);
-                    return;
-                }
-            }
-
             const pendencia = {
                 data,
                 descricao,
                 credito: credito || 'R$ 0,00',
                 debito: debito || 'R$ 0,00',
                 vencimento,
-                docUrl: docUrl,
-                docTipo: docTipo,
+                docDataUrl: pendDocDataUrl || null,
+                docFileType: pendDocFileType || null,
                 status: 'Pendente'
             };
 
@@ -4529,9 +4438,9 @@
             document.getElementById('pendCredito').value = p.credito;
             document.getElementById('pendDebito').value = p.debito;
             document.getElementById('pendVencimento').value = p.vencimento;
-            pendDocDataUrl = p.docUrl || null;
-            pendDocFileType = p.docTipo || null;
-            document.getElementById('pendDocPreview').textContent = p.docUrl ? (p.docTipo === 'pdf' ? '📄 PDF carregado' :
+            pendDocDataUrl = p.docDataUrl;
+            pendDocFileType = p.docFileType;
+            document.getElementById('pendDocPreview').textContent = p.docDataUrl ? (p.docFileType === 'pdf' ? '📄 PDF carregado' :
                 '📄 Imagem carregada') : 'Nenhum arquivo';
             document.getElementById('formPendente').scrollIntoView({ behavior: 'smooth' });
         }
@@ -4576,17 +4485,14 @@
                 document.getElementById('pendUpload').value = '';
                 return;
             }
-
-            try {
-                const url = await uploadImagemStorage(file, 'pendencias');
-                pendDocDataUrl = url;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pendDocDataUrl = e.target.result;
                 pendDocFileType = extensao;
                 document.getElementById('pendDocPreview').textContent = extensao === 'pdf' ? '📄 PDF carregado' :
                     '📄 Imagem carregada';
-            } catch (e) {
-                alert('Erro ao enviar arquivo: ' + e.message);
-                return;
-            }
+            };
+            reader.readAsDataURL(file);
 
             let textoExtraido = '';
             try {
@@ -4675,8 +4581,8 @@
                 debito: pend.debito,
                 vencimento: novaDataVenc.toISOString().split('T')[0],
                 status: 'Pendente',
-                docUrl: null,
-                docTipo: null
+                docDataUrl: null,
+                docFileType: null
             };
             db.pendentes.push(novaPendencia);
 
@@ -4847,7 +4753,7 @@
             vistoriaDataUrl = null;
         }
 
-        async function capturarVistoria() {
+        function capturarVistoria() {
             const video = document.getElementById('vistoriaVideo');
             const canvas = document.getElementById('vistoriaCanvas');
             
@@ -4857,10 +4763,9 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                vistoriaDataUrl = dataUrl;
+                vistoriaDataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 
-                document.getElementById('vistoriaPhotoResult').src = dataUrl;
+                document.getElementById('vistoriaPhotoResult').src = vistoriaDataUrl;
                 document.getElementById('vistoriaPhotoPreview').style.display = 'block';
                 document.getElementById('vistoriaCaptureBtn').style.display = 'none';
                 document.getElementById('vistoriaConfirmBtn').style.display = 'inline-block';
@@ -4875,7 +4780,7 @@
             }
         }
 
-        async function confirmarVistoria() {
+        function confirmarVistoria() {
             if (!vistoriaDataUrl) {
                 alert('Nenhuma foto capturada!');
                 return;
@@ -4887,25 +4792,14 @@
                 return;
             }
             
-            try {
-                // Converter dataUrl para blob e enviar para storage
-                const blob = await fetch(vistoriaDataUrl).then(res => res.blob());
-                const nomeArquivo = 'vistoria_' + Date.now() + '.jpg';
-                const storageRef = storage.ref('vistorias/' + nomeArquivo);
-                await storageRef.put(blob);
-                const url = await storageRef.getDownloadURL();
-                
-                if (!loc.vistoria) loc.vistoria = [];
-                loc.vistoria.push(url);
-                
-                atualizarVistoria();
-                salvarDB();
-                registrarAuditoria('Cadastro', `Foto de vistoria adicionada para ${loc.locatario} - ${loc.placa}`);
-                fecharCameraVistoria();
-                alert('Foto salva com sucesso!');
-            } catch (e) {
-                alert('Erro ao salvar a foto: ' + e.message);
-            }
+            if (!loc.vistoria) loc.vistoria = [];
+            loc.vistoria.push(vistoriaDataUrl);
+            
+            atualizarVistoria();
+            salvarDB();
+            registrarAuditoria('Cadastro', `Foto de vistoria adicionada para ${loc.locatario} - ${loc.placa}`);
+            fecharCameraVistoria();
+            alert('Foto salva com sucesso!');
         }
 
         function excluirFotoVistoria(index) {
