@@ -1152,11 +1152,59 @@
         async function salvarDB() {
             try {
                 if (!db) return;
+                // Verifica se o tamanho excede 1MB antes de salvar
+                const json = JSON.stringify(db);
+                const tamanho = new Blob([json]).size;
+                if (tamanho > 1048576) {
+                    console.warn('Aviso: Tamanho do documento excede 1MB. Tente excluir imagens antigas.');
+                    // Tenta salvar mesmo assim, mas o servidor pode rejeitar
+                }
                 await DB_DOC_REF.set(db);
             } catch (error) {
                 console.error('Erro ao salvar dados no Firebase:', error);
-                alert('Erro ao salvar dados no Firebase. Verifique sua conexão.');
+                alert('Erro ao salvar dados no Firebase. Verifique sua conexão e o tamanho dos dados (evite imagens muito grandes).');
             }
+        }
+
+        // =============================================
+        // FUNÇÃO DE COMPRESSÃO DE IMAGEM
+        // =============================================
+        function comprimirImagem(file, maxWidth = 800, qualidade = 0.6) {
+            return new Promise((resolve, reject) => {
+                if (!file || file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            const dataUrl = canvas.toDataURL('image/jpeg', qualidade);
+                            resolve(dataUrl);
+                        };
+                        img.onerror = reject;
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                } else {
+                    // Para PDFs, apenas converte para base64 sem compressão
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        resolve(e.target.result);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                }
+            });
         }
 
         // =============================================
@@ -1421,7 +1469,7 @@
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                previewImg.src = canvas.toDataURL('image/png');
+                previewImg.src = canvas.toDataURL('image/jpeg', 0.6);
                 
                 setTimeout(atualizarPreviewSelfie, 100);
             } else {
@@ -1442,7 +1490,8 @@
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                selfieDataUrl = canvas.toDataURL('image/png');
+                // Comprime a selfie
+                selfieDataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 
                 document.getElementById('selfiePhotoResult').src = selfieDataUrl;
                 document.getElementById('selfiePhotoPreview').style.display = 'block';
@@ -1651,9 +1700,9 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR MECÂNICO
+        // FUNÇÃO SALVAR MECÂNICO (com compressão de imagem)
         // =============================================
-        function salvarMecanico() {
+        async function salvarMecanico() {
             const data = document.getElementById('mecData').value;
             const oficina = document.getElementById('mecOficina').value;
             const servico = document.getElementById('mecServico').value;
@@ -1673,6 +1722,15 @@
                 return;
             }
 
+            let pdfData = null;
+            let pdfTipo = null;
+            if (document.getElementById('mecUpload').files.length > 0) {
+                const file = document.getElementById('mecUpload').files[0];
+                const dataUrl = await comprimirImagem(file, 1000, 0.6);
+                pdfData = dataUrl;
+                pdfTipo = file.name.split('.').pop().toLowerCase();
+            }
+
             const novoServico = {
                 data,
                 oficina,
@@ -1682,8 +1740,8 @@
                 placa,
                 valor,
                 obs,
-                pdfData: mecPdfDataUrl || null,
-                pdfTipo: mecPdfFileType || null
+                pdfData: pdfData || null,
+                pdfTipo: pdfTipo || null
             };
 
             db.mecanico.push(novoServico);
@@ -1695,8 +1753,8 @@
                 valor: valor,
                 fornecedor: responsavel,
                 oficina: oficina,
-                arquivo: mecPdfDataUrl || null,
-                arquivoTipo: mecPdfFileType || null
+                arquivo: pdfData || null,
+                arquivoTipo: pdfTipo || null
             };
             db.historico.push(novoItemHistorico);
             atualizarTabelaHistorico();
@@ -2189,9 +2247,9 @@
         }
 
         // =============================================
-        // FUNÇÃO SALVAR CLIENTE
+        // FUNÇÃO SALVAR CLIENTE (com selfie comprimida)
         // =============================================
-        function salvarCliente() {
+        async function salvarCliente() {
             const nome = document.getElementById('cliNome').value.trim();
             const cpf = document.getElementById('cliCpf').value.trim();
             const rg = document.getElementById('cliRg').value.trim();
@@ -2216,6 +2274,27 @@
                 return;
             }
 
+            // Comprime a selfie se existir
+            let selfieFinal = selfieClienteTemp;
+            if (selfieFinal && selfieFinal.startsWith('data:image') && selfieFinal.length > 200000) {
+                // Já comprimida na captura, mas se necessário comprimir mais
+                const img = new Image();
+                img.src = selfieFinal;
+                await new Promise(resolve => { img.onload = resolve; });
+                const canvas = document.createElement('canvas');
+                const maxWidth = 400;
+                let width = img.width, height = img.height;
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                selfieFinal = canvas.toDataURL('image/jpeg', 0.5);
+            }
+
             const cliente = {
                 dataCadastro: document.getElementById('cliDataCadastro').value,
                 nome: nome,
@@ -2228,7 +2307,7 @@
                 cep: document.getElementById('cliCep').value,
                 cidade: cidade,
                 estado: estado,
-                selfie: selfieClienteTemp || null
+                selfie: selfieFinal || null
             };
 
             db.clientes.push(cliente);
@@ -2772,13 +2851,21 @@
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                docUploadDataUrl = e.target.result;
+            // Comprime a imagem se for imagem
+            if (extensao !== 'pdf') {
+                const dataUrl = await comprimirImagem(file, 800, 0.6);
+                docUploadDataUrl = dataUrl;
                 docUploadFileType = extensao;
-                atualizarPreviewDoc();
-            };
-            reader.readAsDataURL(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    docUploadDataUrl = e.target.result;
+                    docUploadFileType = extensao;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            atualizarPreviewDoc();
 
             let textoExtraido = '';
             try {
@@ -3295,30 +3382,44 @@
             window.open(dataUrl, '_blank');
         }
 
-        function previewCompPdf() {
+        async function previewCompPdf() {
             const file = document.getElementById('compUpload').files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                compPdfDataUrl = e.target.result;
-                compPdfFileType = file.name.split('.').pop().toLowerCase();
-                document.getElementById('compPdfPreview').textContent = compPdfFileType === 'pdf' ? '📄 PDF carregado' :
-                    '🖼️ Imagem carregada';
-            };
-            reader.readAsDataURL(file);
+            const extensao = file.name.split('.').pop().toLowerCase();
+            if (extensao === 'pdf') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    compPdfDataUrl = e.target.result;
+                    compPdfFileType = extensao;
+                    document.getElementById('compPdfPreview').textContent = '📄 PDF carregado';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const dataUrl = await comprimirImagem(file, 800, 0.6);
+                compPdfDataUrl = dataUrl;
+                compPdfFileType = extensao;
+                document.getElementById('compPdfPreview').textContent = '🖼️ Imagem carregada';
+            }
         }
 
-        function previewMecPdf() {
+        async function previewMecPdf() {
             const file = document.getElementById('mecUpload').files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                mecPdfDataUrl = e.target.result;
-                mecPdfFileType = file.name.split('.').pop().toLowerCase();
-                document.getElementById('mecPdfPreview').textContent = mecPdfFileType === 'pdf' ? '📄 PDF carregado' :
-                    '🖼️ Imagem carregada';
-            };
-            reader.readAsDataURL(file);
+            const extensao = file.name.split('.').pop().toLowerCase();
+            if (extensao === 'pdf') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    mecPdfDataUrl = e.target.result;
+                    mecPdfFileType = extensao;
+                    document.getElementById('mecPdfPreview').textContent = '📄 PDF carregado';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const dataUrl = await comprimirImagem(file, 800, 0.6);
+                mecPdfDataUrl = dataUrl;
+                mecPdfFileType = extensao;
+                document.getElementById('mecPdfPreview').textContent = '🖼️ Imagem carregada';
+            }
         }
 
         function limparCamposMecanico() {
@@ -3687,7 +3788,7 @@
         // =============================================
         // FUNÇÕES DE COMPRAS
         // =============================================
-        function salvarCompra() {
+        async function salvarCompra() {
             const data = document.getElementById('compData').value;
             const produto = document.getElementById('compProduto').value;
             const fornecedor = document.getElementById('compFornecedor').value;
@@ -3711,9 +3812,28 @@
                 return;
             }
 
+            let arquivoData = null;
+            let arquivoTipo = null;
+            if (document.getElementById('compUpload').files.length > 0) {
+                const file = document.getElementById('compUpload').files[0];
+                if (file.name.split('.').pop().toLowerCase() === 'pdf') {
+                    const reader = new FileReader();
+                    arquivoData = await new Promise(resolve => {
+                        reader.onload = e => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    arquivoTipo = 'pdf';
+                } else {
+                    arquivoData = await comprimirImagem(file, 800, 0.6);
+                    arquivoTipo = 'jpg';
+                }
+            }
+
             const compra = {
                 data, produto, fornecedor, cnpjFornecedor, placa,
-                quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs
+                quantidade, valorUnitario, valorTotal, formaPagamento, status, categoria, obs,
+                arquivo: arquivoData,
+                arquivoTipo: arquivoTipo
             };
             db.compras.push(compra);
             
@@ -3724,8 +3844,8 @@
                 valor: valorTotal,
                 fornecedor: fornecedor,
                 oficina: '',
-                arquivo: compPdfDataUrl || null,
-                arquivoTipo: compPdfFileType || null
+                arquivo: arquivoData || null,
+                arquivoTipo: arquivoTipo || null
             };
             db.historico.push(novoItemHistorico);
             
@@ -3901,68 +4021,56 @@
             document.querySelectorAll('#tabelaAuditoria tbody tr').forEach(row => row.style.display = '');
         }
 
-        function previewGaragemImagem() {
+        async function previewGaragemImagem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('garagemPreview').src = e.target.result;
-                    document.getElementById('garagemPreview').style.display = 'block';
-                    document.getElementById('garagemNoImage').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
+                const dataUrl = await comprimirImagem(file, 1000, 0.7);
+                document.getElementById('garagemPreview').src = dataUrl;
+                document.getElementById('garagemPreview').style.display = 'block';
+                document.getElementById('garagemNoImage').style.display = 'none';
             }
         }
 
-        function previewSOSImagem() {
+        async function previewSOSImagem() {
             const file = document.getElementById('sosImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('sosPreview').src = e.target.result;
-                    document.getElementById('sosPreview').style.display = 'block';
-                    document.getElementById('sosNoImage').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
+                const dataUrl = await comprimirImagem(file, 1000, 0.7);
+                document.getElementById('sosPreview').src = dataUrl;
+                document.getElementById('sosPreview').style.display = 'block';
+                document.getElementById('sosNoImage').style.display = 'none';
             }
         }
 
-        function previewCompImagem() {
+        async function previewCompImagem() {
             const file = document.getElementById('compImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('compPreview').src = e.target.result;
-                    document.getElementById('compPreview').style.display = 'block';
-                    document.getElementById('compNoImage').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
+                const dataUrl = await comprimirImagem(file, 1000, 0.7);
+                document.getElementById('compPreview').src = dataUrl;
+                document.getElementById('compPreview').style.display = 'block';
+                document.getElementById('compNoImage').style.display = 'none';
             }
         }
 
         // =============================================
         // FUNÇÕES DA GALERIA GARAGEM
         // =============================================
-        function salvarGaragem() {
+        async function salvarGaragem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    db.imagens.garagem.fotos.push({ 
-                        nome: file.name, 
-                        data: e.target.result,
-                        estado: 'disponivel'
-                    });
-                    atualizarGaleriaGaragem();
-                    salvarDB();
-                    alert('Imagem salva!');
-                    document.getElementById('garagemImagem').value = '';
-                    document.getElementById('garagemPreview').style.display = 'none';
-                    document.getElementById('garagemPreview').src = '';
-                    document.getElementById('garagemNoImage').style.display = 'flex';
-                    registrarAuditoria('Cadastro', 'Imagem garagem');
-                };
-                reader.readAsDataURL(file);
+                const dataUrl = await comprimirImagem(file, 1000, 0.7);
+                db.imagens.garagem.fotos.push({ 
+                    nome: file.name, 
+                    data: dataUrl,
+                    estado: 'disponivel'
+                });
+                atualizarGaleriaGaragem();
+                salvarDB();
+                alert('Imagem salva!');
+                document.getElementById('garagemImagem').value = '';
+                document.getElementById('garagemPreview').style.display = 'none';
+                document.getElementById('garagemPreview').src = '';
+                document.getElementById('garagemNoImage').style.display = 'flex';
+                registrarAuditoria('Cadastro', 'Imagem garagem');
             } else alert('Selecione uma imagem!');
         }
 
@@ -4048,22 +4156,19 @@
         // =============================================
         // FUNÇÕES DA GALERIA SOS
         // =============================================
-        function salvarSOS() {
+        async function salvarSOS() {
             const file = document.getElementById('sosImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    db.imagens.sos.fotos.push({ nome: file.name, data: e.target.result });
-                    atualizarGaleriaSOS();
-                    salvarDB();
-                    alert('Imagem SOS salva!');
-                    document.getElementById('sosImagem').value = '';
-                    document.getElementById('sosPreview').style.display = 'none';
-                    document.getElementById('sosPreview').src = '';
-                    document.getElementById('sosNoImage').style.display = 'flex';
-                    registrarAuditoria('Cadastro', 'Imagem SOS');
-                };
-                reader.readAsDataURL(file);
+                const dataUrl = await comprimirImagem(file, 1000, 0.7);
+                db.imagens.sos.fotos.push({ nome: file.name, data: dataUrl });
+                atualizarGaleriaSOS();
+                salvarDB();
+                alert('Imagem SOS salva!');
+                document.getElementById('sosImagem').value = '';
+                document.getElementById('sosPreview').style.display = 'none';
+                document.getElementById('sosPreview').src = '';
+                document.getElementById('sosNoImage').style.display = 'flex';
+                registrarAuditoria('Cadastro', 'Imagem SOS');
             } else alert('Selecione uma imagem!');
         }
 
@@ -4096,22 +4201,19 @@
             } else alert('Nenhuma imagem SOS salva!');
         }
 
-        function salvarComprovante() {
+        async function salvarComprovante() {
             const file = document.getElementById('compImagem').files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    db.imagens.comprovantes.fotos.push({ nome: file.name, data: e.target.result });
-                    atualizarGaleriaComprovantes();
-                    salvarDB();
-                    alert('Comprovante salvo!');
-                    document.getElementById('compImagem').value = '';
-                    document.getElementById('compPreview').style.display = 'none';
-                    document.getElementById('compPreview').src = '';
-                    document.getElementById('compNoImage').style.display = 'flex';
-                    registrarAuditoria('Cadastro', 'Comprovante');
-                };
-                reader.readAsDataURL(file);
+                const dataUrl = await comprimirImagem(file, 1000, 0.7);
+                db.imagens.comprovantes.fotos.push({ nome: file.name, data: dataUrl });
+                atualizarGaleriaComprovantes();
+                salvarDB();
+                alert('Comprovante salvo!');
+                document.getElementById('compImagem').value = '';
+                document.getElementById('compPreview').style.display = 'none';
+                document.getElementById('compPreview').src = '';
+                document.getElementById('compNoImage').style.display = 'flex';
+                registrarAuditoria('Cadastro', 'Comprovante');
             } else alert('Selecione um comprovante!');
         }
 
@@ -4380,7 +4482,7 @@
         // =============================================
         // FUNÇÕES DA NOVA ABA PENDENTE
         // =============================================
-        function salvarPendencia() {
+        async function salvarPendencia() {
             const data = document.getElementById('pendData').value;
             const descricao = document.getElementById('pendDescricao').value.trim();
             const credito = document.getElementById('pendCredito').value;
@@ -4396,14 +4498,31 @@
                 return;
             }
 
+            let docData = null, docTipo = null;
+            if (document.getElementById('pendUpload').files.length > 0) {
+                const file = document.getElementById('pendUpload').files[0];
+                const extensao = file.name.split('.').pop().toLowerCase();
+                if (extensao !== 'pdf') {
+                    docData = await comprimirImagem(file, 800, 0.6);
+                    docTipo = extensao;
+                } else {
+                    const reader = new FileReader();
+                    docData = await new Promise(resolve => {
+                        reader.onload = e => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    docTipo = extensao;
+                }
+            }
+
             const pendencia = {
                 data,
                 descricao,
                 credito: credito || 'R$ 0,00',
                 debito: debito || 'R$ 0,00',
                 vencimento,
-                docDataUrl: pendDocDataUrl || null,
-                docFileType: pendDocFileType || null,
+                docDataUrl: docData || null,
+                docFileType: docTipo || null,
                 status: 'Pendente'
             };
 
@@ -4485,14 +4604,20 @@
                 document.getElementById('pendUpload').value = '';
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                pendDocDataUrl = e.target.result;
+            if (extensao === 'pdf') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pendDocDataUrl = e.target.result;
+                    pendDocFileType = extensao;
+                    document.getElementById('pendDocPreview').textContent = '📄 PDF carregado';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const dataUrl = await comprimirImagem(file, 800, 0.6);
+                pendDocDataUrl = dataUrl;
                 pendDocFileType = extensao;
-                document.getElementById('pendDocPreview').textContent = extensao === 'pdf' ? '📄 PDF carregado' :
-                    '📄 Imagem carregada';
-            };
-            reader.readAsDataURL(file);
+                document.getElementById('pendDocPreview').textContent = '📄 Imagem carregada';
+            }
 
             let textoExtraido = '';
             try {
@@ -4763,7 +4888,8 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 
-                vistoriaDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                // Comprime a foto da vistoria
+                vistoriaDataUrl = canvas.toDataURL('image/jpeg', 0.6);
                 
                 document.getElementById('vistoriaPhotoResult').src = vistoriaDataUrl;
                 document.getElementById('vistoriaPhotoPreview').style.display = 'block';
