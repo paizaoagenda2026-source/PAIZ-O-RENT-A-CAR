@@ -624,32 +624,24 @@
             </div>
         </div>
 
-        <!-- ABA: BANCO -->
+        <!-- ABA: BANCO (MODIFICADA: SEM SUB-ABAS, TABELA SEMPRE VISÍVEL) -->
         <div class="tab-content" id="banco">
             <h2>🏦 Banco</h2>
-            <div class="sub-tabs">
-                <button class="sub-tab active" onclick="switchSubTabBanco('novo')">➕ Novo Banco</button>
-                <button class="sub-tab" onclick="switchSubTabBanco('meusbancos')">📁 Meus Bancos</button>
+            <div class="form-grid" id="formBanco">
+                <div class="form-group"><label>Banco</label><input type="text" id="bancoNome" class="campo-enter"></div>
+                <div class="form-group"><label>Agência</label><input type="text" id="bancoAgencia" class="campo-enter"></div>
+                <div class="form-group"><label>Conta</label><input type="text" id="bancoConta" class="campo-enter"></div>
+                <div class="form-group"><label>PIX</label><input type="text" id="bancoPix" class="campo-enter"></div>
+                <div class="form-group"><label>Titular</label><input type="text" id="bancoTitular" class="campo-enter"></div>
             </div>
-            <div class="sub-tab-content active" id="subTabNovoBanco">
-                <div class="form-grid" id="formBanco">
-                    <div class="form-group"><label>Banco</label><input type="text" id="bancoNome" class="campo-enter"></div>
-                    <div class="form-group"><label>Agência</label><input type="text" id="bancoAgencia" class="campo-enter"></div>
-                    <div class="form-group"><label>Conta</label><input type="text" id="bancoConta" class="campo-enter"></div>
-                    <div class="form-group"><label>PIX</label><input type="text" id="bancoPix" class="campo-enter"></div>
-                    <div class="form-group"><label>Titular</label><input type="text" id="bancoTitular" class="campo-enter"></div>
-                </div>
-                <button class="btn-primary" data-permissao="banco_salvar" onclick="salvarBanco()">💾 Salvar</button>
-                <button class="btn-warning" data-permissao="banco_editar" onclick="editarBanco()">✏️ Editar</button>
-            </div>
-            <div class="sub-tab-content" id="subTabMeusBancos">
-                <input type="text" class="filter-input" placeholder="🔍 Filtrar bancos..." id="filterBancos">
-                <div class="table-container">
-                    <table id="tabelaBancos">
-                        <thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+            <button class="btn-primary" data-permissao="banco_salvar" onclick="salvarBanco()">💾 Salvar</button>
+            <button class="btn-warning" data-permissao="banco_editar" onclick="editarBanco()">✏️ Editar</button>
+            <input type="text" class="filter-input" placeholder="🔍 Filtrar bancos..." id="filterBancos">
+            <div class="table-container">
+                <table id="tabelaBancos">
+                    <thead><tr><th>Banco</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Titular</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
 
@@ -2330,18 +2322,7 @@
             atualizarTabelaAlugueis();
         }
 
-        function switchSubTabBanco(tabName) {
-            document.querySelectorAll('#banco .sub-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('#banco .sub-tab-content').forEach(c => c.classList.remove('active'));
-            if (tabName === 'novo') {
-                document.querySelector('#banco .sub-tab:first-child').classList.add('active');
-                document.getElementById('subTabNovoBanco').classList.add('active');
-            } else {
-                document.querySelector('#banco .sub-tab:last-child').classList.add('active');
-                document.getElementById('subTabMeusBancos').classList.add('active');
-                atualizarTabelaBancos();
-            }
-        }
+        // Função switchSubTabBanco foi removida (não há mais sub-abas)
 
         function enterFullscreen() {
             if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
