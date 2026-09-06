@@ -828,6 +828,7 @@
             </div>
             <button class="btn-primary" data-permissao="auditoria_filtrar" onclick="aplicarFiltroAuditoria()">🔍 Aplicar Filtro</button>
             <button class="btn-secondary" data-permissao="auditoria_limpar" onclick="limparFiltroAuditoria()">🔄 Limpar Filtro</button>
+            <button class="btn-danger" data-permissao="auditoria_limpar" onclick="limparAuditoriaManual()">🗑️ Limpar Auditoria</button>
             <div class="table-container">
                 <table id="tabelaAuditoria">
                     <thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th><th>IP</th></tr></thead>
@@ -1185,7 +1186,8 @@
                     prazoMax: '',
                     senhaMin: '',
                     sessao: '',
-                    backup: 'sim'
+                    backup: 'sim',
+                    ultimaLimpezaAuditoria: null // Adicionado para controle de limpeza automática
                 }
             };
         }
@@ -1668,6 +1670,24 @@
         let usuarioLogado = null;
 
         // =============================================
+        // FUNÇÃO PARA VERIFICAR SENHA DO ADMINISTRADOR
+        // =============================================
+        function verificarSenhaAdmin() {
+            const senha = prompt("Digite a senha do administrador para confirmar a ação:");
+            if (senha === null) return false; // cancelado
+            const admin = db.usuarios.find(u => u.tipo === 'ADM');
+            if (!admin) {
+                alert("Nenhum administrador encontrado!");
+                return false;
+            }
+            if (senha !== admin.senha) {
+                alert("Senha incorreta!");
+                return false;
+            }
+            return true;
+        }
+
+        // =============================================
         // FUNÇÕES DE SELFIE
         // =============================================
         function abrirModalSelfie(destino = 'cliente') {
@@ -1878,6 +1898,24 @@
             db.pendentes.forEach(p => {
                 if (!p.status) p.status = 'Pendente';
             });
+            
+            // ====== NOVO: Limpeza automática da auditoria a cada 15 dias ======
+            const agora = new Date();
+            const ultimaLimpeza = db.config.ultimaLimpezaAuditoria ? new Date(db.config.ultimaLimpezaAuditoria) : null;
+            if (ultimaLimpeza) {
+                const diffDias = Math.floor((agora - ultimaLimpeza) / (1000 * 60 * 60 * 24));
+                if (diffDias >= 15) {
+                    db.auditoria = [];
+                    db.config.ultimaLimpezaAuditoria = agora.toISOString();
+                    salvarDB();
+                    console.log("Auditoria limpa automaticamente (15 dias).");
+                }
+            } else {
+                db.config.ultimaLimpezaAuditoria = agora.toISOString();
+                salvarDB();
+            }
+            // ====== FIM NOVO ======
+            
             atualizarTabelaUsuario();
             gerarPermissoesUI();
             atualizarResumoFinanceiro();
@@ -3793,17 +3831,7 @@
         function excluirHistorico(index) {
             const item = db.historico[index];
             if (!item) return;
-            const senhaAdmin = prompt("Digite a senha do administrador para confirmar a exclusão:");
-            if (senhaAdmin === null) return; // cancelado
-            const admin = db.usuarios.find(u => u.tipo === 'ADM');
-            if (!admin) {
-                alert("Nenhum administrador encontrado!");
-                return;
-            }
-            if (senhaAdmin !== admin.senha) {
-                alert("Senha incorreta!");
-                return;
-            }
+            if (!verificarSenhaAdmin()) return; // Verifica senha do administrador
             if (confirm("Excluir este lançamento do histórico?")) {
                 db.historico.splice(index, 1);
                 atualizarTabelaHistorico();
@@ -3873,9 +3901,10 @@
         }
 
         // =============================================
-        // FUNÇÕES DE EDIÇÃO/EXCLUSÃO
+        // FUNÇÕES DE EDIÇÃO/EXCLUSÃO (com verificação de senha do admin)
         // =============================================
         function editarVeiculo(index) {
+            if (!verificarSenhaAdmin()) return;
             const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
             const v = veiculosPermitidos[index];
             if (!v) return;
@@ -3907,6 +3936,7 @@
         }
 
         function excluirVeiculo(index) {
+            if (!verificarSenhaAdmin()) return;
             const veiculosPermitidos = db.veiculos.filter(v => temPermissaoVeiculo(v.placa));
             const v = veiculosPermitidos[index];
             if (!v) return;
@@ -3932,6 +3962,7 @@
         }
 
         function editarCliente(index) {
+            if (!verificarSenhaAdmin()) return;
             const c = db.clientes[index];
             document.getElementById('cliDataCadastro').value = c.dataCadastro;
             document.getElementById('cliNome').value = c.nome;
@@ -3954,6 +3985,7 @@
         }
 
         function excluirCliente(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir cliente?')) {
                 const c = db.clientes[index];
                 db.clientes.splice(index, 1);
@@ -3972,6 +4004,7 @@
         }
 
         function editarUsuario(index) {
+            if (!verificarSenhaAdmin()) return;
             if (index === undefined) { alert('Selecione um usuário!'); return; }
             const u = db.usuarios[index];
             document.getElementById('userNome').value = u.nome;
@@ -4000,6 +4033,7 @@
         }
 
         function excluirUsuario(index) {
+            if (!verificarSenhaAdmin()) return;
             if (index === undefined) { alert('Selecione um usuário!'); return; }
             const u = db.usuarios[index];
             if (u.nome === 'SERGIO') { alert('Não pode excluir admin principal!'); return; }
@@ -4021,6 +4055,7 @@
         }
 
         function editarLocacao(index) {
+            if (!verificarSenhaAdmin()) return;
             const l = db.locacoes[index];
             document.getElementById('locLocatario').value = l.locatario;
             document.getElementById('locVeiculo').value = l.veiculo;
@@ -4045,6 +4080,7 @@
         }
 
         function excluirLocacao(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir locação?')) {
                 const l = db.locacoes[index];
                 db.locacoes.splice(index, 1);
@@ -4078,6 +4114,7 @@
         }
 
         function editarManutencao(index) {
+            if (!verificarSenhaAdmin()) return;
             const m = db.manutencao[index];
             document.getElementById('manVeiculo').value = m.veiculo;
             document.getElementById('manPlaca').value = m.placa;
@@ -4091,6 +4128,7 @@
         }
 
         function excluirManutencao(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir manutenção?')) {
                 const m = db.manutencao[index];
                 db.manutencao.splice(index, 1);
@@ -4109,6 +4147,7 @@
         }
 
         function editarMecanico(index) {
+            if (!verificarSenhaAdmin()) return;
             const m = db.mecanico[index];
             document.getElementById('mecData').value = m.data;
             document.getElementById('mecOficina').value = m.oficina;
@@ -4125,6 +4164,7 @@
         }
 
         function excluirMecanico(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir serviço?')) {
                 const m = db.mecanico[index];
                 db.mecanico.splice(index, 1);
@@ -4135,6 +4175,7 @@
         }
 
         function editarBanco(index) {
+            if (!verificarSenhaAdmin()) return;
             if (index === undefined) { alert('Selecione um banco!'); return; }
             const b = db.bancos[index];
             document.getElementById('bancoNome').value = b.nome;
@@ -4149,6 +4190,7 @@
         }
 
         function excluirBanco(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir banco?')) {
                 const b = db.bancos[index];
                 db.bancos.splice(index, 1);
@@ -4164,6 +4206,7 @@
         }
 
         function editarFluxoCaixa(index) {
+            if (!verificarSenhaAdmin()) return;
             const f = db.fluxoCaixa[index];
             document.getElementById('fcData').value = f.data;
             document.getElementById('fcDescricao').value = f.descricao;
@@ -4178,6 +4221,7 @@
         }
 
         function excluirFluxoCaixa(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir lançamento?')) {
                 const f = db.fluxoCaixa[index];
                 db.fluxoCaixa.splice(index, 1);
@@ -4197,6 +4241,7 @@
         }
 
         function editarDoc(index) {
+            if (!verificarSenhaAdmin()) return;
             const d = db.documentos[index];
             document.getElementById('docNome').value = d.nome;
             document.getElementById('docTipo').value = d.tipo;
@@ -4216,6 +4261,7 @@
         }
 
         function excluirDoc(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir documento?')) {
                 const d = db.documentos[index];
                 db.documentos.splice(index, 1);
@@ -4315,6 +4361,7 @@
         }
 
         function carregarCompraParaEdicao(index) {
+            if (!verificarSenhaAdmin()) return;
             const c = db.compras[index];
             document.getElementById('compData').value = c.data;
             document.getElementById('compProduto').value = c.produto;
@@ -4333,6 +4380,7 @@
         }
 
         function excluirCompraDireto(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir esta compra?')) {
                 const compra = db.compras[index];
                 db.compras.splice(index, 1);
@@ -4373,6 +4421,7 @@
         function excluirCompra() {
             const index = compraEditandoIndex;
             if (index === null) { alert('Selecione uma compra na tabela para excluir!'); return; }
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir esta compra?')) {
                 const compra = db.compras[index];
                 db.compras.splice(index, 1);
@@ -4478,6 +4527,24 @@
             document.querySelectorAll('#tabelaAuditoria tbody tr').forEach(row => row.style.display = '');
         }
 
+        // =============================================
+        // FUNÇÕES PARA LIMPEZA DA AUDITORIA (MANUAL E AUTOMÁTICA)
+        // =============================================
+        function limparAuditoriaManual() {
+            if (!verificarSenhaAdmin()) return;
+            if (confirm('Excluir TODOS os registros de auditoria?')) {
+                db.auditoria = [];
+                db.config.ultimaLimpezaAuditoria = new Date().toISOString();
+                atualizarTabelaAuditoria();
+                salvarDB();
+                registrarAuditoria('Exclusão', 'Auditoria limpa manualmente');
+                alert('Auditoria limpa!');
+            }
+        }
+
+        // =============================================
+        // FUNÇÕES PARA PREVIEW DE IMAGENS
+        // =============================================
         async function previewGaragemImagem() {
             const file = document.getElementById('garagemImagem').files[0];
             if (file) {
@@ -4603,6 +4670,7 @@
         }
 
         function excluirImagemGaragem(i) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir imagem?')) {
                 db.imagens.garagem.fotos.splice(i, 1);
                 atualizarGaleriaGaragem();
@@ -4641,6 +4709,7 @@
         }
 
         function excluirImagemSOS(i) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir imagem?')) {
                 db.imagens.sos.fotos.splice(i, 1);
                 atualizarGaleriaSOS();
@@ -4686,6 +4755,7 @@
         }
 
         function excluirComprovante(i) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir comprovante?')) {
                 db.imagens.comprovantes.fotos.splice(i, 1);
                 atualizarGaleriaComprovantes();
@@ -5008,6 +5078,7 @@
                 alert('Selecione uma pendência na tabela para editar!');
                 return;
             }
+            if (!verificarSenhaAdmin()) return;
             const p = db.pendentes[index];
             document.getElementById('pendData').value = p.data;
             document.getElementById('pendDescricao').value = p.descricao;
@@ -5027,6 +5098,7 @@
                 alert('Selecione uma pendência na tabela para excluir!');
                 return;
             }
+            if (!verificarSenhaAdmin()) return;
             if (confirm(`Excluir a pendência "${db.pendentes[index].descricao}"?`)) {
                 const p = db.pendentes[index];
                 db.pendentes.splice(index, 1);
@@ -5386,6 +5458,7 @@
         }
 
         function excluirFotoVistoria(index) {
+            if (!verificarSenhaAdmin()) return;
             if (confirm('Excluir esta foto de vistoria?')) {
                 const loc = db.locacoes[vistoriaLocacaoIndex];
                 if (loc && loc.vistoria) {
