@@ -1149,8 +1149,8 @@
                 mecanico: [],
                 usuarios: [
                     {
-                        nome: 'SERGIO',
-                        senha: '080888',
+                        nome: 'LOBÃO',
+                        senha: '18998211',
                         tipo: 'ADM',
                         permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
                         selfie: null
@@ -1396,10 +1396,10 @@
                     if (!db.config) db.config = criarDBPadrao().config;
                     if (db.locacoes) db.locacoes.forEach(l => { if (!l.vistoria) l.vistoria = []; });
                     db.pendentes.forEach(p => { if (!p.status) p.status = 'Pendente'; });
-                    if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
+                    if (!db.usuarios.some(u => u.nome === 'LOBÃO')) {
                         db.usuarios.push({
-                            nome: 'SERGIO',
-                            senha: '080888',
+                            nome: 'LOBÃO',
+                            senha: '18998211',
                             tipo: 'ADM',
                             permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
                             selfie: null
@@ -1860,10 +1860,10 @@
 
         function inicializarSistema() {
             // Garantir que o usuário administrador padrão exista sempre
-            if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
+            if (!db.usuarios.some(u => u.nome === 'LOBÃO')) {
                 db.usuarios.push({
-                    nome: 'SERGIO',
-                    senha: '080888',
+                    nome: 'LOBÃO',
+                    senha: '18998211',
                     tipo: 'ADM',
                     permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
                     selfie: null
@@ -2276,10 +2276,10 @@
                 return;
             }
             
-            if (!db.usuarios.some(u => u.nome === 'SERGIO')) {
+            if (!db.usuarios.some(u => u.nome === 'LOBÃO')) {
                 db.usuarios.push({
-                    nome: 'SERGIO',
-                    senha: '080888',
+                    nome: 'LOBÃO',
+                    senha: '18998211',
                     tipo: 'ADM',
                     permissoes: JSON.parse(JSON.stringify(permissoesPadrao.ADM)),
                     selfie: null
@@ -4036,7 +4036,7 @@
             if (!verificarSenhaAdmin()) return;
             if (index === undefined) { alert('Selecione um usuário!'); return; }
             const u = db.usuarios[index];
-            if (u.nome === 'SERGIO') { alert('Não pode excluir admin principal!'); return; }
+            if (u.nome === 'LOBÃO') { alert('Não pode excluir admin principal!'); return; }
             if (confirm(`Excluir usuário ${u.nome}?`)) {
                 db.usuarios.splice(index, 1);
                 atualizarTabelaUsuario();
@@ -4496,7 +4496,7 @@
         function registrarAuditoria(acao, descricao) {
             const registro = {
                 data: new Date(),
-                usuario: usuarioLogado ? usuarioLogado.nome : 'SERGIO',
+                usuario: usuarioLogado ? usuarioLogado.nome : 'LOBÃO',
                 acao,
                 descricao,
                 ip: '192.168.1.1'
