@@ -7,8 +7,10 @@
     <!-- Firebase SDKs (compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* CSS completo mantido (sem alterações) */
+        /* CSS completo mantido (com adições para dashboard) */
         :root { --primary: #1a3c6e; --secondary: #e63946; --accent: #f4a261; --bg: #f8f9fa; --text: #333; --white: #fff; --shadow: 0 4px 6px rgba(0,0,0,0.1); --radius: 8px; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --info: #17a2b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -161,6 +163,59 @@
         .vistoria-foto-item .delete-btn:hover { background: rgba(220,53,69,1); }
         .vistoria-camera-btn { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; margin-right: 10px; transition: background 0.3s; }
         .vistoria-camera-btn:hover { background: #0d1b2a; }
+        /* ====== NOVOS ESTILOS PARA DASHBOARD ====== */
+        .dashboard-encerradas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .kpi-card {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-left: 6px solid var(--primary);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-3px);
+        }
+        .kpi-card .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        .kpi-card .kpi-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .kpi-card.green { border-left-color: var(--success); }
+        .kpi-card.green .kpi-value { color: var(--success); }
+        .kpi-card.red { border-left-color: var(--danger); }
+        .kpi-card.red .kpi-value { color: var(--danger); }
+        .kpi-card.orange { border-left-color: var(--accent); }
+        .kpi-card.orange .kpi-value { color: var(--accent); }
+        .chart-container {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .chart-container canvas {
+            max-height: 350px;
+        }
+        .table-responsive {
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        .lucro-positivo { color: var(--success); font-weight: bold; }
+        .lucro-negativo { color: var(--danger); font-weight: bold; }
+        /* ====== FIM NOVOS ESTILOS ====== */
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -326,11 +381,34 @@
             </div>
         </div>
 
-        <!-- ABA: LOCAÇÕES ENCERRADAS -->
+        <!-- ABA: LOCAÇÕES ENCERRADAS (com dashboard) -->
         <div class="tab-content" id="locEncerrada">
             <h2>🏁 Locações Encerradas</h2>
+            <!-- Dashboard de KPIs -->
+            <div class="dashboard-encerradas" id="dashboardEncerradas">
+                <div class="kpi-card">
+                    <div class="kpi-value" id="kpiTotalLocs">0</div>
+                    <div class="kpi-label">Total Locações</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-value" id="kpiReceitaTotal">R$ 0,00</div>
+                    <div class="kpi-label">Receita Total</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-value" id="kpiDespesasTotal">R$ 0,00</div>
+                    <div class="kpi-label">Despesas Totais</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-value" id="kpiLucroTotal">R$ 0,00</div>
+                    <div class="kpi-label">Lucro Total</div>
+                </div>
+            </div>
+            <!-- Gráfico -->
+            <div class="chart-container">
+                <canvas id="chartLocEncerradas"></canvas>
+            </div>
             <input type="text" class="filter-input" placeholder="🔍 Filtrar locações encerradas..." id="filterLocEncerrada">
-            <div class="table-container">
+            <div class="table-responsive">
                 <table id="tabelaLocEncerrada">
                     <thead>
                         <tr>
@@ -342,6 +420,7 @@
                             <th>Encerrada em</th>
                             <th>R$ Gerado</th>
                             <th>Despesas</th>
+                            <th>Lucro</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -3376,13 +3455,16 @@
                 const row = tbody.insertRow();
                 const totalGerado = l.totalGerado || 'R$ 0,00';
                 const despesas = calcularDespesasLocacao(l);
-                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td><td>${totalGerado}</td><td>${despesas}</td>
+                const lucro = calcularLucroLocacao(l);
+                const lucroClass = lucro >= 0 ? 'lucro-positivo' : 'lucro-negativo';
+                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td><td>${totalGerado}</td><td>${despesas}</td><td class="${lucroClass}">${formatarMoedaBR(lucro)}</td>
                     <td>
                         <button class="btn-warning" data-permissao="locEncerrada_reativar" onclick="reativarLocacao(${index})">🔄 Reativar</button>
                         <button class="btn-danger" data-permissao="locEncerrada_excluir" onclick="excluirLocEncerrada(${index})">🗑️ Excluir</button>
                         <button class="btn-info" onclick="verDespesasLocacao(${index})">📋 Despesas</button>
                     </td>`;
             });
+            atualizarDashboardEncerradas();
         }
 
         function calcularDespesasLocacao(locacao) {
@@ -5168,6 +5250,123 @@
             vistoriaLocacaoIndex = null;
             document.getElementById('vistoriaContent').style.display = 'none';
             atualizarVistoria();
+        }
+
+        // =============================================
+        // FUNÇÕES DO DASHBOARD DE LOCAÇÕES ENCERRADAS
+        // =============================================
+        let encerradasChart = null;
+
+        function parseValorMonetario(valorStr) {
+            if (!valorStr) return 0;
+            const limp = valorStr.replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+            return parseFloat(limp) || 0;
+        }
+
+        function calcularReceitaLocacao(locacao) {
+            return parseValorMonetario(locacao.totalGerado);
+        }
+
+        function calcularDespesasLocacaoNumero(locacao) {
+            if (!locacao || !locacao.placa) return 0;
+            const despesas = db.historico.filter(item => {
+                if (item.placa !== locacao.placa) return false;
+                if (!item.data) return true;
+                const itemDate = new Date(item.data);
+                const inicio = new Date(locacao.dataInicio);
+                const fim = new Date(locacao.dataEncerramento || locacao.dataFim || new Date());
+                return itemDate >= inicio && itemDate <= fim;
+            });
+            let total = 0;
+            despesas.forEach(item => {
+                const valorStr = (item.valor || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+                total += parseFloat(valorStr) || 0;
+            });
+            return total;
+        }
+
+        function calcularLucroLocacao(locacao) {
+            const receita = calcularReceitaLocacao(locacao);
+            const despesas = calcularDespesasLocacaoNumero(locacao);
+            return receita - despesas;
+        }
+
+        function atualizarDashboardEncerradas() {
+            const locs = db.locacoesEncerradas;
+            let totalLocs = locs.length;
+            let receitaTotal = 0;
+            let despesasTotal = 0;
+            let lucroTotal = 0;
+
+            locs.forEach(l => {
+                receitaTotal += calcularReceitaLocacao(l);
+                despesasTotal += calcularDespesasLocacaoNumero(l);
+                lucroTotal += calcularLucroLocacao(l);
+            });
+
+            // Atualizar KPIs
+            document.getElementById('kpiTotalLocs').textContent = totalLocs;
+            document.getElementById('kpiReceitaTotal').textContent = formatarMoedaBR(receitaTotal);
+            document.getElementById('kpiDespesasTotal').textContent = formatarMoedaBR(despesasTotal);
+            document.getElementById('kpiLucroTotal').textContent = formatarMoedaBR(lucroTotal);
+
+            // Atualizar gráfico
+            const labels = locs.map((l, i) => `${l.locatario} - ${l.placa}`);
+            const receitas = locs.map(l => calcularReceitaLocacao(l));
+            const despesas = locs.map(l => calcularDespesasLocacaoNumero(l));
+            const lucros = locs.map(l => calcularLucroLocacao(l));
+
+            const ctx = document.getElementById('chartLocEncerradas').getContext('2d');
+            
+            if (encerradasChart) {
+                encerradasChart.destroy();
+            }
+
+            encerradasChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Receita',
+                            data: receitas,
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Despesas',
+                            data: despesas,
+                            backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Lucro',
+                            data: lucros,
+                            backgroundColor: 'rgba(23, 162, 184, 0.7)',
+                            borderColor: 'rgba(23, 162, 184, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Receita, Despesas e Lucro por Locação Encerrada' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return 'R$ ' + value.toFixed(2).replace('.', ','); }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         // INICIALIZAÇÃO FINAL
