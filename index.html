@@ -18,7 +18,7 @@
         .login-box { background: rgba(255, 255, 255, 0.92); padding: 40px; border-radius: var(--radius); box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 400px; text-align: center; }
         .login-box h1 { color: var(--primary); margin-bottom: 10px; font-size: 28px; }
         .login-box h2 { color: var(--secondary); margin-bottom: 30px; font-size: 20px; }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: var(--radius); font-size: 16px; transition: border-color 0.3s; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: var(--radius); font-size: 16px; transition: border-color 0.3s; text-transform: uppercase; }
         .login-box input:focus { outline: none; border-color: var(--primary); }
         .login-box button { width: 100%; padding: 12px; background: var(--primary); color: var(--white); border: none; border-radius: var(--radius); font-size: 16px; cursor: pointer; transition: background 0.3s; font-weight: bold; }
         .login-box button:hover { background: #0d1b2a; }
@@ -216,6 +216,10 @@
         .lucro-positivo { color: var(--success); font-weight: bold; }
         .lucro-negativo { color: var(--danger); font-weight: bold; }
         /* ====== FIM NOVOS ESTILOS ====== */
+        /* ====== ESTILO PARA CONVERSÃO DE MAIÚSCULAS ====== */
+        input[type="text"], input[type="search"], textarea {
+            text-transform: uppercase;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -685,7 +689,12 @@
                 <div class="form-group"><label>Nome do Documento</label><input type="text" id="docNome" class="campo-enter"></div>
                 <div class="form-group"><label>R$ LOCAÇÃO</label><input type="text" id="docTipo" class="money campo-enter" placeholder="Valor do comprovante"></div>
                 <div class="form-group"><label>VENCIMENTO</label><input type="date" id="docData" class="campo-enter"></div>
-                <div class="form-group"><label>Veículo/Cliente</label><input type="text" id="docReferencia" class="campo-enter" placeholder="Placa do veículo"></div>
+                <div class="form-group">
+                    <label>Veículo/Cliente</label>
+                    <select id="docReferencia" class="campo-enter">
+                        <option value="">Selecione uma placa</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Observações</label><textarea id="docObs" rows="3" class="campo-enter"></textarea></div>
                 <div class="form-group">
                     <label>Comprovante (PDF, JPG, PNG)</label>
@@ -698,6 +707,10 @@
             </div>
             <button class="btn-primary" data-permissao="doc_salvar" onclick="salvarDoc()">💾 Salvar</button>
             <button class="btn-warning" data-permissao="doc_limpar" onclick="limparCamposDoc()">🔄 Limpar</button>
+            
+            <!-- Sub-abas de placas -->
+            <div class="sub-tabs" id="docPlacaTabs"></div>
+            
             <div class="table-container">
                 <table id="tabelaDoc">
                     <thead><tr><th>Nome</th><th>R$ LOCAÇÃO</th><th>VENCIMENTO</th><th>Veículo/Cliente</th><th>Ações</th></tr></thead>
@@ -1474,6 +1487,13 @@
 
             document.getElementById('compQuantidade').addEventListener('input', calcularValorTotal);
             document.getElementById('compValorUnitario').addEventListener('input', calcularValorTotal);
+
+            // ====== CONVERSÃO PARA MAIÚSCULAS EM CAMPOS DE TEXTO ======
+            document.querySelectorAll('input[type="text"], input[type="search"], textarea').forEach(input => {
+                input.addEventListener('input', function(e) {
+                    this.value = this.value.toUpperCase();
+                });
+            });
         });
 
         // Máscara de dinheiro com ponto de milhar e vírgula decimal
@@ -1887,6 +1907,9 @@
             atualizarPlacasMecanico();
             preencherPlacaUsuarioLogado();
             atualizarVistoria();
+            // ====== NOVO: Atualizar select de placas no formulário doc ======
+            atualizarSelectPlacasDoc();
+            atualizarSubAbasDoc();
         }
 
         // =============================================
@@ -2288,6 +2311,7 @@
                 if (tabId === 'doc') {
                     preencherPlacaUsuarioLogado();
                     atualizarTabelaDoc();
+                    atualizarSubAbasDoc();
                 }
                 if (tabId === 'locEncerrada') atualizarTabelaLocEncerrada();
                 if (tabId === 'pendente') atualizarTabelaPendentes();
@@ -2634,6 +2658,9 @@
             limparCamposVeiculo();
             atualizarPlacasManutencao();
             atualizarPlacasMecanico();
+            // Atualizar select de placas no doc e sub-abas
+            atualizarSelectPlacasDoc();
+            atualizarSubAbasDoc();
         }
 
         // =============================================
@@ -3206,7 +3233,7 @@
                     break;
                 }
             }
-            if (nome) document.getElementById('docNome').value = nome;
+            if (nome) document.getElementById('docNome').value = nome.toUpperCase();
 
             let valor = '';
             const padroesValor = [
@@ -3262,26 +3289,52 @@
             }
         }
 
-        function atualizarPreviewDoc() {
-            const container = document.getElementById('docPreviewContainer');
-            container.innerHTML = '';
-            if (!docUploadDataUrl || !docUploadFileType) return;
-
-            if (docUploadFileType === 'pdf') {
-                const span = document.createElement('span');
-                span.innerHTML = '📄 PDF selecionado';
-                span.style.fontSize = '14px';
-                span.style.color = '#333';
-                container.appendChild(span);
-            } else {
-                const img = document.createElement('img');
-                img.src = docUploadDataUrl;
-                img.className = 'selfie-thumbnail';
-                img.onclick = function() { openImageModal(docUploadDataUrl); };
-                container.appendChild(img);
-            }
+        // ====== NOVAS FUNÇÕES PARA SELECT DE PLACAS E SUB-ABAS NO DOC ======
+        function atualizarSelectPlacasDoc() {
+            const select = document.getElementById('docReferencia');
+            if (!select) return;
+            select.innerHTML = '<option value="">Selecione uma placa</option>';
+            db.veiculos.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.placa;
+                option.textContent = v.placa + ' - ' + v.fabricante;
+                select.appendChild(option);
+            });
         }
 
+        let docPlacaSelecionada = ''; // '' significa "Todos"
+
+        function atualizarSubAbasDoc() {
+            const container = document.getElementById('docPlacaTabs');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const btnTodos = document.createElement('button');
+            btnTodos.className = 'sub-tab' + (docPlacaSelecionada === '' ? ' active' : '');
+            btnTodos.textContent = 'Todos';
+            btnTodos.onclick = () => {
+                docPlacaSelecionada = '';
+                atualizarSubAbasDoc();
+                atualizarTabelaDoc();
+            };
+            container.appendChild(btnTodos);
+
+            db.veiculos.forEach(v => {
+                const btn = document.createElement('button');
+                btn.className = 'sub-tab' + (docPlacaSelecionada === v.placa ? ' active' : '');
+                btn.textContent = v.placa;
+                btn.onclick = () => {
+                    docPlacaSelecionada = v.placa;
+                    atualizarSubAbasDoc();
+                    atualizarTabelaDoc();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // =============================================
+        // FUNÇÃO SALVAR DOC (usando select de placa e sub-abas)
+        // =============================================
         function salvarDoc() {
             const nome = document.getElementById('docNome').value;
             const tipo = document.getElementById('docTipo').value;
@@ -3310,6 +3363,7 @@
             };
             db.documentos.push(d);
             atualizarTabelaDoc();
+            atualizarSubAbasDoc();
             registrarAuditoria('Cadastro', `Documento: ${d.nome}`);
             salvarDB();
             alert('Documento salvo!');
@@ -3326,7 +3380,29 @@
             docUploadFileType = null;
             document.getElementById('docUpload').value = '';
             document.getElementById('docPreviewContainer').innerHTML = '';
+            docPlacaSelecionada = '';
+            atualizarSubAbasDoc();
             preencherPlacaUsuarioLogado();
+        }
+
+        function atualizarPreviewDoc() {
+            const container = document.getElementById('docPreviewContainer');
+            container.innerHTML = '';
+            if (!docUploadDataUrl || !docUploadFileType) return;
+
+            if (docUploadFileType === 'pdf') {
+                const span = document.createElement('span');
+                span.innerHTML = '📄 PDF selecionado';
+                span.style.fontSize = '14px';
+                span.style.color = '#333';
+                container.appendChild(span);
+            } else {
+                const img = document.createElement('img');
+                img.src = docUploadDataUrl;
+                img.className = 'selfie-thumbnail';
+                img.onclick = function() { openImageModal(docUploadDataUrl); };
+                container.appendChild(img);
+            }
         }
 
         // =============================================
@@ -3647,10 +3723,17 @@
         function atualizarTabelaDoc() {
             const tbody = document.querySelector('#tabelaDoc tbody');
             tbody.innerHTML = '';
-            db.documentos.forEach((d, index) => {
+            // Filtro por placa selecionada
+            let docs = db.documentos;
+            if (docPlacaSelecionada) {
+                docs = docs.filter(d => d.referencia === docPlacaSelecionada);
+            }
+            docs.forEach((d, index) => {
+                // Precisamos do índice original para editar/excluir
+                const originalIndex = db.documentos.indexOf(d);
                 const row = tbody.insertRow();
                 row.innerHTML = `<td>${d.nome}</td><td>${d.tipo}</td><td>${formatarDataBR(d.data)}</td><td>${d.referencia}</td>
-                    <td><button class="btn-warning" onclick="editarDoc(${index})">✏️</button><button class="btn-danger" onclick="excluirDoc(${index})">🗑️</button></td>`;
+                    <td><button class="btn-warning" onclick="editarDoc(${originalIndex})">✏️</button><button class="btn-danger" onclick="excluirDoc(${originalIndex})">🗑️</button></td>`;
             });
         }
 
@@ -3819,6 +3902,8 @@
             salvarDB();
             atualizarPlacasManutencao();
             atualizarPlacasMecanico();
+            atualizarSelectPlacasDoc();
+            atualizarSubAbasDoc();
         }
 
         function excluirVeiculo(index) {
@@ -3835,6 +3920,8 @@
                 salvarDB();
                 atualizarPlacasManutencao();
                 atualizarPlacasMecanico();
+                atualizarSelectPlacasDoc();
+                atualizarSubAbasDoc();
             }
         }
 
@@ -4123,6 +4210,7 @@
             }
             db.documentos.splice(index, 1);
             atualizarTabelaDoc();
+            atualizarSubAbasDoc();
             registrarAuditoria('Edição', `Doc editado: ${d.nome}`);
             salvarDB();
         }
@@ -4132,6 +4220,7 @@
                 const d = db.documentos[index];
                 db.documentos.splice(index, 1);
                 atualizarTabelaDoc();
+                atualizarSubAbasDoc();
                 registrarAuditoria('Exclusão', `Doc excluído: ${d.nome}`);
                 salvarDB();
             }
@@ -5015,7 +5104,7 @@
             }
             const linhas = texto.split('\n').filter(l => l.trim().length > 5);
             if (linhas.length > 0 && !document.getElementById('pendDescricao').value) {
-                document.getElementById('pendDescricao').value = linhas[0].trim();
+                document.getElementById('pendDescricao').value = linhas[0].trim().toUpperCase();
             }
             const valorMatch = texto.match(/R\$\s?([\d.,]+)/i);
             if (valorMatch) {
