@@ -164,34 +164,11 @@
         .vistoria-camera-btn { background: var(--primary); color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; margin-right: 10px; transition: background 0.3s; }
         .vistoria-camera-btn:hover { background: #0d1b2a; }
         /* ====== NOVOS ESTILOS PARA DASHBOARD ====== */
-        .dashboard-encerradas {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .kpi-card {
-            background: linear-gradient(135deg, #f8f9fa, #ffffff);
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-left: 6px solid var(--primary);
-            text-align: center;
-            transition: transform 0.2s;
-        }
-        .kpi-card:hover {
-            transform: translateY(-3px);
-        }
-        .kpi-card .kpi-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-        .kpi-card .kpi-label {
-            font-size: 14px;
-            color: #666;
-        }
+        .dashboard-encerradas { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: linear-gradient(135deg, #f8f9fa, #ffffff); border-radius: 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-left: 6px solid var(--primary); text-align: center; transition: transform 0.2s; }
+        .kpi-card:hover { transform: translateY(-3px); }
+        .kpi-card .kpi-value { font-size: 28px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+        .kpi-card .kpi-label { font-size: 14px; color: #666; }
         .kpi-card.green { border-left-color: var(--success); }
         .kpi-card.green .kpi-value { color: var(--success); }
         .kpi-card.red { border-left-color: var(--danger); }
@@ -200,28 +177,14 @@
         .kpi-card.orange .kpi-value { color: var(--accent); }
         .kpi-card.blue { border-left-color: var(--info); }
         .kpi-card.blue .kpi-value { color: var(--info); }
-        .chart-container {
-            background: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
-            position: relative;
-        }
-        .chart-container canvas {
-            max-height: 350px;
-        }
-        .table-responsive {
-            margin-top: 15px;
-            overflow-x: auto;
-        }
+        .chart-container { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 30px; position: relative; }
+        .chart-container canvas { max-height: 350px; }
+        .table-responsive { margin-top: 15px; overflow-x: auto; }
         .lucro-positivo { color: var(--success); font-weight: bold; }
         .lucro-negativo { color: var(--danger); font-weight: bold; }
         /* ====== FIM NOVOS ESTILOS ====== */
         /* ====== ESTILO PARA CONVERSÃO DE MAIÚSCULAS ====== */
-        input[type="text"], input[type="search"], textarea {
-            text-transform: uppercase;
-        }
+        input[type="text"], input[type="search"], textarea { text-transform: uppercase; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -1036,7 +999,7 @@
                         <div class="contrato-form-group"><label>Placa do Veículo:</label><input type="text" id="ctVeiculoPlaca" value="QMK3B93" class="campo-enter"></div>
                         <div class="contrato-form-group"><label>Ano de Fabricação:</label><input type="text" id="ctAnoFabr" value="2020" class="campo-enter"></div>
                         <div class="contrato-form-group"><label>Ano Modelo:</label><input type="text" id="ctAnoModel" value="2020" class="campo-enter"></div>
-                        <div class="contrato-form-group"><label>Gestor do Contrato:</label><input type="text" id="ctGestor" value="Sergio Pereira da Silva" class="campo-enter"></div>
+                        <div class="contrato-form-group"><label>Gestor do Contrato:</label><input type="text" id="ctGestor" value="LOBÃO" class="campo-enter"></div>
                         <div class="contrato-form-group"><label>Local de Vistoria:</label><input type="text" id="ctLocalVistoria" value="AV. VILA EMA 5445 VILA EMA SÃO PAULO" class="campo-enter"></div>
                         <div class="contrato-form-group"><label>Multa por Rescisão Antecipada:</label><input type="text" id="ctMultaRescisao" value="R$ 2.500,00 (dois e quinhentos reais)" class="money campo-enter"></div>
                         <div class="contrato-form-group"><label>Taxa de Troca de Veículo:</label><input type="text" id="ctTaxaTroca" value="R$ 600,00 (seiscentos reais)" class="money campo-enter"></div>
@@ -1883,6 +1846,24 @@
                 });
                 salvarDB();
             }
+            
+            // ====== REMOÇÃO DO ADMINISTRADOR SERGIO ======
+            // Remove qualquer usuário chamado "Sergio" ou "SERGIO" ou "Sergio Pereira da Silva"
+            db.usuarios = db.usuarios.filter(u => {
+                const nomeUpper = (u.nome || '').toUpperCase();
+                return nomeUpper !== 'SERGIO' && nomeUpper !== 'SERGIO PEREIRA DA SILVA';
+            });
+            
+            // Garante que o LOBÃO tenha todos os poderes de ADM
+            const lobao = db.usuarios.find(u => u.nome === 'LOBÃO');
+            if (lobao) {
+                lobao.permissoes = JSON.parse(JSON.stringify(permissoesPadrao.ADM));
+                lobao.tipo = 'ADM';
+                // Garante que a senha do LOBÃO seja a padrão se não existir
+                if (!lobao.senha) lobao.senha = '18998211';
+            }
+            // ====== FIM REMOÇÃO ======
+
             if (!db.contratos) {
                 db.contratos = {
                     contratoLocacao: {},
@@ -4990,7 +4971,7 @@
                 <p>13. Sobrevindo algum sinistro durante a condução do automóvel, o Locatário deverá providenciar Boletim de Ocorrência encaminhando-o imediatamente à Locadora.</p>
                 <p>14. A apresentação do Boletim de Ocorrência citado na cláusula 3.4 deste Contrato, não exime o Locatário de arcar com todas as despesas decorrentes do evento danoso.</p>
                 <p>15. O locatário se compromete a arcar com as despesas inerentes à utilização de combustível, conserto de pneus, câmaras de ar, lâmpadas e troca de peças de reposição por mal uso.</p>
-                <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong>.</p>
+                <p>16. Devolver o veículo nas mesmas condições de conservação nas quais lhe foram entregues no ato da retirada, inclusive devolvendo-o limpo, no endereço indicado pelo gestor do contrato, Sr. <strong>${d.ctGestor || 'LOBÃO'}</strong>.</p>
                 <h3>CLÁUSULA QUARTA - DO ACOMPANHAMENTO E FISCALIZAÇÃO</h3>
                 <p>17. O acompanhamento e a vistoria a serem exercidos pelo Locador, por meio de seus prepostos, consistirão no direito de vistoriar o veículo quando de sua restituição e durante o período de vigência do contrato, mediante prévia comunicação.</p>
                 <p>18. As partes ajustam que a vistoria obrigatória ocorrerá a cada 15 dias em local situado a <strong>${d.ctLocalVistoria || 'AV. VILA EMA 5445 VILA EMA SÃO PAULO'}</strong>, por sua vez a recusa no cumprimento desta condição poderá dar ensejo à rescisão do contrato com a retenção do valor dado em caução.</p>
@@ -5010,7 +4991,7 @@
                 <p>29. Todas as multas deverão ser pagas na semana seguinte à sua comunicação.</p>
                 <p>30. O declara ter ciência de que os valores das multas penalidades variam de acordo com o município de sua ocorrência.</p>
                 <h3>CLÁUSULA SÉTIMA – DO FATURAMENTO E PAGAMENTO</h3>
-                <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. <strong>${d.ctGestor || 'Sergio Pereira da Silva'}</strong> para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
+                <p>31. O locatário concorda com que sua conta vinculada à Uber seja vinculada à conta do Sr. <strong>${d.ctGestor || 'LOBÃO'}</strong> para que em caso de o saldo de débito não cobrir as despesas do aluguel, esta poderá ser utilizada até o limite das despesas, e em caso de ainda remanescer dívida, o locatário deverá proceder ao complemento do valor.</p>
                 <p>31.1. CASO O VALOR DO ALUGUEL NÃO SEJA FEITO EM SUA TOTALIDADE PELO APLICATIVO DA UBER, DEVERÁ SER FEITO O PAGAMENTO DA DIFERENÇA VIA PIX ATÉ AS 13:00 da data determinada.</p>
                 <p>32. O não pagamento do aluguel semanal e outros débitos em sua totalidade permitirá ao Locador rescindir o contrato imediatamente, incidindo a multa de <strong>${d.ctMultaNaoPagamento || 'R$ 2.500,00 (dois mil e quinhentos reais)'}</strong>.</p>
                 <h3>CLÁUSULA OITAVA - DA RESCISÃO</h3>
