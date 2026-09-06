@@ -2046,7 +2046,8 @@
                 valor,
                 obs,
                 pdfData: pdfData || null,
-                pdfTipo: pdfTipo || null
+                pdfTipo: pdfTipo || null,
+                pago: false  // Adicionado campo pago
             };
 
             db.mecanico.push(novoServico);
@@ -2070,6 +2071,72 @@
             salvarDB();
             alert('Serviço salvo com sucesso e lançado no histórico!');
             limparCamposMecanico();
+        }
+
+        // =============================================
+        // FUNÇÃO PAGAMENTO MECÂNICO (novo)
+        // =============================================
+        function pagamentoMecanico(index) {
+            const m = db.mecanico[index];
+            if (!m) return;
+
+            if (m.pago) {
+                alert('Este serviço já foi pago!');
+                return;
+            }
+
+            // Pede senha do admin
+            if (!verificarSenhaAdmin()) {
+                return;
+            }
+
+            const hoje = new Date().toISOString().split('T')[0];
+            const descricao = `Pagamento serviço mecânico: ${m.servico} - ${m.placa}`;
+            const valorStr = (m.valor || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+            const valorNum = parseFloat(valorStr) || 0;
+
+            if (valorNum <= 0) {
+                alert('Valor inválido para pagamento!');
+                return;
+            }
+
+            const valorFormatado = formatarMoedaBR(valorNum);
+
+            // Evita duplicidade no fluxo de caixa
+            const existeFluxo = db.fluxoCaixa.some(f => 
+                f.data === hoje && 
+                f.descricao === descricao && 
+                f.valor === valorFormatado && 
+                f.tipo === 'saida'
+            );
+
+            if (existeFluxo) {
+                alert('Já existe um lançamento de saída para este serviço no fluxo de caixa!');
+                return;
+            }
+
+            // Adiciona lançamento no fluxo de caixa
+            db.fluxoCaixa.push({
+                data: hoje,
+                descricao: descricao,
+                categoria: 'Mecânico',
+                valor: valorFormatado,
+                tipo: 'saida'
+            });
+
+            // Marca como pago
+            m.pago = true;
+
+            // Atualiza tabelas e resumo
+            atualizarTabelaMecanico();
+            atualizarTabelaFluxoCaixa();
+            atualizarResumoFinanceiro();
+
+            // Registro de auditoria
+            registrarAuditoria('Cadastro', `Pagamento de serviço mecânico: ${m.servico} - ${m.placa} (${valorFormatado})`);
+
+            salvarDB();
+            alert(`Pagamento registrado no fluxo de caixa!\nValor: ${valorFormatado}\nServiço: ${m.servico}`);
         }
 
         // =============================================
@@ -3710,8 +3777,11 @@
             tbody.innerHTML = '';
             db.mecanico.forEach((m, index) => {
                 const row = tbody.insertRow();
+                const pagamentoBtn = m.pago ? 
+                    '<button class="btn-success" disabled style="opacity: 0.6; cursor: not-allowed;">💰 Pago</button>' : 
+                    '<button class="btn-success" onclick="pagamentoMecanico(' + index + ')">💰 Pagamento</button>';
                 row.innerHTML = `<td>${formatarDataBR(m.data)}</td><td>${m.oficina}</td><td>${m.servico}</td><td>${m.carro}</td><td>${m.valor}</td>
-                    <td><button class="btn-warning" onclick="editarMecanico(${index})">✏️</button><button class="btn-danger" onclick="excluirMecanico(${index})">🗑️</button></td>`;
+                    <td>${pagamentoBtn}<button class="btn-warning" onclick="editarMecanico(${index})">✏️</button><button class="btn-danger" onclick="excluirMecanico(${index})">🗑️</button></td>`;
             });
         }
 
