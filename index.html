@@ -895,6 +895,7 @@
                             <th>Fornecedor</th>
                             <th>Oficina</th>
                             <th>Arquivo (NF/Orçamento)</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -3415,6 +3416,16 @@
             const totalGerado = valorDiario * dias;
             locacao.totalGerado = formatarMoedaBR(totalGerado);
             locacao.dataEncerramento = new Date().toISOString().split('T')[0];
+            
+            // ===== NOVO: Calcular despesas (compras + mecânico) e armazenar na locação =====
+            const despesasTotaisNumero = calcularDespesasLocacaoNumero(locacao);
+            const despesasFormatado = formatarMoedaBR(despesasTotaisNumero);
+            const receitaNumero = parseFloat((locacao.totalGerado || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
+            const lucroNumero = receitaNumero - despesasTotaisNumero;
+            locacao.despesas = despesasFormatado;
+            locacao.lucro = formatarMoedaBR(lucroNumero);
+            // ===== FIM NOVO =====
+
             db.locacoesEncerradas.push(locacao);
             db.locacoes.splice(index, 1);
 
@@ -3435,10 +3446,10 @@
             db.locacoesEncerradas.forEach((l, index) => {
                 const row = tbody.insertRow();
                 const totalGerado = l.totalGerado || 'R$ 0,00';
-                const despesas = calcularDespesasLocacao(l);
-                const lucro = calcularLucroLocacao(l);
-                const lucroClass = lucro >= 0 ? 'lucro-positivo' : 'lucro-negativo';
-                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td><td>${totalGerado}</td><td>${despesas}</td><td class="${lucroClass}">${formatarMoedaBR(lucro)}</td>
+                const despesas = l.despesas || calcularDespesasLocacao(l);
+                const lucro = l.lucro || formatarMoedaBR(calcularLucroLocacao(l));
+                const lucroClass = (parseFloat(lucro.replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0) >= 0 ? 'lucro-positivo' : 'lucro-negativo';
+                row.innerHTML = `<td>${l.locatario}</td><td>${l.veiculo}</td><td>${l.placa}</td><td>${formatarDataBR(l.dataInicio)}</td><td>${formatarDataBR(l.dataFim)}</td><td>${formatarDataBR(l.dataEncerramento)}</td><td>${totalGerado}</td><td>${despesas}</td><td class="${lucroClass}">${lucro}</td>
                     <td>
                         <button class="btn-warning" data-permissao="locEncerrada_reativar" onclick="reativarLocacao(${index})">🔄 Reativar</button>
                         <button class="btn-danger" data-permissao="locEncerrada_excluir" onclick="excluirLocEncerrada(${index})">🗑️ Excluir</button>
@@ -3466,6 +3477,30 @@
             return formatarMoedaBR(total);
         }
 
+        function calcularDespesasLocacaoNumero(locacao) {
+            if (!locacao || !locacao.placa) return 0;
+            const despesas = db.historico.filter(item => {
+                if (item.placa !== locacao.placa) return false;
+                if (!item.data) return true;
+                const itemDate = new Date(item.data);
+                const inicio = new Date(locacao.dataInicio);
+                const fim = new Date(locacao.dataEncerramento || locacao.dataFim || new Date());
+                return itemDate >= inicio && itemDate <= fim;
+            });
+            let total = 0;
+            despesas.forEach(item => {
+                const valorStr = (item.valor || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.');
+                total += parseFloat(valorStr) || 0;
+            });
+            return total;
+        }
+
+        function calcularLucroLocacao(locacao) {
+            const receita = parseFloat((locacao.totalGerado || '0').replace('R$ ', '').replace(/\./g, '').replace(',', '.')) || 0;
+            const despesas = calcularDespesasLocacaoNumero(locacao);
+            return receita - despesas;
+        }
+
         function reativarLocacao(index) {
             const locacao = db.locacoesEncerradas[index];
             if (!locacao) return;
@@ -3473,6 +3508,8 @@
 
             delete locacao.dataEncerramento;
             delete locacao.totalGerado;
+            delete locacao.despesas;
+            delete locacao.lucro;
             db.locacoes.push(locacao);
             db.locacoesEncerradas.splice(index, 1);
 
@@ -3639,6 +3676,9 @@
             });
         }
 
+        // =============================================
+        // FUNÇÃO ATUALIZAR TABELA DE HISTÓRICO (com botão excluir)
+        // =============================================
         function atualizarTabelaHistorico() {
             const tbody = document.querySelector('#tabelaHistorico tbody');
             if (!tbody) return;
@@ -3661,8 +3701,33 @@
                                  <td>${item.valor || 'R$ 0,00'}</td>
                                  <td>${item.fornecedor || '-'}</td>
                                  <td>${item.oficina || '-'}</td>
-                                 <td>${arquivoHtml}</td>`;
+                                 <td>${arquivoHtml}</td>
+                                 <td><button class="btn-danger" onclick="excluirHistorico(${index})">🗑️ Excluir</button></td>`;
             });
+        }
+
+        // Função para excluir um lançamento do histórico com verificação de senha do ADM
+        function excluirHistorico(index) {
+            const item = db.historico[index];
+            if (!item) return;
+            const senhaAdmin = prompt("Digite a senha do administrador para confirmar a exclusão:");
+            if (senhaAdmin === null) return; // cancelado
+            const admin = db.usuarios.find(u => u.tipo === 'ADM');
+            if (!admin) {
+                alert("Nenhum administrador encontrado!");
+                return;
+            }
+            if (senhaAdmin !== admin.senha) {
+                alert("Senha incorreta!");
+                return;
+            }
+            if (confirm("Excluir este lançamento do histórico?")) {
+                db.historico.splice(index, 1);
+                atualizarTabelaHistorico();
+                salvarDB();
+                registrarAuditoria('Exclusão', `Lançamento do histórico excluído: ${item.descricao}`);
+                alert('Lançamento excluído!');
+            }
         }
 
         function abrirDocumentoHistorico(dataUrl) {
@@ -4073,7 +4138,7 @@
         }
 
         // =============================================
-        // FUNÇÕES DE COMPRAS
+        // FUNÇÕES DE COMPRAS (MODIFICADO PARA LANÇAR NO FLUXO DE CAIXA)
         // =============================================
         async function salvarCompra() {
             const data = document.getElementById('compData').value;
@@ -4136,11 +4201,27 @@
             };
             db.historico.push(novoItemHistorico);
             
+            // ===== NOVO: Lançar no Fluxo de Caixa como saída =====
+            const descricaoFluxo = `Compra: ${produto}`;
+            const existeFluxo = db.fluxoCaixa.some(f => f.data === data && f.descricao === descricaoFluxo && f.valor === valorTotal && f.tipo === 'saida');
+            if (!existeFluxo) {
+                db.fluxoCaixa.push({
+                    data: data,
+                    descricao: descricaoFluxo,
+                    categoria: 'Compras',
+                    valor: valorTotal,
+                    tipo: 'saida'
+                });
+            }
+            // ===== FIM NOVO =====
+            
             atualizarTabelaCompras();
             atualizarTabelaHistorico();
+            atualizarTabelaFluxoCaixa();
+            atualizarResumoFinanceiro();
             registrarAuditoria('Cadastro', `Compra: ${produto}`);
             salvarDB();
-            alert('Compra salva!');
+            alert('Compra salva e lançada no Fluxo de Caixa e Histórico!');
             limparCamposCompra();
         }
 
