@@ -198,6 +198,8 @@
         .kpi-card.red .kpi-value { color: var(--danger); }
         .kpi-card.orange { border-left-color: var(--accent); }
         .kpi-card.orange .kpi-value { color: var(--accent); }
+        .kpi-card.blue { border-left-color: var(--info); }
+        .kpi-card.blue .kpi-value { color: var(--info); }
         .chart-container {
             background: #fff;
             border-radius: 10px;
@@ -667,17 +669,28 @@
                 </div>
             </div>
             <button class="btn-primary" data-permissao="fluxocaixa_salvar" onclick="salvarFluxoCaixa()">💾 Salvar</button>
-            <div class="table-container">
+            
+            <!-- DASHBOARD DO FLUXO DE CAIXA -->
+            <div class="dashboard-encerradas" id="dashboardFluxoCaixa" style="margin-top: 20px;">
+                <div class="kpi-card green">
+                    <div class="kpi-value" id="totalEntradas">R$ 0,00</div>
+                    <div class="kpi-label">Entradas</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-value" id="totalSaidas">R$ 0,00</div>
+                    <div class="kpi-label">Saídas</div>
+                </div>
+                <div class="kpi-card blue">
+                    <div class="kpi-value" id="saldoTotal">R$ 0,00</div>
+                    <div class="kpi-label">Saldo (Entradas - Saídas)</div>
+                </div>
+            </div>
+            
+            <div class="table-container" style="margin-top: 20px;">
                 <table id="tabelaFluxoCaixa">
                     <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Tipo</th><th>Ações</th></tr></thead>
                     <tbody></tbody>
                 </table>
-            </div>
-            <div style="margin-top: 20px; padding: 20px; background: #f0f0f0; border-radius: 8px;">
-                <h3>Resumo Financeiro</h3>
-                <p>Total Entradas: <span id="totalEntradas">R$ 0,00</span></p>
-                <p>Total Saídas: <span id="totalSaidas">R$ 0,00</span></p>
-                <p>Saldo: <span id="saldoTotal">R$ 0,00</span></p>
             </div>
         </div>
 
